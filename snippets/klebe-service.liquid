@@ -1,0 +1,147 @@
+{%- comment -%}
+  Klebe-Service Snippet für Belag-Produkte (futurespin).
+  Zeigt "Belag kleben lassen (+2,50 €)" Checkbox nur bei Produkten mit Tag "Belag".
+
+  Parameter:
+    product  – Shopify Produkt-Objekt
+    section  – Shopify Section-Objekt
+    block    – Shopify Block-Objekt (buy-buttons)
+
+  Klebe-Service Variant ID: 57809405641052
+  Nach erfolgreichem Cart-Add des Belags wird der Service als separates
+  Line Item via /cart/add.js hinzugefügt – kein Eingriff in bestehende Logik.
+{%- endcomment -%}
+
+{% if product.tags contains 'Belag' %}
+
+<div class="klebe-service" data-klebe-block-id="{{ block.id }}">
+  <label class="klebe-service__label" for="klebe-service-{{ block.id }}">
+    <input
+      type="checkbox"
+      id="klebe-service-{{ block.id }}"
+      class="klebe-service__checkbox"
+    >
+    <span class="klebe-service__text">
+      Belag kleben lassen
+      <span class="klebe-service__price">(+2,50&nbsp;€)</span>
+    </span>
+  </label>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var KLEBE_VARIANT_ID = 57809405641052;
+  var blockId = '{{ block.id | escape }}';
+  var isAdding = false;
+
+  function init() {
+    // Scope: das buy-buttons-block Element dieses spezifischen Blocks
+    var wrapper = document.querySelector('.buy-buttons-block--' + blockId);
+    if (!wrapper) return;
+
+    // add-to-cart-component innerhalb desselben Blocks beobachten
+    var atcComponent = wrapper.querySelector('add-to-cart-component');
+    if (!atcComponent) return;
+
+    var observer = new MutationObserver(function (mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        var m = mutations[i];
+        if (
+          m.type === 'attributes' &&
+          m.attributeName === 'class' &&
+          m.target.classList.contains('atc-added')
+        ) {
+          var checkbox = document.getElementById('klebe-service-' + blockId);
+          if (checkbox && checkbox.checked && !isAdding) {
+            addKlebeService();
+          }
+        }
+      }
+    });
+
+    // Gesamten Teilbaum beobachten – atc-added kann auf Button-Kind gesetzt werden
+    observer.observe(atcComponent, { attributes: true, subtree: true });
+  }
+
+  function addKlebeService() {
+    isAdding = true;
+
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        items: [{ id: KLEBE_VARIANT_ID, quantity: 1 }]
+      })
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          return response.json().then(function (data) {
+            throw new Error(data.description || 'Cart add fehlgeschlagen');
+          });
+        }
+        return response.json();
+      })
+      .then(function () {
+        // Theme-Cart aktualisieren – mehrere Event-Namen für Theme-Kompatibilität
+        ['cart:refresh', 'cart:updated', 'cart:update'].forEach(function (name) {
+          document.dispatchEvent(new CustomEvent(name, { bubbles: true }));
+        });
+        isAdding = false;
+      })
+      .catch(function (err) {
+        console.warn('[Klebe-Service] Fehler beim Hinzufügen:', err);
+        isAdding = false;
+      });
+  }
+
+  // Initialisierung nach DOM-Bereitschaft
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+</script>
+
+{% stylesheet %}
+  .klebe-service {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-block: var(--padding-sm, 0.5rem) 0;
+  }
+
+  .klebe-service__label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-family: var(--font-body--family, inherit);
+    font-size: var(--font-size--sm, 0.875rem);
+    line-height: 1.4;
+    color: var(--color-foreground);
+  }
+
+  .klebe-service__checkbox {
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    cursor: pointer;
+    accent-color: var(--color-primary, currentColor);
+    border-radius: 2px;
+  }
+
+  .klebe-service__price {
+    color: var(--color-foreground-secondary, color-mix(in srgb, var(--color-foreground) 60%, transparent));
+    font-size: var(--font-size--xs, 0.75rem);
+    white-space: nowrap;
+    margin-inline-start: 0.125rem;
+  }
+{% endstylesheet %}
+
+{% endif %}
