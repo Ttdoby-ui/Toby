@@ -1,7 +1,10 @@
 {%- comment -%}
   Klebe-Service Snippet für Belag-Produkte (futurespin).
-  Zeigt "Belag kleben lassen (+2,50 €)" Checkbox nur bei Produkten mit Tag "Belag".
+  Zeigt "Belag kleben lassen (+2,50 €)" nur bei Produkten mit Tag "Belag".
   Klebe-Service Variant ID: 57809405641052
+
+  Trigger: theme-eigenes 'cart:update' Event (CartAddEvent aus events.js),
+  das product-form-component nach erfolgreichem Cart-Add dispatcht.
 {%- endcomment -%}
 
 {% stylesheet %}
@@ -65,29 +68,29 @@
   var isAdding = false;
 
   function init() {
+    // buy-buttons-block dieses spezifischen Blocks finden
     var wrapper = document.querySelector('.buy-buttons-block--' + blockId);
     if (!wrapper) return;
 
-    var atcComponent = wrapper.querySelector('add-to-cart-component');
-    if (!atcComponent) return;
+    var productForm = wrapper.querySelector('product-form-component');
+    if (!productForm) return;
 
-    var observer = new MutationObserver(function (mutations) {
-      for (var i = 0; i < mutations.length; i++) {
-        var m = mutations[i];
-        if (
-          m.type === 'attributes' &&
-          m.attributeName === 'class' &&
-          m.target.classList.contains('atc-added')
-        ) {
-          var checkbox = document.getElementById('klebe-service-' + blockId);
-          if (checkbox && checkbox.checked && !isAdding) {
-            addKlebeService();
-          }
-        }
+    // Das theme-eigene 'cart:update' Event abfangen.
+    // CartAddEvent (events.js) nutzt ThemeEvents.cartUpdate = 'cart:update'
+    // und wird von product-form-component nach erfolgreichem Fetch dispatcht.
+    productForm.addEventListener('cart:update', function (event) {
+      var detail = event.detail;
+      if (!detail || !detail.data) return;
+
+      // Nur auf Erfolge reagieren (kein Fehler, Quelle ist das Produktformular)
+      if (detail.data.didError === true) return;
+      if (detail.data.source !== 'product-form-component') return;
+
+      var checkbox = document.getElementById('klebe-service-' + blockId);
+      if (checkbox && checkbox.checked && !isAdding) {
+        addKlebeService();
       }
     });
-
-    observer.observe(atcComponent, { attributes: true, subtree: true });
   }
 
   function addKlebeService() {
@@ -106,19 +109,24 @@
       .then(function (response) {
         if (!response.ok) {
           return response.json().then(function (data) {
-            throw new Error(data.description || 'Cart add fehlgeschlagen');
+            throw new Error(data.description || 'Cart-Add fehlgeschlagen');
           });
         }
         return response.json();
       })
       .then(function () {
-        ['cart:refresh', 'cart:updated', 'cart:update'].forEach(function (name) {
-          document.dispatchEvent(new CustomEvent(name, { bubbles: true }));
-        });
+        // Cart-Icon aktualisieren: 'cart:update' auf document dispatchen,
+        // damit der Warenkorb-Zähler im Header neu geladen wird.
+        document.dispatchEvent(
+          new CustomEvent('cart:update', {
+            bubbles: true,
+            detail: { data: { source: 'klebe-service' } }
+          })
+        );
         isAdding = false;
       })
       .catch(function (err) {
-        console.warn('[Klebe-Service] Fehler:', err);
+        console.warn('[Klebe-Service] Fehler beim Hinzufügen:', err);
         isAdding = false;
       });
   }
