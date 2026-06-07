@@ -1,7 +1,7 @@
 {%- comment -%}
   Klebe-Service Snippet für Belag-Produkte (futurespin).
   Zeigt "Belag kleben lassen (+2,50 €)" nur bei Produkten mit Tag "Belag".
-  Klebe-Service Variant ID: 57809405641052
+  Klebe-Service Variant ID: 57810488852828
 
   Trigger: theme-eigenes 'cart:update' Event (CartAddEvent aus events.js),
   das product-form-component nach erfolgreichem Cart-Add dispatcht.
@@ -63,26 +63,22 @@
 (function () {
   'use strict';
 
-  var KLEBE_VARIANT_ID = 57809405641052;
+  var KLEBE_VARIANT_ID = 57810488852828;
   var blockId = '{{ block.id | escape }}';
   var isAdding = false;
 
   function init() {
-    // buy-buttons-block dieses spezifischen Blocks finden
     var wrapper = document.querySelector('.buy-buttons-block--' + blockId);
     if (!wrapper) return;
 
     var productForm = wrapper.querySelector('product-form-component');
     if (!productForm) return;
 
-    // Das theme-eigene 'cart:update' Event abfangen.
-    // CartAddEvent (events.js) nutzt ThemeEvents.cartUpdate = 'cart:update'
-    // und wird von product-form-component nach erfolgreichem Fetch dispatcht.
+    // 'cart:update' = ThemeEvents.cartUpdate = CartAddEvent.eventName
+    // Wird von product-form-component nach erfolgreichem Fetch dispatcht (bubbles: true)
     productForm.addEventListener('cart:update', function (event) {
       var detail = event.detail;
       if (!detail || !detail.data) return;
-
-      // Nur auf Erfolge reagieren (kein Fehler, Quelle ist das Produktformular)
       if (detail.data.didError === true) return;
       if (detail.data.source !== 'product-form-component') return;
 
@@ -115,8 +111,6 @@
         return response.json();
       })
       .then(function () {
-        // Cart-Icon aktualisieren: 'cart:update' auf document dispatchen,
-        // damit der Warenkorb-Zähler im Header neu geladen wird.
         document.dispatchEvent(
           new CustomEvent('cart:update', {
             bubbles: true,
