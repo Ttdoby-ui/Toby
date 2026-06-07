@@ -1,0 +1,893 @@
+{% stylesheet %}
+  .konfig {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 4rem;
+    font-family: var(--font-body--family, sans-serif);
+    color: var(--color-foreground, #111);
+  }
+  .konfig__headline {
+    text-align: center;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .konfig__sub {
+    text-align: center;
+    color: var(--color-foreground-secondary, #666);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+
+  /* ---- Progress nav ---- */
+  .konfig__nav {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 2px solid var(--color-border, #e0e0e0);
+    margin-bottom: 2rem;
+    gap: 0;
+  }
+  .konfig__nav::-webkit-scrollbar { display: none; }
+  .konfig__nav-btn {
+    flex: 1;
+    min-width: 6rem;
+    padding: 0.7rem 0.5rem 0.6rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-foreground-secondary, #999);
+    text-align: center;
+    white-space: nowrap;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+  .konfig__nav-btn .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    background: var(--color-border, #ccc);
+    color: var(--color-background, #fff);
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .konfig__nav-btn.is-active {
+    color: var(--color-foreground, #111);
+    border-bottom-color: var(--color-primary, #111);
+    font-weight: 700;
+  }
+  .konfig__nav-btn.is-active .num { background: var(--color-primary, #111); }
+  .konfig__nav-btn.is-done { color: var(--color-foreground, #333); }
+  .konfig__nav-btn.is-done .num { background: var(--color-primary, #111); }
+
+  /* ---- Panel ---- */
+  .konfig__panel { display: block; }
+  .konfig__panel.is-hidden { display: none; }
+  .konfig__panel-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+  }
+
+  /* ---- Grid ---- */
+  .konfig__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+    min-height: 80px;
+  }
+  @media (min-width: 600px) {
+    .konfig__grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  }
+
+  /* ---- Card ---- */
+  .k-card {
+    border: 2px solid var(--color-border, #e2e2e2);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--color-background, #fff);
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    cursor: default;
+  }
+  .k-card.is-clickable { cursor: pointer; }
+  .k-card.is-clickable:hover {
+    border-color: var(--color-primary, #555);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+  .k-card.is-selected {
+    border-color: var(--color-primary, #111);
+    box-shadow: 0 0 0 2px var(--color-primary, #111);
+  }
+  .k-card__img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--color-background-secondary, #f4f4f4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .k-card__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .k-card__img-empty { font-size: 2.5rem; opacity: 0.25; }
+  .k-card__body { padding: 0.6rem; flex: 1; }
+  .k-card__name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 0.2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .k-card__price { font-size: 0.82rem; font-weight: 700; }
+
+  /* ---- Variant selectors ---- */
+  .k-vars {
+    padding: 0.5rem 0.6rem 0.65rem;
+    border-top: 1px solid var(--color-border, #ececec);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .k-vars__lbl {
+    display: block;
+    font-size: 0.67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-foreground-secondary, #888);
+    margin-bottom: 0.25rem;
+  }
+  .k-swatches { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .k-swatch {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
+    outline: none;
+    padding: 0;
+  }
+  .k-swatch:hover:not(:disabled) { transform: scale(1.18); }
+  .k-swatch.is-on { border-color: var(--color-primary, #111); box-shadow: 0 0 0 1px var(--color-primary,#111); }
+  .k-swatch:disabled, .k-swatch.is-blocked { opacity: 0.28; cursor: not-allowed; transform: none; }
+  .k-pills { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+  .k-pill {
+    padding: 0.18rem 0.5rem;
+    border: 1px solid var(--color-border, #ccc);
+    border-radius: 999px;
+    font-size: 0.73rem;
+    background: none;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    line-height: 1.5;
+  }
+  .k-pill:hover:not(:disabled) { border-color: var(--color-primary, #111); }
+  .k-pill.is-on {
+    background: var(--color-primary, #111);
+    color: var(--color-background, #fff);
+    border-color: var(--color-primary, #111);
+  }
+  .k-pill:disabled { opacity: 0.35; cursor: not-allowed; }
+  .k-pick-btn {
+    width: 100%;
+    margin-top: 0.3rem;
+    padding: 0.4rem 0.5rem;
+    background: var(--color-primary, #111);
+    color: var(--color-background, #fff);
+    border: none;
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .k-pick-btn:hover:not(:disabled) { opacity: 0.82; }
+  .k-pick-btn:disabled { background: var(--color-foreground-secondary, #aaa); cursor: not-allowed; }
+  .k-pick-btn.is-hidden { display: none; }
+
+  /* ---- Klebeservice ---- */
+  .k-klebe {
+    margin-bottom: 1.5rem;
+    padding: 0.9rem 1rem;
+    background: var(--color-background-secondary, #f8f8f8);
+    border: 1px solid var(--color-border, #e0e0e0);
+    border-radius: 8px;
+  }
+  .k-klebe.is-hidden { display: none; }
+  .k-klebe__lbl {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .k-klebe__lbl input { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--color-primary, #111); }
+
+  /* ---- Black hint ---- */
+  .k-hint {
+    background: #fffbeb;
+    border: 1px solid #f59e0b;
+    color: #78350f;
+    padding: 0.7rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .k-hint.is-hidden { display: none; }
+
+  /* ---- Loading / empty / error ---- */
+  .k-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+  }
+  .k-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid var(--color-border, #ddd);
+    border-top-color: var(--color-primary, #111);
+    border-radius: 50%;
+    animation: konfig-spin 0.7s linear infinite;
+  }
+  @keyframes konfig-spin { to { transform: rotate(360deg); } }
+  .k-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--color-foreground-secondary, #888);
+  }
+  .k-msg.is-error { color: #b91c1c; }
+
+  /* ---- Footer buttons ---- */
+  .konfig__footer {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border, #e0e0e0);
+    flex-wrap: wrap;
+  }
+  .k-btn {
+    padding: 0.7rem 1.4rem;
+    border-radius: 5px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    line-height: 1.3;
+  }
+  .k-btn:hover:not(:disabled) { opacity: 0.82; }
+  .k-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .k-btn--next { background: var(--color-primary, #111); color: var(--color-background, #fff); }
+  .k-btn--back { background: none; color: var(--color-foreground-secondary, #555); border: 1px solid var(--color-border, #ccc); }
+  .k-btn--atc { background: var(--color-primary, #111); color: var(--color-background, #fff); font-size: 1rem; padding: 0.85rem 2rem; }
+  .k-btn--atc.is-ok { background: #15803d; }
+  .k-btn--atc.is-err { background: #b91c1c; }
+
+  /* ---- Summary ---- */
+  .konfig__summary { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.5rem; }
+  .k-sum-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem;
+    background: var(--color-background-secondary, #f8f8f8);
+    border-radius: 8px;
+  }
+  .k-sum-row__img {
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+    border-radius: 5px;
+    background: var(--color-background, #fff);
+    flex-shrink: 0;
+  }
+  .k-sum-row__icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 5px;
+    background: var(--color-border, #e4e4e4);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+  }
+  .k-sum-row__info { flex: 1; min-width: 0; }
+  .k-sum-row__lbl {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-foreground-secondary, #888);
+  }
+  .k-sum-row__name { font-size: 0.88rem; font-weight: 600; margin-top: 0.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .k-sum-row__price { font-size: 0.92rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+  .konfig__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0.5rem;
+    border-top: 2px solid var(--color-foreground, #111);
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .konfig__total-price { font-size: 1.35rem; }
+
+  /* ---- Kantenband optional badge ---- */
+  .k-optional {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-foreground-secondary, #888);
+    margin-left: 0.4rem;
+  }
+{% endstylesheet %}
+
+<div class="konfig" id="schlaeger-konfigurator">
+  <h2 class="konfig__headline">Schläger-Konfigurator</h2>
+  <p class="konfig__sub">Stelle Deinen individuellen Tischtennisschläger zusammen</p>
+
+  <nav class="konfig__nav" aria-label="Konfigurator Schritte">
+    <button class="konfig__nav-btn is-active" data-panel="0"><span class="num">1</span> Holz</button>
+    <button class="konfig__nav-btn" data-panel="1"><span class="num">2</span> Vorhandbelag</button>
+    <button class="konfig__nav-btn" data-panel="2"><span class="num">3</span> Rückhandbelag</button>
+    <button class="konfig__nav-btn" data-panel="3"><span class="num">4</span> Kantenband</button>
+    <button class="konfig__nav-btn" data-panel="4"><span class="num">5</span> Zusammenfassung</button>
+  </nav>
+
+  <!-- Panel 0: Holz -->
+  <div class="konfig__panel" id="kp-0">
+    <p class="konfig__panel-title">Schritt 1: Wähle Dein Holz</p>
+    <div class="konfig__grid" id="kg-holz">
+      <div class="k-loading"><div class="k-spinner"></div></div>
+    </div>
+    <div class="k-klebe is-hidden" id="k-klebe-row">
+      <label class="k-klebe__lbl" for="k-klebe-cb">
+        <input type="checkbox" id="k-klebe-cb">
+        Klebeservice: Belag kleben lassen (+2,50&nbsp;€)
+      </label>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--next" id="k-next-0" disabled>Weiter zu Vorhandbelag →</button>
+    </div>
+  </div>
+
+  <!-- Panel 1: Vorhandbelag -->
+  <div class="konfig__panel is-hidden" id="kp-1">
+    <p class="konfig__panel-title">Schritt 2: Vorhandbelag auswählen</p>
+    <div class="konfig__grid" id="kg-vorhand">
+      <div class="k-loading"><div class="k-spinner"></div></div>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="0">← Zurück</button>
+      <button class="k-btn k-btn--next" id="k-next-1" disabled>Weiter zu Rückhandbelag →</button>
+    </div>
+  </div>
+
+  <!-- Panel 2: Rückhandbelag -->
+  <div class="konfig__panel is-hidden" id="kp-2">
+    <p class="konfig__panel-title">Schritt 3: Rückhandbelag auswählen</p>
+    <div class="k-hint is-hidden" id="k-black-hint">
+      ⚠️ Du hast für die Vorhand einen schwarzen Belag gewählt – bitte wähle für die Rückhand eine andere Farbe (max. ein schwarzer Belag erlaubt).
+    </div>
+    <div class="konfig__grid" id="kg-rueckhand">
+      <div class="k-loading"><div class="k-spinner"></div></div>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="1">← Zurück</button>
+      <button class="k-btn k-btn--next" id="k-next-2" disabled>Weiter zu Kantenband →</button>
+    </div>
+  </div>
+
+  <!-- Panel 3: Kantenband -->
+  <div class="konfig__panel is-hidden" id="kp-3">
+    <p class="konfig__panel-title">Schritt 4: Kantenband auswählen<span class="k-optional">(optional)</span></p>
+    <div class="konfig__grid" id="kg-kantenband">
+      <div class="k-loading"><div class="k-spinner"></div></div>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="2">← Zurück</button>
+      <button class="k-btn k-btn--next" id="k-next-3">Zur Zusammenfassung →</button>
+    </div>
+  </div>
+
+  <!-- Panel 4: Zusammenfassung -->
+  <div class="konfig__panel is-hidden" id="kp-4">
+    <p class="konfig__panel-title">Dein individueller Schläger</p>
+    <div class="konfig__summary" id="k-summary"></div>
+    <div class="konfig__total">
+      <span>Gesamtpreis</span>
+      <span class="konfig__total-price" id="k-total">–</span>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="3">← Zurück</button>
+      <button class="k-btn k-btn--atc" id="k-atc">In den Warenkorb</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---- Config (set via section settings) ---- */
+  var TAG_HOLZ       = {{ section.settings.tag_holz | default: 'Holz' | json }};
+  var TAG_BELAG      = {{ section.settings.tag_belag | default: 'Belag' | json }};
+  var TAG_KANTENBAND = {{ section.settings.tag_kantenband | default: 'Kantenband' | json }};
+  var KLEBE_ID       = 57810488852828;
+  var KLEBE_PRICE    = 2.50;
+
+  var COLOR_CSS = {
+    'schwarz': '#111', 'black': '#111',
+    'rot': '#cc1a1a', 'red': '#cc1a1a',
+    'dunkelrot': '#8b0000',
+    'grün': '#2a6e2a', 'green': '#2a6e2a',
+    'blau': '#1a4db5', 'blue': '#1a4db5',
+    'orange': '#e85c00',
+    'gelb': '#c8a000', 'yellow': '#c8a000',
+    'lila': '#7b2fbf', 'violet': '#7b2fbf', 'purple': '#7b2fbf',
+    'weiß': '#ddd', 'weiss': '#ddd', 'white': '#ddd',
+    'pink': '#d63384',
+    'braun': '#7b4a2d', 'brown': '#7b4a2d',
+  };
+
+  /* ---- State ---- */
+  var S = { holz: null, klebe: false, vorhand: null, rueckhand: null, kantenband: null };
+
+  /* ---- Cache ---- */
+  var _cache = {};
+
+  /* ---- DOM shortcuts ---- */
+  function ge(id) { return document.getElementById(id); }
+  var panels   = [0,1,2,3,4].map(function(i){ return ge('kp-' + i); });
+  var navBtns  = Array.from(document.querySelectorAll('.konfig__nav-btn'));
+  var nxt      = { 0: ge('k-next-0'), 1: ge('k-next-1'), 2: ge('k-next-2'), 3: ge('k-next-3') };
+  var klebeRow = ge('k-klebe-row');
+  var blackHint= ge('k-black-hint');
+  var atcBtn   = ge('k-atc');
+
+  /* ---- Wire navigation ---- */
+  navBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() { goTo(+btn.dataset.panel, true); });
+  });
+  document.querySelectorAll('.k-btn--back').forEach(function(b) {
+    b.addEventListener('click', function() { goTo(+b.dataset.target); });
+  });
+  [0,1,2,3].forEach(function(i) {
+    if (nxt[i]) nxt[i].addEventListener('click', function() { goTo(i + 1); });
+  });
+  var klebeCb = ge('k-klebe-cb');
+  if (klebeCb) klebeCb.addEventListener('change', function() { S.klebe = klebeCb.checked; });
+  if (atcBtn) atcBtn.addEventListener('click', addToCart);
+
+  /* ---- Init ---- */
+  loadProducts(TAG_HOLZ).then(function(ps) { renderSimple(ge('kg-holz'), ps, 'holz'); });
+  loadProducts(TAG_BELAG);
+  loadProducts(TAG_KANTENBAND);
+
+  /* ---- Navigate ---- */
+  function goTo(idx, fromNav) {
+    if (!fromNav) {
+      if (idx >= 1 && !S.holz) return;
+      if (idx >= 2 && !S.vorhand) return;
+      if (idx >= 3 && !S.rueckhand) return;
+    }
+
+    if (idx === 1) { renderBelagPanel(ge('kg-vorhand'), 'vorhand'); }
+    if (idx === 2) {
+      var vh = S.vorhand && isBlk(S.vorhand.variant);
+      if (blackHint) blackHint.classList.toggle('is-hidden', !vh);
+      if (vh && S.rueckhand && isBlk(S.rueckhand.variant)) {
+        S.rueckhand = null; if (nxt[2]) nxt[2].disabled = true;
+      }
+      renderBelagPanel(ge('kg-rueckhand'), 'rueckhand');
+    }
+    if (idx === 3) { renderKantenbandPanel(); }
+    if (idx === 4) { renderSummary(); }
+
+    panels.forEach(function(p, i) { if (p) p.classList.toggle('is-hidden', i !== idx); });
+    navBtns.forEach(function(b, i) {
+      b.classList.toggle('is-active', i === idx);
+      b.classList.toggle('is-done', i < idx);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---- Load ---- */
+  function loadProducts(tag) {
+    if (_cache[tag]) return Promise.resolve(_cache[tag]);
+    return fetch('/products.json?tag=' + encodeURIComponent(tag) + '&limit=250')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { _cache[tag] = d.products || []; return _cache[tag]; })
+      .catch(function() { _cache[tag] = []; return []; });
+  }
+
+  function spinner() { return '<div class="k-loading"><div class="k-spinner"></div></div>'; }
+
+  /* ---- Render: simple grid (Holz, single-variant) ---- */
+  function renderSimple(grid, products, type) {
+    if (!grid) return;
+    grid.innerHTML = '';
+    if (!products.length) {
+      grid.innerHTML = '<p class="k-msg">Keine Produkte gefunden.<br><small>Bitte Produkte mit Tag <em>' + esc(type === 'holz' ? TAG_HOLZ : TAG_KANTENBAND) + '</em> anlegen.</small></p>';
+      return;
+    }
+    products.forEach(function(p) {
+      var card = buildCard(p, type);
+      grid.appendChild(card);
+    });
+  }
+
+  /* ---- Render: Belag grid (multi-variant with selectors) ---- */
+  function renderBelagPanel(grid, type) {
+    if (!grid) return;
+    grid.innerHTML = spinner();
+    loadProducts(TAG_BELAG).then(function(products) {
+      grid.innerHTML = '';
+      if (!products.length) {
+        grid.innerHTML = '<p class="k-msg">Keine Beläge gefunden.<br><small>Produkte mit Tag <em>' + esc(TAG_BELAG) + '</em> anlegen.</small></p>';
+        return;
+      }
+      var vorhandIsBlack = S.vorhand && isBlk(S.vorhand.variant);
+      products.forEach(function(p) {
+        var card = buildCard(p, type);
+        addVarSelectors(card, p, type, type === 'rueckhand' && vorhandIsBlack);
+        grid.appendChild(card);
+        // Restore selection highlight
+        if (type === 'vorhand' && S.vorhand && S.vorhand.product.id === p.id) card.classList.add('is-selected');
+        if (type === 'rueckhand' && S.rueckhand && S.rueckhand.product.id === p.id) card.classList.add('is-selected');
+      });
+    });
+  }
+
+  /* ---- Render: Kantenband grid ---- */
+  function renderKantenbandPanel() {
+    var grid = ge('kg-kantenband');
+    if (!grid) return;
+    grid.innerHTML = spinner();
+    loadProducts(TAG_KANTENBAND).then(function(products) {
+      grid.innerHTML = '';
+      if (!products.length) {
+        grid.innerHTML = '<p class="k-msg">Kein Kantenband im Shop gefunden.<br><small>Produkte mit Tag <em>' + esc(TAG_KANTENBAND) + '</em> anlegen oder diesen Schritt überspringen.</small></p>';
+        return;
+      }
+      products.forEach(function(p) {
+        var card = buildCard(p, 'kantenband');
+        if (p.variants.length > 1) {
+          addVarSelectors(card, p, 'kantenband', false);
+        }
+        if (S.kantenband && S.kantenband.product.id === p.id) card.classList.add('is-selected');
+        grid.appendChild(card);
+      });
+    });
+  }
+
+  /* ---- Build base card ---- */
+  function buildCard(product, type) {
+    var card = document.createElement('div');
+    card.className = 'k-card';
+    card.dataset.productId = product.id;
+    card.dataset.type = type;
+
+    var imgSrc = '';
+    if (product.images && product.images[0]) {
+      imgSrc = product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_300x$1$2');
+    }
+
+    var v0 = product.variants[0];
+    card.innerHTML =
+      '<div class="k-card__img">' +
+      (imgSrc ? '<img src="' + imgSrc + '" alt="' + esc(product.title) + '" loading="lazy">' : '<div class="k-card__img-empty">🏓</div>') +
+      '</div>' +
+      '<div class="k-card__body">' +
+      '<div class="k-card__name">' + esc(product.title) + '</div>' +
+      '<div class="k-card__price">ab ' + fmtPrice(v0.price) + '</div>' +
+      '</div>';
+
+    // Single-variant: click card → select
+    if (product.variants.length === 1) {
+      card.classList.add('is-clickable');
+      card.addEventListener('click', function() { pickProduct(type, product, v0, card); });
+    }
+
+    return card;
+  }
+
+  /* ---- Add variant selectors to card ---- */
+  function addVarSelectors(card, product, type, blackForbidden) {
+    var opts = product.options || [];
+    var vars = product.variants || [];
+    if (!opts.length || vars.length <= 1) return;
+
+    var sel = {};
+
+    var wrap = document.createElement('div');
+    wrap.className = 'k-vars';
+
+    opts.forEach(function(opt, oi) {
+      var isColor = /farbe|color|colour|couleur/i.test(opt.name);
+      var grp = document.createElement('div');
+      var lbl = document.createElement('span');
+      lbl.className = 'k-vars__lbl';
+      lbl.textContent = opt.name;
+      grp.appendChild(lbl);
+
+      if (isColor) {
+        var sw = document.createElement('div');
+        sw.className = 'k-swatches';
+        opt.values.forEach(function(val) {
+          var blkVal = /schwarz|black/i.test(val);
+          var blocked = blackForbidden && blkVal;
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'k-swatch' + (blocked ? ' is-blocked' : '');
+          btn.style.background = COLOR_CSS[val.toLowerCase()] || '#aaa';
+          btn.title = blocked ? 'Schwarz nicht möglich – bereits auf Vorhand' : val;
+          btn.disabled = blocked;
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            sw.querySelectorAll('.k-swatch').forEach(function(x){ x.classList.remove('is-on'); });
+            btn.classList.add('is-on');
+            sel[oi] = val;
+            tryMatch();
+          });
+          sw.appendChild(btn);
+        });
+        grp.appendChild(sw);
+      } else {
+        var pl = document.createElement('div');
+        pl.className = 'k-pills';
+        opt.values.forEach(function(val) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'k-pill';
+          btn.textContent = val;
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            pl.querySelectorAll('.k-pill').forEach(function(x){ x.classList.remove('is-on'); });
+            btn.classList.add('is-on');
+            sel[oi] = val;
+            tryMatch();
+          });
+          pl.appendChild(btn);
+        });
+        grp.appendChild(pl);
+      }
+
+      wrap.appendChild(grp);
+    });
+
+    var pickBtn = document.createElement('button');
+    pickBtn.type = 'button';
+    pickBtn.className = 'k-pick-btn is-hidden';
+    pickBtn.textContent = 'Auswählen';
+    wrap.appendChild(pickBtn);
+    card.appendChild(wrap);
+
+    function tryMatch() {
+      if (Object.keys(sel).length < opts.length) return;
+      var match = null;
+      for (var i = 0; i < vars.length; i++) {
+        var v = vars[i];
+        var ok = opts.every(function(o, oi) { return v['option' + (oi+1)] === sel[oi]; });
+        if (ok) { match = v; break; }
+      }
+      if (!match) { pickBtn.classList.add('is-hidden'); return; }
+
+      if (blackForbidden && isBlk(match)) {
+        pickBtn.textContent = 'Schwarz bereits auf Vorhand vergeben';
+        pickBtn.disabled = true;
+        pickBtn.classList.remove('is-hidden');
+        return;
+      }
+      if (!match.available) {
+        pickBtn.textContent = 'Nicht verfügbar';
+        pickBtn.disabled = true;
+        pickBtn.classList.remove('is-hidden');
+        return;
+      }
+
+      pickBtn.textContent = 'Auswählen';
+      pickBtn.disabled = false;
+      pickBtn.classList.remove('is-hidden');
+      pickBtn.onclick = function() { pickProduct(type, product, match, card); };
+    }
+  }
+
+  /* ---- Select a product/variant ---- */
+  function pickProduct(type, product, variant, card) {
+    // Deselect siblings
+    var grid = card.closest('.konfig__grid');
+    if (grid) grid.querySelectorAll('.k-card').forEach(function(c){ c.classList.remove('is-selected'); });
+    card.classList.add('is-selected');
+
+    if (type === 'holz') {
+      S.holz = { product: product, variant: variant };
+      if (klebeRow) klebeRow.classList.remove('is-hidden');
+      if (nxt[0]) nxt[0].disabled = false;
+    } else if (type === 'vorhand') {
+      S.vorhand = { product: product, variant: variant };
+      if (nxt[1]) nxt[1].disabled = false;
+    } else if (type === 'rueckhand') {
+      S.rueckhand = { product: product, variant: variant };
+      if (nxt[2]) nxt[2].disabled = false;
+    } else if (type === 'kantenband') {
+      var prev = S.kantenband;
+      var same = prev && prev.product.id === product.id && prev.variant.id === variant.id;
+      if (same) {
+        // Toggle off
+        S.kantenband = null;
+        card.classList.remove('is-selected');
+      } else {
+        S.kantenband = { product: product, variant: variant };
+      }
+    }
+  }
+
+  /* ---- Render summary ---- */
+  function renderSummary() {
+    var rows = [];
+    var total = 0;
+
+    function addRow(label, product, variant, icon) {
+      var img = product.images && product.images[0]
+        ? product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_80x$1$2')
+        : '';
+      var name = product.title;
+      if (variant.title && variant.title !== 'Default Title') name += ' – ' + variant.title;
+      var price = parseFloat(variant.price);
+      total += price;
+      rows.push(
+        '<div class="k-sum-row">' +
+        (img ? '<img class="k-sum-row__img" src="' + img + '" alt="">' : '<div class="k-sum-row__icon">' + icon + '</div>') +
+        '<div class="k-sum-row__info"><div class="k-sum-row__lbl">' + esc(label) + '</div><div class="k-sum-row__name">' + esc(name) + '</div></div>' +
+        '<div class="k-sum-row__price">' + fmtPrice(price.toFixed(2)) + '</div>' +
+        '</div>'
+      );
+    }
+
+    if (S.holz) addRow('Holz', S.holz.product, S.holz.variant, '🏓');
+    if (S.klebe) {
+      total += KLEBE_PRICE;
+      rows.push(
+        '<div class="k-sum-row">' +
+        '<div class="k-sum-row__icon">🔧</div>' +
+        '<div class="k-sum-row__info"><div class="k-sum-row__lbl">Klebeservice</div><div class="k-sum-row__name">Belag kleben lassen</div></div>' +
+        '<div class="k-sum-row__price">' + fmtPrice(KLEBE_PRICE.toFixed(2)) + '</div>' +
+        '</div>'
+      );
+    }
+    if (S.vorhand) addRow('Belag Vorhand', S.vorhand.product, S.vorhand.variant, '⚫');
+    if (S.rueckhand) addRow('Belag Rückhand', S.rueckhand.product, S.rueckhand.variant, '🔴');
+    if (S.kantenband) addRow('Kantenband', S.kantenband.product, S.kantenband.variant, '📏');
+
+    var sumEl = ge('k-summary');
+    var totEl = ge('k-total');
+    if (sumEl) sumEl.innerHTML = rows.join('');
+    if (totEl) totEl.textContent = fmtPrice(total.toFixed(2));
+
+    // Reset ATC button
+    if (atcBtn) {
+      atcBtn.disabled = false;
+      atcBtn.textContent = 'In den Warenkorb';
+      atcBtn.className = 'k-btn k-btn--atc';
+    }
+  }
+
+  /* ---- Add to cart ---- */
+  function addToCart() {
+    var items = [];
+    if (S.holz) items.push({ id: S.holz.variant.id, quantity: 1 });
+    if (S.klebe) items.push({ id: KLEBE_ID, quantity: 1 });
+    if (S.vorhand) items.push({ id: S.vorhand.variant.id, quantity: 1 });
+    if (S.rueckhand) items.push({ id: S.rueckhand.variant.id, quantity: 1 });
+    if (S.kantenband) items.push({ id: S.kantenband.variant.id, quantity: 1 });
+    if (!items.length) return;
+
+    atcBtn.disabled = true;
+    atcBtn.textContent = 'Wird hinzugefügt…';
+
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: items }),
+    })
+      .then(function(r) {
+        if (!r.ok) return r.json().then(function(d) { throw new Error(d.description || 'Fehler'); });
+        return r.json();
+      })
+      .then(function() {
+        atcBtn.textContent = '✓ Im Warenkorb!';
+        atcBtn.classList.add('is-ok');
+        document.dispatchEvent(new CustomEvent('cart:update', {
+          bubbles: true,
+          detail: { data: { source: 'konfigurator' } },
+        }));
+      })
+      .catch(function(err) {
+        console.error('[Konfigurator]', err);
+        atcBtn.textContent = 'Fehler – bitte erneut versuchen';
+        atcBtn.classList.add('is-err');
+        atcBtn.disabled = false;
+      });
+  }
+
+  /* ---- Helpers ---- */
+  function isBlk(variant) {
+    return [variant.option1, variant.option2, variant.option3]
+      .filter(Boolean)
+      .some(function(v) { return /schwarz|black/i.test(v); });
+  }
+
+  function fmtPrice(p) {
+    return parseFloat(p).toFixed(2).replace('.', ',') + ' €';
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' }[c];
+    });
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Schlägerkonfigurator",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "tag_holz",
+      "label": "Produkt-Tag für Hölzer",
+      "default": "Holz",
+      "info": "Alle Produkte mit diesem Tag erscheinen in Schritt 1 (Holz)."
+    },
+    {
+      "type": "text",
+      "id": "tag_belag",
+      "label": "Produkt-Tag für Beläge",
+      "default": "Belag",
+      "info": "Alle Produkte mit diesem Tag erscheinen in Schritt 2 & 3 (Beläge)."
+    },
+    {
+      "type": "text",
+      "id": "tag_kantenband",
+      "label": "Produkt-Tag für Kantenband",
+      "default": "Kantenband",
+      "info": "Alle Produkte mit diesem Tag erscheinen in Schritt 4 (Kantenband)."
+    }
+  ]
+}
+{% endschema %}

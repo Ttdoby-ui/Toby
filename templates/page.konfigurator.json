@@ -1,0 +1,13 @@
+{
+  "sections": {
+    "konfigurator": {
+      "type": "konfigurator",
+      "settings": {
+        "tag_holz": "Holz",
+        "tag_belag": "Belag",
+        "tag_kantenband": "Kantenband"
+      }
+    }
+  },
+  "order": ["konfigurator"]
+}
