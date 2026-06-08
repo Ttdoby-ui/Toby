@@ -479,7 +479,7 @@
 
   /* ---- Wire navigation ---- */
   navBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() { goTo(+btn.dataset.panel, true); });
+    btn.addEventListener('click', function() { goTo(+btn.dataset.panel); });
   });
   document.querySelectorAll('.k-btn--back').forEach(function(b) {
     b.addEventListener('click', function() { goTo(+b.dataset.target); });
@@ -521,20 +521,17 @@
       if (prePos === 'vorhand') {
         S.vorhand = { product: prod, variant: vari };
         if (nxt[1]) nxt[1].disabled = false;
+        goTo(1);
       } else if (prePos === 'rueckhand') {
         S.rueckhand = { product: prod, variant: vari };
+        if (nxt[2]) nxt[2].disabled = false;
+        goTo(2);
       }
     });
   }());
 
   /* ---- Navigate ---- */
-  function goTo(idx, fromNav) {
-    if (!fromNav) {
-      if (idx >= 1 && !S.holz) return;
-      if (idx >= 2 && !S.vorhand) return;
-      if (idx >= 3 && !S.rueckhand) return;
-    }
-
+  function goTo(idx) {
     if (idx === 1) { renderBelagPanel(ge('kg-vorhand'), 'vorhand'); }
     if (idx === 2) {
       var vh = S.vorhand && isBlk(S.vorhand.variant);
@@ -560,7 +557,16 @@
     if (_cache[tag]) return Promise.resolve(_cache[tag]);
     return fetch('/products.json?tag=' + encodeURIComponent(tag) + '&limit=250')
       .then(function(r) { return r.json(); })
-      .then(function(d) { _cache[tag] = d.products || []; return _cache[tag]; })
+      .then(function(d) {
+        var all = d.products || [];
+        var tagLower = tag.toLowerCase();
+        _cache[tag] = all.filter(function(p) {
+          return p.tags && p.tags.split(',').some(function(t) {
+            return t.trim().toLowerCase() === tagLower;
+          });
+        });
+        return _cache[tag];
+      })
       .catch(function() { _cache[tag] = []; return []; });
   }
 
@@ -773,12 +779,15 @@
       S.holz = { product: product, variant: variant };
       if (klebeRow) klebeRow.classList.remove('is-hidden');
       if (nxt[0]) nxt[0].disabled = false;
+      setTimeout(function() { goTo(1); }, 200);
     } else if (type === 'vorhand') {
       S.vorhand = { product: product, variant: variant };
       if (nxt[1]) nxt[1].disabled = false;
+      setTimeout(function() { goTo(2); }, 200);
     } else if (type === 'rueckhand') {
       S.rueckhand = { product: product, variant: variant };
       if (nxt[2]) nxt[2].disabled = false;
+      setTimeout(function() { goTo(3); }, 200);
     } else if (type === 'kantenband') {
       var prev = S.kantenband;
       var same = prev && prev.product.id === product.id && prev.variant.id === variant.id;
