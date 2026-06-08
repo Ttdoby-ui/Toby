@@ -345,6 +345,18 @@
   }
   .konfig__total-price { font-size: 1.35rem; }
 
+  /* ---- Nav thumbnail images ---- */
+  .k-nav-img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    border-radius: 4px;
+    background: var(--color-background, #fff);
+    flex-shrink: 0;
+    display: block;
+    border: 1px solid var(--color-border, #e0e0e0);
+  }
+
   /* ---- Kantenband optional badge ---- */
   .k-optional {
     font-size: 0.75rem;
@@ -608,11 +620,33 @@
     if (idx === 4) { renderSummary(); }
 
     panels.forEach(function(p, i) { if (p) p.classList.toggle('is-hidden', i !== idx); });
-    navBtns.forEach(function(b, i) {
-      b.classList.toggle('is-active', i === idx);
-      b.classList.toggle('is-done', i < idx);
-    });
+    updateNavBtns(idx);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---- Update nav bar (active/done classes + thumbnails) ---- */
+  function updateNavBtns(activeIdx) {
+    var stateMap = [S.holz, S.vorhand, S.rueckhand, S.kantenband];
+    navBtns.forEach(function(b, i) {
+      if (activeIdx !== undefined) {
+        b.classList.toggle('is-active', i === activeIdx);
+        b.classList.toggle('is-done', i < activeIdx);
+      }
+      var sel = stateMap[i];
+      var existing = b.querySelector('.k-nav-img');
+      if (sel && sel.product.images && sel.product.images[0]) {
+        var src = sel.product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_40x$1$2');
+        if (!existing) {
+          existing = document.createElement('img');
+          existing.className = 'k-nav-img';
+          existing.alt = '';
+          b.insertBefore(existing, b.firstChild);
+        }
+        existing.src = src;
+      } else {
+        if (existing) existing.remove();
+      }
+    });
   }
 
   /* ---- Load ---- */
@@ -730,6 +764,25 @@
         var card = buildCard(p, 'kantenband');
         if (p.variants.length > 1) {
           addVarSelectors(card, p, 'kantenband', false);
+        } else {
+          // Single-variant: add explicit Auswählen/Entfernen button
+          var v0 = p.variants[0];
+          var isPreSel = S.kantenband && S.kantenband.product.id === p.id;
+          var btnWrap = document.createElement('div');
+          btnWrap.className = 'k-vars';
+          var pickBtn = document.createElement('button');
+          pickBtn.type = 'button';
+          pickBtn.className = 'k-pick-btn';
+          pickBtn.textContent = isPreSel ? '✓ Ausgewählt' : 'Auswählen';
+          pickBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            pickProduct('kantenband', p, v0, card);
+            var nowSel = S.kantenband && S.kantenband.product.id === p.id;
+            pickBtn.textContent = nowSel ? '✓ Ausgewählt' : 'Auswählen';
+            updateNavBtns();
+          });
+          btnWrap.appendChild(pickBtn);
+          card.appendChild(btnWrap);
         }
         if (S.kantenband && S.kantenband.product.id === p.id) card.classList.add('is-selected');
         grid.appendChild(card);
@@ -880,20 +933,22 @@
       S.holz = { product: product, variant: variant };
       if (klebeRow) klebeRow.classList.remove('is-hidden');
       if (nxt[0]) nxt[0].disabled = false;
+      updateNavBtns();
       setTimeout(function() { goTo(1); }, 200);
     } else if (type === 'vorhand') {
       S.vorhand = { product: product, variant: variant };
       if (nxt[1]) nxt[1].disabled = false;
+      updateNavBtns();
       setTimeout(function() { goTo(2); }, 200);
     } else if (type === 'rueckhand') {
       S.rueckhand = { product: product, variant: variant };
       if (nxt[2]) nxt[2].disabled = false;
+      updateNavBtns();
       setTimeout(function() { goTo(3); }, 200);
     } else if (type === 'kantenband') {
       var prev = S.kantenband;
       var same = prev && prev.product.id === product.id && prev.variant.id === variant.id;
       if (same) {
-        // Toggle off
         S.kantenband = null;
         card.classList.remove('is-selected');
       } else {
@@ -956,9 +1011,9 @@
   function addToCart() {
     var items = [];
     if (S.holz) items.push({ id: S.holz.variant.id, quantity: 1 });
-    if (S.klebe) items.push({ id: KLEBE_ID, quantity: 1 });
-    if (S.vorhand) items.push({ id: S.vorhand.variant.id, quantity: 1 });
-    if (S.rueckhand) items.push({ id: S.rueckhand.variant.id, quantity: 1 });
+    if (S.klebe) items.push({ id: KLEBE_ID, quantity: 1, properties: { 'Klebeservice': 'Belag aufkleben' } });
+    if (S.vorhand) items.push({ id: S.vorhand.variant.id, quantity: 1, properties: { 'Position': 'Vorhand' } });
+    if (S.rueckhand) items.push({ id: S.rueckhand.variant.id, quantity: 1, properties: { 'Position': 'Rückhand' } });
     if (S.kantenband) items.push({ id: S.kantenband.variant.id, quantity: 1 });
     if (!items.length) return;
 
