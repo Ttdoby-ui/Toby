@@ -566,7 +566,7 @@
 
   function spinner() { return '<div class="k-loading"><div class="k-spinner"></div></div>'; }
 
-  /* ---- Render: simple grid (Holz, single-variant) ---- */
+  /* ---- Render: simple grid (Holz / Kantenband, single- or multi-variant) ---- */
   function renderSimple(grid, products, type) {
     if (!grid) return;
     grid.innerHTML = '';
@@ -576,6 +576,12 @@
     }
     products.forEach(function(p) {
       var card = buildCard(p, type);
+      if (p.variants.length > 1) {
+        addVarSelectors(card, p, type, false);
+      }
+      // Restore selection highlight when re-rendering
+      if (type === 'holz'      && S.holz      && S.holz.product.id      === p.id) card.classList.add('is-selected');
+      if (type === 'kantenband'&& S.kantenband && S.kantenband.product.id === p.id) card.classList.add('is-selected');
       grid.appendChild(card);
     });
   }
