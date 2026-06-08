@@ -501,6 +501,9 @@
   <div class="konfig__panel is-hidden" id="kp-4">
     <p class="konfig__panel-title">Dein individueller Schläger</p>
     <div class="konfig__summary" id="k-summary"></div>
+    <div class="k-hint is-hidden" id="k-black-warning">
+      ⚠️ Tischtennisregel: Bitte wähle mindestens einen <strong>schwarzen</strong> Belag. Der andere darf eine beliebige Farbe haben.
+    </div>
     <div class="konfig__total">
       <span>Gesamtpreis</span>
       <span class="konfig__total-price" id="k-total">–</span>
@@ -999,9 +1002,15 @@
     if (sumEl) sumEl.innerHTML = rows.join('');
     if (totEl) totEl.textContent = fmtPrice(total.toFixed(2));
 
-    // Reset ATC button
+    // Black rubber validation: at least one must be black
+    var selectedRubbers = [S.vorhand, S.rueckhand].filter(Boolean);
+    var hasBlack = selectedRubbers.some(function(r) { return isBlk(r.variant); });
+    var needsBlack = selectedRubbers.length > 0 && !hasBlack;
+    var warnEl = ge('k-black-warning');
+    if (warnEl) warnEl.classList.toggle('is-hidden', !needsBlack);
+
     if (atcBtn) {
-      atcBtn.disabled = false;
+      atcBtn.disabled = needsBlack;
       atcBtn.textContent = 'In den Warenkorb';
       atcBtn.className = 'k-btn k-btn--atc';
     }
@@ -1016,6 +1025,10 @@
     if (S.rueckhand) items.push({ id: S.rueckhand.variant.id, quantity: 1, properties: { 'Position': 'Rückhand' } });
     if (S.kantenband) items.push({ id: S.kantenband.variant.id, quantity: 1 });
     if (!items.length) return;
+
+    // Failsafe: enforce black rubber rule
+    var selectedRubbers = [S.vorhand, S.rueckhand].filter(Boolean);
+    if (selectedRubbers.length > 0 && !selectedRubbers.some(function(r) { return isBlk(r.variant); })) return;
 
     atcBtn.disabled = true;
     atcBtn.textContent = 'Wird hinzugefügt…';

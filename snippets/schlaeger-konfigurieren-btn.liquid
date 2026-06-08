@@ -218,10 +218,13 @@
       var radio    = overlay.querySelector('input[name="schlaeger-pos-' + uid + '"]:checked');
       var position = radio ? radio.value : 'vorhand';
       var variantId = getVariantId();
+      // Preserve preview_theme_id so the redirect stays in the preview theme
+      var previewId = new URLSearchParams(window.location.search).get('preview_theme_id');
       var url = '/pages/schlaeger-konfigurator'
         + '?position=' + encodeURIComponent(position)
         + '&product_id=' + encodeURIComponent(productId)
-        + (variantId ? '&variant_id=' + encodeURIComponent(variantId) : '');
+        + (variantId ? '&variant_id=' + encodeURIComponent(variantId) : '')
+        + (previewId ? '&preview_theme_id=' + encodeURIComponent(previewId) : '');
       window.location.href = url;
     });
   })();
