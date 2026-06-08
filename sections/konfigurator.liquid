@@ -496,6 +496,37 @@
   loadProducts(TAG_BELAG);
   loadProducts(TAG_KANTENBAND);
 
+  // Pre-select from URL params when navigating from a product page
+  (function () {
+    var params     = new URLSearchParams(window.location.search);
+    var prePos     = params.get('position');
+    var preProdId  = params.get('product_id');
+    var preVarId   = params.get('variant_id');
+    if (!prePos || !preProdId) return;
+
+    loadProducts(TAG_BELAG).then(function (products) {
+      var prod = null;
+      for (var i = 0; i < products.length; i++) {
+        if (String(products[i].id) === preProdId) { prod = products[i]; break; }
+      }
+      if (!prod) return;
+
+      var vari = prod.variants[0];
+      if (preVarId) {
+        for (var j = 0; j < prod.variants.length; j++) {
+          if (String(prod.variants[j].id) === preVarId) { vari = prod.variants[j]; break; }
+        }
+      }
+
+      if (prePos === 'vorhand') {
+        S.vorhand = { product: prod, variant: vari };
+        if (nxt[1]) nxt[1].disabled = false;
+      } else if (prePos === 'rueckhand') {
+        S.rueckhand = { product: prod, variant: vari };
+      }
+    });
+  }());
+
   /* ---- Navigate ---- */
   function goTo(idx, fromNav) {
     if (!fromNav) {

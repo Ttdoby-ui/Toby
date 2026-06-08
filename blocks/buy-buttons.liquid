@@ -91,6 +91,7 @@
         </div>
       {%- endform -%}
     </product-form-component>
+    {% render 'schlaeger-konfigurieren-btn', product: product, block: block %}
   {%- else -%}
     <div class="product-form-buttons">
       <button
