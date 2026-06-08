@@ -209,24 +209,32 @@
   .k-pick-btn:disabled { background: var(--color-foreground-secondary, #aaa); cursor: not-allowed; }
   .k-pick-btn.is-hidden { display: none; }
 
-  /* ---- Klebeservice ---- */
-  .k-klebe {
+  /* ---- Dienstleistungen ---- */
+  .k-services {
     margin-bottom: 1.5rem;
     padding: 0.9rem 1rem;
     background: var(--color-background-secondary, #f8f8f8);
     border: 1px solid var(--color-border, #e0e0e0);
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
-  .k-klebe.is-hidden { display: none; }
-  .k-klebe__lbl {
+  .k-service-notice {
+    font-size: 0.88rem;
+    color: var(--color-foreground, #111);
+    line-height: 1.5;
+  }
+  .k-service-opt {
     display: flex;
     align-items: center;
     gap: 0.55rem;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 500;
+    font-family: var(--font-body--family, inherit);
   }
-  .k-klebe__lbl input { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--color-primary, #111); }
+  .k-service-opt input { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--color-primary, #111); flex-shrink: 0; }
 
   /* ---- Black hint ---- */
   .k-hint {
@@ -445,11 +453,17 @@
     <div class="konfig__grid" id="kg-holz">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
-    <div class="k-klebe is-hidden" id="k-klebe-row">
-      <label class="k-klebe__lbl" for="k-klebe-cb">
-        <input type="checkbox" id="k-klebe-cb">
-        Klebeservice: Belag kleben lassen (+2,50&nbsp;€)
+    <div class="k-services" id="k-services-row">
+      <div class="k-service-notice">
+        🔧 <strong>Klebeservice inklusive:</strong> Deine Beläge werden professionell aufgeklebt
+        (+{{ section.settings.klebe_preis | default: '5.00' }}&nbsp;€ werden automatisch hinzugefügt).
+      </div>
+      {%- if section.settings.versiegelung_variant_id != blank -%}
+      <label class="k-service-opt" for="k-versiegelung-cb">
+        <input type="checkbox" id="k-versiegelung-cb">
+        🛡️ Schlägerversiegelung optional hinzufügen (+{{ section.settings.versiegelung_preis | default: '5.00' }}&nbsp;€)
       </label>
+      {%- endif -%}
     </div>
     <div class="konfig__footer">
       <button class="k-btn k-btn--next" id="k-next-0" disabled>Weiter zu Vorhandbelag →</button>
@@ -523,8 +537,10 @@
   var TAG_HOLZ       = {{ section.settings.tag_holz | default: 'Holz' | json }};
   var TAG_BELAG      = {{ section.settings.tag_belag | default: 'Belag' | json }};
   var TAG_KANTENBAND = {{ section.settings.tag_kantenband | default: 'Kantenband' | json }};
-  var KLEBE_ID       = 57810488852828;
-  var KLEBE_PRICE    = 2.50;
+  var KLEBE_ID           = {{ section.settings.klebe_variant_id | default: '57810488852828' }};
+  var KLEBE_PRICE        = parseFloat('{{ section.settings.klebe_preis | default: "5.00" }}') || 5.00;
+  var VERSIEGELUNG_ID    = '{{ section.settings.versiegelung_variant_id | default: "" }}';
+  var VERSIEGELUNG_PRICE = parseFloat('{{ section.settings.versiegelung_preis | default: "5.00" }}') || 5.00;
 
   var COLOR_CSS = {
     'schwarz': '#111', 'black': '#111',
@@ -541,7 +557,7 @@
   };
 
   /* ---- State ---- */
-  var S = { holz: null, klebe: false, vorhand: null, rueckhand: null, kantenband: null };
+  var S = { holz: null, vorhand: null, rueckhand: null, kantenband: null, versiegelung: false };
 
   /* ---- Cache ---- */
   var _cache = {};
@@ -551,7 +567,6 @@
   var panels   = [0,1,2,3,4].map(function(i){ return ge('kp-' + i); });
   var navBtns  = Array.from(document.querySelectorAll('.konfig__nav-btn'));
   var nxt      = { 0: ge('k-next-0'), 1: ge('k-next-1'), 2: ge('k-next-2'), 3: ge('k-next-3') };
-  var klebeRow = ge('k-klebe-row');
   var blackHint= ge('k-black-hint');
   var atcBtn   = ge('k-atc');
 
@@ -565,8 +580,8 @@
   [0,1,2,3].forEach(function(i) {
     if (nxt[i]) nxt[i].addEventListener('click', function() { goTo(i + 1); });
   });
-  var klebeCb = ge('k-klebe-cb');
-  if (klebeCb) klebeCb.addEventListener('change', function() { S.klebe = klebeCb.checked; });
+  var versiegelungCb = ge('k-versiegelung-cb');
+  if (versiegelungCb) versiegelungCb.addEventListener('change', function() { S.versiegelung = versiegelungCb.checked; });
   if (atcBtn) atcBtn.addEventListener('click', addToCart);
 
   /* ---- Init ---- */
@@ -934,7 +949,6 @@
 
     if (type === 'holz') {
       S.holz = { product: product, variant: variant };
-      if (klebeRow) klebeRow.classList.remove('is-hidden');
       if (nxt[0]) nxt[0].disabled = false;
       updateNavBtns();
       setTimeout(function() { goTo(1); }, 200);
@@ -983,18 +997,27 @@
     }
 
     if (S.holz) addRow('Holz', S.holz.product, S.holz.variant, '🏓');
-    if (S.klebe) {
-      total += KLEBE_PRICE;
+    if (S.vorhand) addRow('Belag Vorhand', S.vorhand.product, S.vorhand.variant, '⚫');
+    if (S.rueckhand) addRow('Belag Rückhand', S.rueckhand.product, S.rueckhand.variant, '🔴');
+    // Klebeservice wird immer automatisch hinzugefügt
+    total += KLEBE_PRICE;
+    rows.push(
+      '<div class="k-sum-row">' +
+      '<div class="k-sum-row__icon">🔧</div>' +
+      '<div class="k-sum-row__info"><div class="k-sum-row__lbl">Klebeservice (automatisch)</div><div class="k-sum-row__name">Beläge professionell aufkleben</div></div>' +
+      '<div class="k-sum-row__price">' + fmtPrice(KLEBE_PRICE.toFixed(2)) + '</div>' +
+      '</div>'
+    );
+    if (S.versiegelung && VERSIEGELUNG_ID) {
+      total += VERSIEGELUNG_PRICE;
       rows.push(
         '<div class="k-sum-row">' +
-        '<div class="k-sum-row__icon">🔧</div>' +
-        '<div class="k-sum-row__info"><div class="k-sum-row__lbl">Klebeservice</div><div class="k-sum-row__name">Belag kleben lassen</div></div>' +
-        '<div class="k-sum-row__price">' + fmtPrice(KLEBE_PRICE.toFixed(2)) + '</div>' +
+        '<div class="k-sum-row__icon">🛡️</div>' +
+        '<div class="k-sum-row__info"><div class="k-sum-row__lbl">Schlägerversiegelung</div><div class="k-sum-row__name">Kanten professionell versiegeln</div></div>' +
+        '<div class="k-sum-row__price">' + fmtPrice(VERSIEGELUNG_PRICE.toFixed(2)) + '</div>' +
         '</div>'
       );
     }
-    if (S.vorhand) addRow('Belag Vorhand', S.vorhand.product, S.vorhand.variant, '⚫');
-    if (S.rueckhand) addRow('Belag Rückhand', S.rueckhand.product, S.rueckhand.variant, '🔴');
     if (S.kantenband) addRow('Kantenband', S.kantenband.product, S.kantenband.variant, '📏');
 
     var sumEl = ge('k-summary');
@@ -1020,11 +1043,13 @@
   function addToCart() {
     var items = [];
     if (S.holz) items.push({ id: S.holz.variant.id, quantity: 1 });
-    if (S.klebe) items.push({ id: KLEBE_ID, quantity: 1, properties: { 'Klebeservice': 'Belag aufkleben' } });
     if (S.vorhand) items.push({ id: S.vorhand.variant.id, quantity: 1, properties: { 'Position': 'Vorhand' } });
     if (S.rueckhand) items.push({ id: S.rueckhand.variant.id, quantity: 1, properties: { 'Position': 'Rückhand' } });
     if (S.kantenband) items.push({ id: S.kantenband.variant.id, quantity: 1 });
     if (!items.length) return;
+    // Klebeservice wird immer automatisch hinzugefügt
+    items.push({ id: KLEBE_ID, quantity: 1, properties: { 'Service': 'Klebeservice' } });
+    if (S.versiegelung && VERSIEGELUNG_ID) items.push({ id: +VERSIEGELUNG_ID, quantity: 1, properties: { 'Service': 'Schlägerversiegelung' } });
 
     // Failsafe: enforce black rubber rule
     var selectedRubbers = [S.vorhand, S.rueckhand].filter(Boolean);
@@ -1101,6 +1126,42 @@
       "label": "Produkt-Tag für Kantenband",
       "default": "Kantenband",
       "info": "Alle Produkte mit diesem Tag erscheinen in Schritt 4 (Kantenband)."
+    },
+    {
+      "type": "header",
+      "content": "Klebeservice (automatisch)"
+    },
+    {
+      "type": "text",
+      "id": "klebe_variant_id",
+      "label": "Klebeservice – Varianten-ID",
+      "default": "57810488852828",
+      "info": "Die Varianten-ID des Klebeservice-Produkts im Shopify-Backend."
+    },
+    {
+      "type": "text",
+      "id": "klebe_preis",
+      "label": "Klebeservice – Preis (z. B. 5.00)",
+      "default": "5.00",
+      "info": "Nur für die Anzeige im Konfigurator. Der tatsächliche Preis muss am Produkt im Shopify-Backend übereinstimmen."
+    },
+    {
+      "type": "header",
+      "content": "Schlägerversiegelung (optional)"
+    },
+    {
+      "type": "text",
+      "id": "versiegelung_variant_id",
+      "label": "Schlägerversiegelung – Varianten-ID",
+      "default": "",
+      "info": "Die Varianten-ID des Versiegelungs-Produkts. Leer lassen, um die Option auszublenden."
+    },
+    {
+      "type": "text",
+      "id": "versiegelung_preis",
+      "label": "Schlägerversiegelung – Preis (z. B. 5.00)",
+      "default": "5.00",
+      "info": "Nur für die Anzeige im Konfigurator. Der tatsächliche Preis muss am Produkt im Shopify-Backend übereinstimmen."
     }
   ]
 }
