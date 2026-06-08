@@ -1070,6 +1070,7 @@
       .then(function() {
         atcBtn.textContent = '✓ Im Warenkorb!';
         atcBtn.classList.add('is-ok');
+        setOrderNote();
         document.dispatchEvent(new CustomEvent('cart:update', {
           bubbles: true,
           detail: { data: { source: 'konfigurator' } },
@@ -1081,6 +1082,42 @@
         atcBtn.classList.add('is-err');
         atcBtn.disabled = false;
       });
+  }
+
+  /* ---- Packzettel-Notiz ---- */
+  function setOrderNote() {
+    function selName(sel) {
+      if (!sel) return '–';
+      var n = sel.product.title;
+      if (sel.variant.title && sel.variant.title !== 'Default Title') n += ' (' + sel.variant.title + ')';
+      return n;
+    }
+
+    var lines = [
+      '=== SCHLÄGERKONFIGURATION ===',
+      'Holz:              ' + selName(S.holz),
+      'Vorhand-Belag:     ' + selName(S.vorhand),
+      'Rückhand-Belag:    ' + selName(S.rueckhand),
+      'Kantenband:        ' + (S.kantenband ? selName(S.kantenband) : 'keins'),
+      'Klebeservice:      Ja (Beläge aufkleben)',
+      'Versiegelung:      ' + (S.versiegelung && VERSIEGELUNG_ID ? 'Ja' : 'Nein'),
+      '============================',
+    ];
+
+    var attrs = {
+      'Schlägerbau – Holz':          selName(S.holz),
+      'Schlägerbau – Vorhand-Belag': selName(S.vorhand),
+      'Schlägerbau – Rückhand-Belag':selName(S.rueckhand),
+      'Schlägerbau – Klebeservice':  'Ja',
+    };
+    if (S.kantenband) attrs['Schlägerbau – Kantenband'] = selName(S.kantenband);
+    if (S.versiegelung && VERSIEGELUNG_ID) attrs['Schlägerbau – Versiegelung'] = 'Ja';
+
+    fetch('/cart/update.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: lines.join('\n'), attributes: attrs }),
+    }).catch(function() {});
   }
 
   /* ---- Helpers ---- */
@@ -1153,7 +1190,6 @@
       "type": "text",
       "id": "versiegelung_variant_id",
       "label": "Schlägerversiegelung – Varianten-ID",
-      "default": "",
       "info": "Die Varianten-ID des Versiegelungs-Produkts. Leer lassen, um die Option auszublenden."
     },
     {
