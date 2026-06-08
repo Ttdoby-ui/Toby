@@ -352,6 +352,67 @@
     color: var(--color-foreground-secondary, #888);
     margin-left: 0.4rem;
   }
+
+  /* ---- Pre-selection banner (from product page) ---- */
+  .k-pre-sel {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-background-secondary, #f3f3f3);
+    border: 2px solid var(--color-primary, #111);
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+  }
+  .k-pre-sel.is-hidden { display: none; }
+  .k-pre-sel__img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: var(--color-background, #fff);
+    flex-shrink: 0;
+  }
+  .k-pre-sel__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+    background: var(--color-border, #e4e4e4);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+  }
+  .k-pre-sel__info { flex: 1; min-width: 0; }
+  .k-pre-sel__lbl {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-primary, #111);
+    margin-bottom: 0.15rem;
+  }
+  .k-pre-sel__name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .k-pre-sel__var { font-size: 0.8rem; color: var(--color-foreground-secondary, #777); }
+  .k-pre-sel__clear {
+    font-size: 0.78rem;
+    color: var(--color-foreground-secondary, #888);
+    background: none;
+    border: 1px solid var(--color-border, #ccc);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0.3rem 0.6rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .k-pre-sel__clear:hover { border-color: var(--color-foreground, #111); color: var(--color-foreground, #111); }
 {% endstylesheet %}
 
 <div class="konfig" id="schlaeger-konfigurator">
@@ -386,6 +447,7 @@
   <!-- Panel 1: Vorhandbelag -->
   <div class="konfig__panel is-hidden" id="kp-1">
     <p class="konfig__panel-title">Schritt 2: Vorhandbelag auswählen</p>
+    <div class="k-pre-sel is-hidden" id="k-pre-sel-vorhand"></div>
     <div class="konfig__grid" id="kg-vorhand">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
@@ -398,6 +460,7 @@
   <!-- Panel 2: Rückhandbelag -->
   <div class="konfig__panel is-hidden" id="kp-2">
     <p class="konfig__panel-title">Schritt 3: Rückhandbelag auswählen</p>
+    <div class="k-pre-sel is-hidden" id="k-pre-sel-rueckhand"></div>
     <div class="k-hint is-hidden" id="k-black-hint">
       ⚠️ Du hast für die Vorhand einen schwarzen Belag gewählt – bitte wähle für die Rückhand eine andere Farbe (max. ein schwarzer Belag erlaubt).
     </div>
@@ -561,9 +624,12 @@
         var all = d.products || [];
         var tagLower = tag.toLowerCase();
         _cache[tag] = all.filter(function(p) {
-          return p.tags && p.tags.split(',').some(function(t) {
-            return t.trim().toLowerCase() === tagLower;
-          });
+          if (!p.tags) return false;
+          // tags can be an Array (Storefront JSON) or a comma-separated String (Admin API)
+          var list = Array.isArray(p.tags)
+            ? p.tags
+            : String(p.tags).split(',');
+          return list.some(function(t) { return String(t).trim().toLowerCase() === tagLower; });
         });
         return _cache[tag];
       })
@@ -595,6 +661,41 @@
   /* ---- Render: Belag grid (multi-variant with selectors) ---- */
   function renderBelagPanel(grid, type) {
     if (!grid) return;
+
+    // Pre-selection banner
+    var bannerEl = ge('k-pre-sel-' + type);
+    var current  = type === 'vorhand' ? S.vorhand : S.rueckhand;
+    if (bannerEl) {
+      if (current) {
+        var bImg = current.product.images && current.product.images[0]
+          ? current.product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_120x$1$2')
+          : '';
+        var bVar = current.variant.title && current.variant.title !== 'Default Title'
+          ? current.variant.title : '';
+        bannerEl.innerHTML =
+          (bImg
+            ? '<img class="k-pre-sel__img" src="' + bImg + '" alt="">'
+            : '<div class="k-pre-sel__icon">🏓</div>') +
+          '<div class="k-pre-sel__info">' +
+            '<div class="k-pre-sel__lbl">Bereits ausgewählt</div>' +
+            '<div class="k-pre-sel__name">' + esc(current.product.title) + '</div>' +
+            (bVar ? '<div class="k-pre-sel__var">' + esc(bVar) + '</div>' : '') +
+          '</div>' +
+          '<button class="k-pre-sel__clear" id="k-pre-sel-clear-' + type + '">Ändern</button>';
+        bannerEl.classList.remove('is-hidden');
+
+        var clearBtn = ge('k-pre-sel-clear-' + type);
+        if (clearBtn) clearBtn.onclick = function () {
+          if (type === 'vorhand') { S.vorhand = null; if (nxt[1]) nxt[1].disabled = true; }
+          else                   { S.rueckhand = null; if (nxt[2]) nxt[2].disabled = true; }
+          bannerEl.classList.add('is-hidden');
+          grid.querySelectorAll('.k-card').forEach(function(c) { c.classList.remove('is-selected'); });
+        };
+      } else {
+        bannerEl.classList.add('is-hidden');
+      }
+    }
+
     grid.innerHTML = spinner();
     loadProducts(TAG_BELAG).then(function(products) {
       grid.innerHTML = '';
@@ -608,7 +709,7 @@
         addVarSelectors(card, p, type, type === 'rueckhand' && vorhandIsBlack);
         grid.appendChild(card);
         // Restore selection highlight
-        if (type === 'vorhand' && S.vorhand && S.vorhand.product.id === p.id) card.classList.add('is-selected');
+        if (type === 'vorhand'   && S.vorhand   && S.vorhand.product.id   === p.id) card.classList.add('is-selected');
         if (type === 'rueckhand' && S.rueckhand && S.rueckhand.product.id === p.id) card.classList.add('is-selected');
       });
     });
