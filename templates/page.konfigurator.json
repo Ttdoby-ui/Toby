@@ -5,7 +5,11 @@
       "settings": {
         "tag_holz": "Holz",
         "tag_belag": "Belag",
-        "tag_kantenband": "Kantenband"
+        "tag_kantenband": "Kantenband",
+        "klebe_variant_id": "57810488852828",
+        "klebe_preis": "5.00",
+        "versiegelung_variant_id": "57854998970716",
+        "versiegelung_preis": "5.00"
       }
     }
   },
