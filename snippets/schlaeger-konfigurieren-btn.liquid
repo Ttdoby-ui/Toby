@@ -181,8 +181,9 @@
   <script>
   (function () {
     'use strict';
-    var uid       = '{{ sk_uid | escape }}';
-    var productId = '{{ product.id }}';
+    var uid           = '{{ sk_uid | escape }}';
+    var productId     = '{{ product.id }}';
+    var productHandle = '{{ product.handle }}';
     var openBtn   = document.getElementById('schlaeger-konfig-open-'   + uid);
     var overlay   = document.getElementById('schlaeger-pos-overlay-'   + uid);
     var closeBtn  = document.getElementById('schlaeger-pos-close-'     + uid);
@@ -223,6 +224,7 @@
       var url = '/pages/schlaeger-konfigurator'
         + '?position=' + encodeURIComponent(position)
         + '&product_id=' + encodeURIComponent(productId)
+        + '&product_handle=' + encodeURIComponent(productHandle)
         + (variantId ? '&variant_id=' + encodeURIComponent(variantId) : '')
         + (previewId ? '&preview_theme_id=' + encodeURIComponent(previewId) : '');
       window.location.href = url;

@@ -464,6 +464,34 @@
     flex-shrink: 0;
     line-height: 1;
   }
+
+  /* ---- Search inputs ---- */
+  .k-search-wrap {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+  .k-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .k-search {
+    width: 100%;
+    padding: 0.55rem 0.75rem 0.55rem 2.25rem;
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-family: var(--font-body--family, inherit);
+    color: var(--color-foreground, #111);
+    background: var(--color-background, #fff);
+    outline: none;
+    box-sizing: border-box;
+  }
+  .k-search:focus { border-color: var(--color-primary, #111); box-shadow: 0 0 0 2px rgba(0,0,0,0.06); }
 {% endstylesheet %}
 
 <div class="konfig" id="schlaeger-konfigurator">
@@ -482,6 +510,10 @@
   <!-- Panel 0: Holz -->
   <div class="konfig__panel" id="kp-0">
     <p class="konfig__panel-title">Schritt 1: Wähle Dein Holz</p>
+    <div class="k-search-wrap">
+      <span class="k-search-icon">🔍</span>
+      <input type="search" class="k-search" id="k-search-holz" placeholder="Holz suchen…" autocomplete="off">
+    </div>
     <div class="konfig__grid" id="kg-holz">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
@@ -500,6 +532,10 @@
   <div class="konfig__panel is-hidden" id="kp-1">
     <p class="konfig__panel-title">Schritt 2: Vorhandbelag auswählen</p>
     <div class="k-pre-sel is-hidden" id="k-pre-sel-vorhand"></div>
+    <div class="k-search-wrap">
+      <span class="k-search-icon">🔍</span>
+      <input type="search" class="k-search" id="k-search-vorhand" placeholder="Belag suchen…" autocomplete="off">
+    </div>
     <div class="konfig__grid" id="kg-vorhand">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
@@ -516,6 +552,10 @@
     <div class="k-hint is-hidden" id="k-black-hint">
       ⚠️ Du hast für die Vorhand einen schwarzen Belag gewählt – bitte wähle für die Rückhand eine andere Farbe (max. ein schwarzer Belag erlaubt).
     </div>
+    <div class="k-search-wrap">
+      <span class="k-search-icon">🔍</span>
+      <input type="search" class="k-search" id="k-search-rueckhand" placeholder="Belag suchen…" autocomplete="off">
+    </div>
     <div class="konfig__grid" id="kg-rueckhand">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
@@ -528,6 +568,10 @@
   <!-- Panel 3: Kantenband -->
   <div class="konfig__panel is-hidden" id="kp-3">
     <p class="konfig__panel-title">Schritt 4: Kantenband auswählen<span class="k-optional">(optional)</span></p>
+    <div class="k-search-wrap">
+      <span class="k-search-icon">🔍</span>
+      <input type="search" class="k-search" id="k-search-kantenband" placeholder="Kantenband suchen…" autocomplete="off">
+    </div>
     <div class="konfig__grid" id="kg-kantenband">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
@@ -651,39 +695,54 @@
 
   // Pre-select from URL params when navigating from a product page
   (function () {
-    var params    = new URLSearchParams(window.location.search);
-    var prePos    = params.get('position');
-    var preProdId = params.get('product_id');
-    var preVarId  = params.get('variant_id');
-    if (!prePos || !preProdId) return;
+    var params      = new URLSearchParams(window.location.search);
+    var prePos      = params.get('position');
+    var preProdId   = params.get('product_id');
+    var preHandle   = params.get('product_handle');
+    var preVarId    = params.get('variant_id');
+    if (!prePos || (!preProdId && !preHandle)) return;
 
-    _belagPromise.then(function (products) {
-      var prod = null;
-      for (var i = 0; i < products.length; i++) {
-        if (String(products[i].id) === preProdId) { prod = products[i]; break; }
-      }
+    var targetStep = prePos === 'vorhand' ? 1 : prePos === 'rueckhand' ? 2 : null;
+    if (!targetStep) return;
 
-      // Navigate to the correct step regardless of whether the product was found
-      var targetStep = prePos === 'vorhand' ? 1 : prePos === 'rueckhand' ? 2 : null;
-      if (!targetStep) return;
-
-      if (prod) {
-        var vari = prod.variants[0];
-        if (preVarId) {
-          for (var j = 0; j < prod.variants.length; j++) {
-            if (String(prod.variants[j].id) === preVarId) { vari = prod.variants[j]; break; }
-          }
-        }
-        if (prePos === 'vorhand') {
-          S.vorhand = { product: prod, variant: vari };
-          if (nxt[1]) nxt[1].disabled = false;
-        } else {
-          S.rueckhand = { product: prod, variant: vari };
-          if (nxt[2]) nxt[2].disabled = false;
+    function applyPreSelection(prod) {
+      if (!prod) return;
+      var vari = prod.variants[0];
+      if (preVarId) {
+        for (var j = 0; j < prod.variants.length; j++) {
+          if (String(prod.variants[j].id) === preVarId) { vari = prod.variants[j]; break; }
         }
       }
-      goTo(targetStep);
-    });
+      if (prePos === 'vorhand') {
+        S.vorhand = { product: prod, variant: vari };
+        if (nxt[1]) nxt[1].disabled = false;
+      } else {
+        S.rueckhand = { product: prod, variant: vari };
+        if (nxt[2]) nxt[2].disabled = false;
+      }
+      updateNavBtns();
+    }
+
+    if (preHandle) {
+      // Direct fetch by product handle — always finds the product regardless of tag filters
+      fetch('/products/' + encodeURIComponent(preHandle) + '.js')
+        .then(function(r) { return r.json(); })
+        .then(function(prod) {
+          applyPreSelection(prod);
+          goTo(targetStep);
+        })
+        .catch(function() { goTo(targetStep); });
+    } else {
+      // Fallback: search in tag-filtered cache by product ID
+      _belagPromise.then(function(products) {
+        var prod = null;
+        for (var i = 0; i < products.length; i++) {
+          if (String(products[i].id) === preProdId) { prod = products[i]; break; }
+        }
+        applyPreSelection(prod);
+        goTo(targetStep);
+      });
+    }
   }());
 
   /* ---- Navigate ---- */
@@ -860,6 +919,9 @@
         if (type === 'vorhand'   && S.vorhand   && S.vorhand.product.id   === p.id) card.classList.add('is-selected');
         if (type === 'rueckhand' && S.rueckhand && S.rueckhand.product.id === p.id) card.classList.add('is-selected');
       });
+      // Re-apply search filter if user already typed something
+      var si = ge('k-search-' + type);
+      if (si && si.value) filterGrid(grid, si.value);
     });
   }
 
@@ -901,6 +963,9 @@
         if (S.kantenband && S.kantenband.product.id === p.id) card.classList.add('is-selected');
         grid.appendChild(card);
       });
+      // Re-apply search filter if user already typed something
+      var si = ge('k-search-kantenband');
+      if (si && si.value) filterGrid(grid, si.value);
     });
   }
 
@@ -1238,6 +1303,30 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' }[c];
     });
   }
+
+  /* ---- Grid search filter ---- */
+  function filterGrid(grid, term) {
+    var q = term.trim().toLowerCase();
+    grid.querySelectorAll('.k-card').forEach(function(card) {
+      var name = (card.querySelector('.k-card__name') || {}).textContent || '';
+      card.style.display = (!q || name.toLowerCase().indexOf(q) !== -1) ? '' : 'none';
+    });
+  }
+
+  // Wire search inputs to their grids
+  [
+    { searchId: 'k-search-holz',       gridId: 'kg-holz' },
+    { searchId: 'k-search-vorhand',    gridId: 'kg-vorhand' },
+    { searchId: 'k-search-rueckhand',  gridId: 'kg-rueckhand' },
+    { searchId: 'k-search-kantenband', gridId: 'kg-kantenband' },
+  ].forEach(function(pair) {
+    var inp = ge(pair.searchId);
+    if (!inp) return;
+    inp.addEventListener('input', function() {
+      var grid = ge(pair.gridId);
+      if (grid) filterGrid(grid, inp.value);
+    });
+  });
 })();
 </script>
 
