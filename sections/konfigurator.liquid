@@ -646,40 +646,43 @@
 
   /* ---- Init ---- */
   loadProducts(TAG_HOLZ).then(function(ps) { renderSimple(ge('kg-holz'), ps, 'holz'); });
-  loadProducts(TAG_BELAG);
+  var _belagPromise = loadProducts(TAG_BELAG);   // single shared promise – reused below
   loadProducts(TAG_KANTENBAND);
 
   // Pre-select from URL params when navigating from a product page
   (function () {
-    var params     = new URLSearchParams(window.location.search);
-    var prePos     = params.get('position');
-    var preProdId  = params.get('product_id');
-    var preVarId   = params.get('variant_id');
+    var params    = new URLSearchParams(window.location.search);
+    var prePos    = params.get('position');
+    var preProdId = params.get('product_id');
+    var preVarId  = params.get('variant_id');
     if (!prePos || !preProdId) return;
 
-    loadProducts(TAG_BELAG).then(function (products) {
+    _belagPromise.then(function (products) {
       var prod = null;
       for (var i = 0; i < products.length; i++) {
         if (String(products[i].id) === preProdId) { prod = products[i]; break; }
       }
-      if (!prod) return;
 
-      var vari = prod.variants[0];
-      if (preVarId) {
-        for (var j = 0; j < prod.variants.length; j++) {
-          if (String(prod.variants[j].id) === preVarId) { vari = prod.variants[j]; break; }
+      // Navigate to the correct step regardless of whether the product was found
+      var targetStep = prePos === 'vorhand' ? 1 : prePos === 'rueckhand' ? 2 : null;
+      if (!targetStep) return;
+
+      if (prod) {
+        var vari = prod.variants[0];
+        if (preVarId) {
+          for (var j = 0; j < prod.variants.length; j++) {
+            if (String(prod.variants[j].id) === preVarId) { vari = prod.variants[j]; break; }
+          }
+        }
+        if (prePos === 'vorhand') {
+          S.vorhand = { product: prod, variant: vari };
+          if (nxt[1]) nxt[1].disabled = false;
+        } else {
+          S.rueckhand = { product: prod, variant: vari };
+          if (nxt[2]) nxt[2].disabled = false;
         }
       }
-
-      if (prePos === 'vorhand') {
-        S.vorhand = { product: prod, variant: vari };
-        if (nxt[1]) nxt[1].disabled = false;
-        goTo(1);
-      } else if (prePos === 'rueckhand') {
-        S.rueckhand = { product: prod, variant: vari };
-        if (nxt[2]) nxt[2].disabled = false;
-        goTo(2);
-      }
+      goTo(targetStep);
     });
   }());
 
