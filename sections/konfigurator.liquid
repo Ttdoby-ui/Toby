@@ -724,11 +724,12 @@
     }
 
     if (preHandle) {
-      // Direct fetch by product handle — always finds the product regardless of tag filters
-      fetch('/products/' + encodeURIComponent(preHandle) + '.js')
+      // Use .json endpoint — returns same image/price format as /products.json
+      // (.js endpoint returns images as plain strings and prices in cents, incompatible)
+      fetch('/products/' + encodeURIComponent(preHandle) + '.json')
         .then(function(r) { return r.json(); })
-        .then(function(prod) {
-          applyPreSelection(prod);
+        .then(function(data) {
+          applyPreSelection(data && data.product ? data.product : null);
           goTo(targetStep);
         })
         .catch(function() { goTo(targetStep); });
@@ -828,16 +829,7 @@
     return fetch('/products.json?tag=' + encodeURIComponent(tag) + '&limit=250')
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        var all = d.products || [];
-        var tagLower = tag.toLowerCase();
-        _cache[tag] = all.filter(function(p) {
-          if (!p.tags) return false;
-          // tags can be an Array (Storefront JSON) or a comma-separated String (Admin API)
-          var list = Array.isArray(p.tags)
-            ? p.tags
-            : String(p.tags).split(',');
-          return list.some(function(t) { return String(t).trim().toLowerCase() === tagLower; });
-        });
+        _cache[tag] = d.products || [];
         return _cache[tag];
       })
       .catch(function() { _cache[tag] = []; return []; });
