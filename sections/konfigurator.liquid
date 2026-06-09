@@ -433,6 +433,37 @@
     flex-shrink: 0;
   }
   .k-pre-sel__clear:hover { border-color: var(--color-foreground, #111); color: var(--color-foreground, #111); }
+
+  /* ---- Versiegelung step ---- */
+  .k-vers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 480px) { .k-vers-grid { grid-template-columns: 1fr; } }
+  .k-vers-opt {
+    border: 2px solid var(--color-border, #e2e2e2);
+    border-radius: 10px;
+    padding: 1.75rem 1rem;
+    background: var(--color-background, #fff);
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-align: center;
+    font-family: var(--font-body--family, inherit);
+  }
+  .k-vers-opt:hover { border-color: var(--color-primary, #111); box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+  .k-vers-opt.is-selected { border-color: var(--color-primary, #111); box-shadow: 0 0 0 2px var(--color-primary, #111); }
+  .k-vers-opt__icon { font-size: 2.2rem; display: block; margin-bottom: 0.6rem; }
+  .k-vers-opt__title { font-size: 1rem; font-weight: 700; display: block; margin-bottom: 0.3rem; }
+  .k-vers-opt__price { font-size: 0.85rem; color: var(--color-foreground-secondary, #777); display: block; }
+
+  /* ---- Nav emoji fallback ---- */
+  .k-nav-emoji {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
 {% endstylesheet %}
 
 <div class="konfig" id="schlaeger-konfigurator">
@@ -444,7 +475,8 @@
     <button class="konfig__nav-btn" data-panel="1"><span class="num">2</span> Vorhandbelag</button>
     <button class="konfig__nav-btn" data-panel="2"><span class="num">3</span> Rückhandbelag</button>
     <button class="konfig__nav-btn" data-panel="3"><span class="num">4</span> Kantenband</button>
-    <button class="konfig__nav-btn" data-panel="4"><span class="num">5</span> Zusammenfassung</button>
+    <button class="konfig__nav-btn" data-panel="4"><span class="num">5</span> Versiegelung</button>
+    <button class="konfig__nav-btn" data-panel="5"><span class="num">6</span> Zusammenfassung</button>
   </nav>
 
   <!-- Panel 0: Holz -->
@@ -458,12 +490,6 @@
         🔧 <strong>Klebeservice inklusive:</strong> Deine Beläge werden professionell aufgeklebt
         (+{{ section.settings.klebe_preis | default: '5.00' }}&nbsp;€ werden automatisch hinzugefügt).
       </div>
-      {%- if section.settings.versiegelung_variant_id != blank -%}
-      <label class="k-service-opt" for="k-versiegelung-cb">
-        <input type="checkbox" id="k-versiegelung-cb">
-        🛡️ Schlägerversiegelung optional hinzufügen (+{{ section.settings.versiegelung_preis | default: '5.00' }}&nbsp;€)
-      </label>
-      {%- endif -%}
     </div>
     <div class="konfig__footer">
       <button class="k-btn k-btn--next" id="k-next-0" disabled>Weiter zu Vorhandbelag →</button>
@@ -507,12 +533,36 @@
     </div>
     <div class="konfig__footer">
       <button class="k-btn k-btn--back" data-target="2">← Zurück</button>
-      <button class="k-btn k-btn--next" id="k-next-3">Zur Zusammenfassung →</button>
+      <button class="k-btn k-btn--next" id="k-next-3">Weiter zur Versiegelung →</button>
     </div>
   </div>
 
-  <!-- Panel 4: Zusammenfassung -->
+  <!-- Panel 4: Schlägerversiegelung -->
   <div class="konfig__panel is-hidden" id="kp-4">
+    <p class="konfig__panel-title">Schritt 5: Schlägerversiegelung<span class="k-optional">(optional)</span></p>
+    <p style="font-size:0.9rem;color:var(--color-foreground-secondary,#666);margin-bottom:1.25rem;">
+      Das Kantenband wird professionell versiegelt – für optimalen Schutz und längere Haltbarkeit.
+    </p>
+    <div class="k-vers-grid">
+      <button type="button" class="k-vers-opt" id="k-vers-ja">
+        <span class="k-vers-opt__icon">🛡️</span>
+        <span class="k-vers-opt__title">Ja, versiegeln</span>
+        <span class="k-vers-opt__price">+{{ section.settings.versiegelung_preis | default: '5.00' }}&nbsp;€</span>
+      </button>
+      <button type="button" class="k-vers-opt" id="k-vers-nein">
+        <span class="k-vers-opt__icon">✕</span>
+        <span class="k-vers-opt__title">Nein, danke</span>
+        <span class="k-vers-opt__price">Ohne Versiegelung</span>
+      </button>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="3">← Zurück</button>
+      <button class="k-btn k-btn--next" id="k-next-4">Zur Zusammenfassung →</button>
+    </div>
+  </div>
+
+  <!-- Panel 5: Zusammenfassung -->
+  <div class="konfig__panel is-hidden" id="kp-5">
     <p class="konfig__panel-title">Dein individueller Schläger</p>
     <div class="konfig__summary" id="k-summary"></div>
     <div class="k-hint is-hidden" id="k-black-warning">
@@ -523,7 +573,7 @@
       <span class="konfig__total-price" id="k-total">–</span>
     </div>
     <div class="konfig__footer">
-      <button class="k-btn k-btn--back" data-target="3">← Zurück</button>
+      <button class="k-btn k-btn--back" data-target="4">← Zurück</button>
       <button class="k-btn k-btn--atc" id="k-atc">In den Warenkorb</button>
     </div>
   </div>
@@ -564,9 +614,9 @@
 
   /* ---- DOM shortcuts ---- */
   function ge(id) { return document.getElementById(id); }
-  var panels   = [0,1,2,3,4].map(function(i){ return ge('kp-' + i); });
+  var panels   = [0,1,2,3,4,5].map(function(i){ return ge('kp-' + i); });
   var navBtns  = Array.from(document.querySelectorAll('.konfig__nav-btn'));
-  var nxt      = { 0: ge('k-next-0'), 1: ge('k-next-1'), 2: ge('k-next-2'), 3: ge('k-next-3') };
+  var nxt      = { 0: ge('k-next-0'), 1: ge('k-next-1'), 2: ge('k-next-2'), 3: ge('k-next-3'), 4: ge('k-next-4') };
   var blackHint= ge('k-black-hint');
   var atcBtn   = ge('k-atc');
 
@@ -577,11 +627,21 @@
   document.querySelectorAll('.k-btn--back').forEach(function(b) {
     b.addEventListener('click', function() { goTo(+b.dataset.target); });
   });
-  [0,1,2,3].forEach(function(i) {
+  [0,1,2,3,4].forEach(function(i) {
     if (nxt[i]) nxt[i].addEventListener('click', function() { goTo(i + 1); });
   });
-  var versiegelungCb = ge('k-versiegelung-cb');
-  if (versiegelungCb) versiegelungCb.addEventListener('change', function() { S.versiegelung = versiegelungCb.checked; });
+  // Versiegelung Ja/Nein
+  var versJa   = ge('k-vers-ja');
+  var versNein = ge('k-vers-nein');
+  function pickVers(val) {
+    S.versiegelung = val;
+    if (versJa)   versJa.classList.toggle('is-selected',  val);
+    if (versNein) versNein.classList.toggle('is-selected', !val);
+    updateNavBtns();
+    setTimeout(function() { goTo(5); }, 200);
+  }
+  if (versJa)   versJa.addEventListener('click',   function() { pickVers(true); });
+  if (versNein) versNein.addEventListener('click',  function() { pickVers(false); });
   if (atcBtn) atcBtn.addEventListener('click', addToCart);
 
   /* ---- Init ---- */
@@ -635,7 +695,8 @@
       renderBelagPanel(ge('kg-rueckhand'), 'rueckhand');
     }
     if (idx === 3) { renderKantenbandPanel(); }
-    if (idx === 4) { renderSummary(); }
+    if (idx === 4) { renderVersiegelungPanel(); }
+    if (idx === 5) { renderSummary(); }
 
     panels.forEach(function(p, i) { if (p) p.classList.toggle('is-hidden', i !== idx); });
     updateNavBtns(idx);
@@ -643,26 +704,58 @@
   }
 
   /* ---- Update nav bar (active/done classes + thumbnails) ---- */
+  var NAV_ICONS = ['🏓', '⚫', '🔴', '📏', '🛡️'];
   function updateNavBtns(activeIdx) {
-    var stateMap = [S.holz, S.vorhand, S.rueckhand, S.kantenband];
+    var stateMap = [S.holz, S.vorhand, S.rueckhand, S.kantenband, S.versiegelung !== undefined ? S.versiegelung : null];
     navBtns.forEach(function(b, i) {
       if (activeIdx !== undefined) {
         b.classList.toggle('is-active', i === activeIdx);
         b.classList.toggle('is-done', i < activeIdx);
       }
-      var sel = stateMap[i];
-      var existing = b.querySelector('.k-nav-img');
-      if (sel && sel.product.images && sel.product.images[0]) {
-        var src = sel.product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_40x$1$2');
-        if (!existing) {
-          existing = document.createElement('img');
-          existing.className = 'k-nav-img';
-          existing.alt = '';
-          b.insertBefore(existing, b.firstChild);
+      // Remove any existing thumbnail/emoji
+      var existImg   = b.querySelector('.k-nav-img');
+      var existEmoji = b.querySelector('.k-nav-emoji');
+
+      // Step 4 (Versiegelung) uses boolean, not a product
+      if (i === 4) {
+        if (S.versiegelung) {
+          if (!existEmoji) {
+            existEmoji = document.createElement('span');
+            existEmoji.className = 'k-nav-emoji';
+            b.insertBefore(existEmoji, b.firstChild);
+          }
+          existEmoji.textContent = '🛡️';
+        } else {
+          if (existEmoji) existEmoji.remove();
         }
-        existing.src = src;
+        return;
+      }
+
+      var sel = stateMap[i];
+      if (sel && sel.product && sel.product.images && sel.product.images[0]) {
+        // Product image available → show thumbnail
+        var src = sel.product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_40x$1$2');
+        if (existEmoji) existEmoji.remove();
+        if (!existImg) {
+          existImg = document.createElement('img');
+          existImg.className = 'k-nav-img';
+          existImg.alt = '';
+          b.insertBefore(existImg, b.firstChild);
+        }
+        existImg.src = src;
+      } else if (sel && sel.product) {
+        // Product selected but no image → show emoji fallback
+        if (existImg) existImg.remove();
+        if (!existEmoji) {
+          existEmoji = document.createElement('span');
+          existEmoji.className = 'k-nav-emoji';
+          b.insertBefore(existEmoji, b.firstChild);
+        }
+        existEmoji.textContent = NAV_ICONS[i] || '✓';
       } else {
-        if (existing) existing.remove();
+        // Nothing selected → remove both
+        if (existImg)   existImg.remove();
+        if (existEmoji) existEmoji.remove();
       }
     });
   }
@@ -972,6 +1065,12 @@
         S.kantenband = { product: product, variant: variant };
       }
     }
+  }
+
+  /* ---- Render versiegelung step ---- */
+  function renderVersiegelungPanel() {
+    if (versJa)   versJa.classList.toggle('is-selected',  S.versiegelung === true);
+    if (versNein) versNein.classList.toggle('is-selected', S.versiegelung === false);
   }
 
   /* ---- Render summary ---- */
