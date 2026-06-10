@@ -628,9 +628,9 @@
   'use strict';
 
   /* ---- Config (set via section settings) ---- */
-  var TAG_HOLZ       = {{ section.settings.tag_holz | default: 'Holz' | json }};
-  var TAG_BELAG      = {{ section.settings.tag_belag | default: 'Belag' | json }};
-  var TAG_KANTENBAND = {{ section.settings.tag_kantenband | default: 'Kantenband' | json }};
+  var HANDLE_HOLZ      = {{ section.settings.collection_holz | default: 'holzer' | json }};
+  var HANDLE_BELAG     = {{ section.settings.collection_belag | default: 'belage' | json }};
+  var HANDLE_KANTENBAND= {{ section.settings.collection_kantenband | default: 'kantenbander' | json }};
   var KLEBE_ID           = {{ section.settings.klebe_variant_id | default: '57810488852828' }};
   var KLEBE_PRICE        = parseFloat('{{ section.settings.klebe_preis | default: "5.00" }}') || 5.00;
   var VERSIEGELUNG_ID    = '{{ section.settings.versiegelung_variant_id | default: "" }}';
@@ -689,9 +689,9 @@
   if (atcBtn) atcBtn.addEventListener('click', addToCart);
 
   /* ---- Init ---- */
-  loadProducts(TAG_HOLZ).then(function(ps) { renderSimple(ge('kg-holz'), ps, 'holz'); });
-  var _belagPromise = loadProducts(TAG_BELAG);   // single shared promise – reused below
-  loadProducts(TAG_KANTENBAND);
+  loadProducts(HANDLE_HOLZ).then(function(ps) { renderSimple(ge('kg-holz'), ps, 'holz'); });
+  var _belagPromise = loadProducts(HANDLE_BELAG);   // single shared promise – reused below
+  loadProducts(HANDLE_KANTENBAND);
 
   // Pre-select from URL params when navigating from a product page
   (function () {
@@ -823,16 +823,25 @@
     });
   }
 
-  /* ---- Load ---- */
-  function loadProducts(tag) {
-    if (_cache[tag]) return Promise.resolve(_cache[tag]);
-    return fetch('/products.json?tag=' + encodeURIComponent(tag) + '&limit=250')
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        _cache[tag] = d.products || [];
-        return _cache[tag];
-      })
-      .catch(function() { _cache[tag] = []; return []; });
+  /* ---- Load (paginated collection fetch) ---- */
+  function loadProducts(handle) {
+    if (_cache[handle] !== undefined) return Promise.resolve(_cache[handle]);
+    function fetchPage(url, acc) {
+      return fetch(url)
+        .then(function(r) {
+          var link = r.headers.get('Link') || '';
+          return r.json().then(function(d) { return { products: d.products || [], link: link }; });
+        })
+        .then(function(res) {
+          var all = acc.concat(res.products);
+          var m = res.link.match(/<([^>]+)>;\s*rel="next"/);
+          if (m && res.products.length === 250) return fetchPage(m[1], all);
+          _cache[handle] = all;
+          return all;
+        });
+    }
+    return fetchPage('/collections/' + encodeURIComponent(handle) + '/products.json?limit=250', [])
+      .catch(function() { _cache[handle] = []; return []; });
   }
 
   function spinner() { return '<div class="k-loading"><div class="k-spinner"></div></div>'; }
@@ -842,7 +851,7 @@
     if (!grid) return;
     grid.innerHTML = '';
     if (!products.length) {
-      grid.innerHTML = '<p class="k-msg">Keine Produkte gefunden.<br><small>Bitte Produkte mit Tag <em>' + esc(type === 'holz' ? TAG_HOLZ : TAG_KANTENBAND) + '</em> anlegen.</small></p>';
+      grid.innerHTML = '<p class="k-msg">Keine Produkte gefunden.<br><small>Kollektion <em>' + esc(type === 'holz' ? HANDLE_HOLZ : HANDLE_KANTENBAND) + '</em> ist leer oder existiert nicht.</small></p>';
       return;
     }
     products.forEach(function(p) {
@@ -896,10 +905,10 @@
     }
 
     grid.innerHTML = spinner();
-    loadProducts(TAG_BELAG).then(function(products) {
+    loadProducts(HANDLE_BELAG).then(function(products) {
       grid.innerHTML = '';
       if (!products.length) {
-        grid.innerHTML = '<p class="k-msg">Keine Beläge gefunden.<br><small>Produkte mit Tag <em>' + esc(TAG_BELAG) + '</em> anlegen.</small></p>';
+        grid.innerHTML = '<p class="k-msg">Keine Beläge gefunden.<br><small>Kollektion <em>' + esc(HANDLE_BELAG) + '</em> ist leer oder existiert nicht.</small></p>';
         return;
       }
       var vorhandIsBlack = S.vorhand && isBlk(S.vorhand.variant);
@@ -922,10 +931,10 @@
     var grid = ge('kg-kantenband');
     if (!grid) return;
     grid.innerHTML = spinner();
-    loadProducts(TAG_KANTENBAND).then(function(products) {
+    loadProducts(HANDLE_KANTENBAND).then(function(products) {
       grid.innerHTML = '';
       if (!products.length) {
-        grid.innerHTML = '<p class="k-msg">Kein Kantenband im Shop gefunden.<br><small>Produkte mit Tag <em>' + esc(TAG_KANTENBAND) + '</em> anlegen oder diesen Schritt überspringen.</small></p>';
+        grid.innerHTML = '<p class="k-msg">Kein Kantenband gefunden.<br><small>Kollektion <em>' + esc(HANDLE_KANTENBAND) + '</em> ist leer oder existiert nicht.</small></p>';
         return;
       }
       products.forEach(function(p) {
@@ -1328,24 +1337,24 @@
   "settings": [
     {
       "type": "text",
-      "id": "tag_holz",
-      "label": "Produkt-Tag für Hölzer",
-      "default": "Holz",
-      "info": "Alle Produkte mit diesem Tag erscheinen in Schritt 1 (Holz)."
+      "id": "collection_holz",
+      "label": "Kollektion für Hölzer (Handle)",
+      "default": "holzer",
+      "info": "Handle der Shopify-Kollektion, die in Schritt 1 (Holz) erscheint. Zu finden in Shopify Admin → Kollektionen → URL."
     },
     {
       "type": "text",
-      "id": "tag_belag",
-      "label": "Produkt-Tag für Beläge",
-      "default": "Belag",
-      "info": "Alle Produkte mit diesem Tag erscheinen in Schritt 2 & 3 (Beläge)."
+      "id": "collection_belag",
+      "label": "Kollektion für Beläge (Handle)",
+      "default": "belage",
+      "info": "Handle der Shopify-Kollektion, die in Schritt 2 & 3 (Beläge) erscheint."
     },
     {
       "type": "text",
-      "id": "tag_kantenband",
-      "label": "Produkt-Tag für Kantenband",
-      "default": "Kantenband",
-      "info": "Alle Produkte mit diesem Tag erscheinen in Schritt 4 (Kantenband)."
+      "id": "collection_kantenband",
+      "label": "Kollektion für Kantenbänder (Handle)",
+      "default": "kantenbander",
+      "info": "Handle der Shopify-Kollektion, die in Schritt 4 (Kantenband) erscheint."
     },
     {
       "type": "header",

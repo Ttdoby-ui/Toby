@@ -3,9 +3,9 @@
     "konfigurator": {
       "type": "konfigurator",
       "settings": {
-        "tag_holz": "Holz",
-        "tag_belag": "Belag",
-        "tag_kantenband": "Kantenband",
+        "collection_holz": "holzer",
+        "collection_belag": "belage",
+        "collection_kantenband": "kantenbander",
         "klebe_variant_id": "57810488852828",
         "klebe_preis": "5.00",
         "versiegelung_variant_id": "57854998970716",
