@@ -64,16 +64,7 @@
     "konfigurator_banner_main": {
       "type": "konfigurator-banner",
       "settings": {
-        "icon": "🏓",
-        "title": "Bau deinen Traumschläger",
-        "subtitle": "Wähle Holz, Beläge und Klebeservice – individuell zusammengestellt in wenigen Klicks.",
-        "btn_label": "Jetzt konfigurieren →",
-        "link": "/pages/schlaeger-konfigurator",
-        "bg_color": "#111111",
-        "text_color": "#ffffff",
-        "btn_bg": "#ffffff",
-        "btn_text": "#111111",
-        "padding_v": 56
+        "link": "/pages/schlaeger-konfigurator"
       }
     },
     "product_list_fa6P9H": {

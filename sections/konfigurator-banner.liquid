@@ -1,136 +1,47 @@
 {% stylesheet %}
   .kb-wrap {
-    background: {{ section.settings.bg_color }};
-    color: {{ section.settings.text_color }};
-    padding: {{ section.settings.padding_v }}px 1.5rem;
-    text-align: center;
-  }
-  .kb-inner {
-    max-width: 680px;
-    margin: 0 auto;
-  }
-  .kb-icon {
-    font-size: 3rem;
-    line-height: 1;
-    margin-bottom: 0.75rem;
-  }
-  .kb-title {
-    font-size: clamp(1.35rem, 3.5vw, 2.2rem);
-    font-weight: 800;
-    line-height: 1.2;
-    margin: 0 0 0.6rem;
-    font-family: var(--font-heading--family, inherit);
-  }
-  .kb-sub {
-    font-size: 1rem;
-    opacity: 0.82;
-    margin: 0 0 1.75rem;
-    line-height: 1.6;
-  }
-  .kb-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.85rem 2.25rem;
-    background: {{ section.settings.btn_bg }};
-    color: {{ section.settings.btn_text }};
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    border-radius: var(--buttons-radius, 4px);
+    display: block;
+    width: 100%;
     text-decoration: none;
-    transition: opacity 0.15s;
-    font-family: var(--font-body--family, inherit);
-    border: 2px solid {{ section.settings.btn_bg }};
+    line-height: 0;
+    overflow: hidden;
   }
-  .kb-btn:hover { opacity: 0.82; }
+  .kb-img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
 {% endstylesheet %}
 
-<div class="kb-wrap">
-  <div class="kb-inner">
-    {%- if section.settings.icon != blank -%}
-      <div class="kb-icon">{{ section.settings.icon }}</div>
-    {%- endif -%}
-    <h2 class="kb-title">{{ section.settings.title }}</h2>
-    {%- if section.settings.subtitle != blank -%}
-      <p class="kb-sub">{{ section.settings.subtitle }}</p>
-    {%- endif -%}
-    <a class="kb-btn" href="{{ section.settings.link | default: '/pages/schlaeger-konfigurator' }}">
-      {{ section.settings.btn_label }}
-    </a>
-  </div>
-</div>
+{%- assign kb_link = section.settings.link | default: '/pages/schlaeger-konfigurator' -%}
+
+{%- if section.settings.image != blank -%}
+  <a class="kb-wrap" href="{{ kb_link }}">
+    {{
+      section.settings.image
+      | image_url: width: 2000
+      | image_tag:
+        class: 'kb-img',
+        alt: section.settings.image.alt | default: 'Schlägerkonfigurator',
+        loading: 'lazy',
+        widths: '375, 750, 1100, 1500, 2000'
+    }}
+  </a>
+{%- endif -%}
 
 {% schema %}
 {
   "name": "Konfigurator Banner",
   "settings": [
     {
-      "type": "text",
-      "id": "icon",
-      "label": "Emoji / Icon",
-      "default": "🏓"
-    },
-    {
-      "type": "text",
-      "id": "title",
-      "label": "Überschrift",
-      "default": "Bau deinen Traumschläger"
-    },
-    {
-      "type": "textarea",
-      "id": "subtitle",
-      "label": "Unterzeile",
-      "default": "Wähle Holz, Beläge und Klebeservice – individuell zusammengestellt in wenigen Klicks."
-    },
-    {
-      "type": "text",
-      "id": "btn_label",
-      "label": "Button-Text",
-      "default": "Jetzt konfigurieren →"
+      "type": "image_picker",
+      "id": "image",
+      "label": "Banner-Bild"
     },
     {
       "type": "url",
       "id": "link",
-      "label": "Button-Link (Konfigurator-Seite)"
-    },
-    {
-      "type": "header",
-      "content": "Farben"
-    },
-    {
-      "type": "color",
-      "id": "bg_color",
-      "label": "Hintergrundfarbe",
-      "default": "#111111"
-    },
-    {
-      "type": "color",
-      "id": "text_color",
-      "label": "Textfarbe",
-      "default": "#ffffff"
-    },
-    {
-      "type": "color",
-      "id": "btn_bg",
-      "label": "Button Hintergrund",
-      "default": "#ffffff"
-    },
-    {
-      "type": "color",
-      "id": "btn_text",
-      "label": "Button Textfarbe",
-      "default": "#111111"
-    },
-    {
-      "type": "range",
-      "id": "padding_v",
-      "label": "Innenabstand oben/unten (px)",
-      "min": 20,
-      "max": 120,
-      "step": 4,
-      "default": 56
+      "label": "Link (Konfigurator-Seite)"
     }
   ],
   "presets": [
