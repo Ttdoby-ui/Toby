@@ -118,7 +118,12 @@
   .schlaeger-pos-submit:hover { opacity: 0.85; }
 {% endstylesheet %}
 
-{% if product.tags contains 'Belag' %}
+{%- assign sk_is_belag = false -%}
+{%- assign sk_is_holz  = false -%}
+{%- if product.tags contains 'Belag' -%}{%- assign sk_is_belag = true -%}{%- endif -%}
+{%- if product.tags contains 'Holz'  -%}{%- assign sk_is_holz  = true -%}{%- endif -%}
+
+{% if sk_is_belag or sk_is_holz %}
   {%- assign sk_uid = product.id | append: '-' | append: block.id -%}
 
   <div class="schlaeger-konfig-wrap">
@@ -132,51 +137,53 @@
     </button>
   </div>
 
-  <div
-    class="schlaeger-pos-overlay is-hidden"
-    id="schlaeger-pos-overlay-{{ sk_uid }}"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="schlaeger-pos-title-{{ sk_uid }}"
-  >
-    <div class="schlaeger-pos-box">
-      <button
-        type="button"
-        class="schlaeger-pos-close"
-        id="schlaeger-pos-close-{{ sk_uid }}"
-        aria-label="Schließen"
-      >✕</button>
-      <p class="schlaeger-pos-title" id="schlaeger-pos-title-{{ sk_uid }}">
-        Wähle die Position in der Konfiguration
-      </p>
-      <div class="schlaeger-pos-options">
-        <label class="schlaeger-pos-option">
-          <input
-            type="radio"
-            name="schlaeger-pos-{{ sk_uid }}"
-            value="vorhand"
-            checked
-          >
-          Vorhand
-        </label>
-        <label class="schlaeger-pos-option">
-          <input
-            type="radio"
-            name="schlaeger-pos-{{ sk_uid }}"
-            value="rueckhand"
-          >
-          Rückhand
-        </label>
+  {% if sk_is_belag %}
+    <div
+      class="schlaeger-pos-overlay is-hidden"
+      id="schlaeger-pos-overlay-{{ sk_uid }}"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="schlaeger-pos-title-{{ sk_uid }}"
+    >
+      <div class="schlaeger-pos-box">
+        <button
+          type="button"
+          class="schlaeger-pos-close"
+          id="schlaeger-pos-close-{{ sk_uid }}"
+          aria-label="Schließen"
+        >✕</button>
+        <p class="schlaeger-pos-title" id="schlaeger-pos-title-{{ sk_uid }}">
+          Wähle die Position in der Konfiguration
+        </p>
+        <div class="schlaeger-pos-options">
+          <label class="schlaeger-pos-option">
+            <input
+              type="radio"
+              name="schlaeger-pos-{{ sk_uid }}"
+              value="vorhand"
+              checked
+            >
+            Vorhand
+          </label>
+          <label class="schlaeger-pos-option">
+            <input
+              type="radio"
+              name="schlaeger-pos-{{ sk_uid }}"
+              value="rueckhand"
+            >
+            Rückhand
+          </label>
+        </div>
+        <button
+          type="button"
+          class="schlaeger-pos-submit"
+          id="schlaeger-pos-submit-{{ sk_uid }}"
+        >
+          Auswählen
+        </button>
       </div>
-      <button
-        type="button"
-        class="schlaeger-pos-submit"
-        id="schlaeger-pos-submit-{{ sk_uid }}"
-      >
-        Auswählen
-      </button>
     </div>
-  </div>
+  {% endif %}
 
   <script>
   (function () {
@@ -184,11 +191,10 @@
     var uid           = '{{ sk_uid | escape }}';
     var productId     = '{{ product.id }}';
     var productHandle = '{{ product.handle }}';
-    var openBtn   = document.getElementById('schlaeger-konfig-open-'   + uid);
-    var overlay   = document.getElementById('schlaeger-pos-overlay-'   + uid);
-    var closeBtn  = document.getElementById('schlaeger-pos-close-'     + uid);
-    var submitBtn = document.getElementById('schlaeger-pos-submit-'    + uid);
-    if (!openBtn || !overlay) return;
+    var isHolz        = {{ sk_is_holz | json }};
+
+    var openBtn = document.getElementById('schlaeger-konfig-open-' + uid);
+    if (!openBtn) return;
 
     function getVariantId() {
       var inp = document.querySelector(
@@ -199,36 +205,43 @@
       return fallback ? fallback.value : '';
     }
 
-    openBtn.addEventListener('click', function () {
-      overlay.classList.remove('is-hidden');
-    });
-
-    closeBtn.addEventListener('click', function () {
-      overlay.classList.add('is-hidden');
-    });
-
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) overlay.classList.add('is-hidden');
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') overlay.classList.add('is-hidden');
-    });
-
-    submitBtn.addEventListener('click', function () {
-      var radio    = overlay.querySelector('input[name="schlaeger-pos-' + uid + '"]:checked');
-      var position = radio ? radio.value : 'vorhand';
+    function goToKonfigurator(position) {
       var variantId = getVariantId();
-      // Preserve preview_theme_id so the redirect stays in the preview theme
       var previewId = new URLSearchParams(window.location.search).get('preview_theme_id');
-      var url = '/pages/schlaeger-konfigurator'
+      window.location.href = '/pages/schlaeger-konfigurator'
         + '?position=' + encodeURIComponent(position)
         + '&product_id=' + encodeURIComponent(productId)
         + '&product_handle=' + encodeURIComponent(productHandle)
         + (variantId ? '&variant_id=' + encodeURIComponent(variantId) : '')
         + (previewId ? '&preview_theme_id=' + encodeURIComponent(previewId) : '');
-      window.location.href = url;
-    });
+    }
+
+    if (isHolz) {
+      openBtn.addEventListener('click', function () { goToKonfigurator('holz'); });
+    } else {
+      var overlay   = document.getElementById('schlaeger-pos-overlay-'   + uid);
+      var closeBtn  = document.getElementById('schlaeger-pos-close-'     + uid);
+      var submitBtn = document.getElementById('schlaeger-pos-submit-'    + uid);
+      if (!overlay) return;
+
+      openBtn.addEventListener('click', function () {
+        overlay.classList.remove('is-hidden');
+      });
+      closeBtn.addEventListener('click', function () {
+        overlay.classList.add('is-hidden');
+      });
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) overlay.classList.add('is-hidden');
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') overlay.classList.add('is-hidden');
+      });
+      submitBtn.addEventListener('click', function () {
+        var radio    = overlay.querySelector('input[name="schlaeger-pos-' + uid + '"]:checked');
+        var position = radio ? radio.value : 'vorhand';
+        goToKonfigurator(position);
+      });
+    }
   })();
   </script>
 {% endif %}

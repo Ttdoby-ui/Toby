@@ -702,8 +702,8 @@
     var preVarId    = params.get('variant_id');
     if (!prePos || (!preProdId && !preHandle)) return;
 
-    var targetStep = prePos === 'vorhand' ? 1 : prePos === 'rueckhand' ? 2 : null;
-    if (!targetStep) return;
+    var targetStep = prePos === 'vorhand' ? 1 : prePos === 'rueckhand' ? 2 : prePos === 'holz' ? 1 : null;
+    if (targetStep === null) return;
 
     function applyPreSelection(prod) {
       if (!prod) return;
@@ -716,9 +716,12 @@
       if (prePos === 'vorhand') {
         S.vorhand = { product: prod, variant: vari };
         if (nxt[1]) nxt[1].disabled = false;
-      } else {
+      } else if (prePos === 'rueckhand') {
         S.rueckhand = { product: prod, variant: vari };
         if (nxt[2]) nxt[2].disabled = false;
+      } else if (prePos === 'holz') {
+        S.holz = { product: prod, variant: vari };
+        if (nxt[0]) nxt[0].disabled = false;
       }
       updateNavBtns();
     }
