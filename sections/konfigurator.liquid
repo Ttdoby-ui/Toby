@@ -1212,12 +1212,31 @@
 
   /* ---- Add to cart ---- */
   function addToCart() {
+    // Validation: required steps
+    if (!S.holz) {
+      atcBtn.textContent = 'Schritt 1: Holz wurde noch nicht ausgewählt';
+      atcBtn.classList.add('is-err');
+      setTimeout(function() {
+        atcBtn.textContent = 'In den Warenkorb';
+        atcBtn.classList.remove('is-err');
+      }, 3000);
+      return;
+    }
+    if (!S.vorhand && !S.rueckhand) {
+      atcBtn.textContent = 'Schritt 2: Kein Belag ausgewählt';
+      atcBtn.classList.add('is-err');
+      setTimeout(function() {
+        atcBtn.textContent = 'In den Warenkorb';
+        atcBtn.classList.remove('is-err');
+      }, 3000);
+      return;
+    }
+
     var items = [];
     if (S.holz) items.push({ id: S.holz.variant.id, quantity: 1 });
     if (S.vorhand) items.push({ id: S.vorhand.variant.id, quantity: 1, properties: { 'Position': 'Vorhand' } });
     if (S.rueckhand) items.push({ id: S.rueckhand.variant.id, quantity: 1, properties: { 'Position': 'Rückhand' } });
     if (S.kantenband) items.push({ id: S.kantenband.variant.id, quantity: 1 });
-    if (!items.length) return;
     // Klebeservice wird immer automatisch hinzugefügt
     items.push({ id: KLEBE_ID, quantity: 1, properties: { 'Service': 'Klebeservice' } });
     if (S.versiegelung && VERSIEGELUNG_ID) items.push({ id: +VERSIEGELUNG_ID, quantity: 1, properties: { 'Service': 'Schlägerversiegelung' } });
