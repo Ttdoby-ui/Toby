@@ -1229,13 +1229,16 @@
     atcBtn.disabled = true;
     atcBtn.textContent = 'Wird hinzugefügt…';
 
+    console.log('[Konfigurator] addToCart items:', JSON.stringify(items));
     fetch('/cart/add.js', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: items }),
     })
       .then(function(r) {
-        if (!r.ok) return r.json().then(function(d) { throw new Error(d.description || 'Fehler'); });
+        if (!r.ok) return r.json().then(function(d) {
+          throw new Error(d.description || d.message || 'HTTP ' + r.status);
+        });
         return r.json();
       })
       .then(function() {
@@ -1248,8 +1251,8 @@
         }));
       })
       .catch(function(err) {
-        console.error('[Konfigurator]', err);
-        atcBtn.textContent = 'Fehler – bitte erneut versuchen';
+        console.error('[Konfigurator] cart error:', err.message, '| items:', JSON.stringify(items));
+        atcBtn.textContent = 'Fehler: ' + err.message;
         atcBtn.classList.add('is-err');
         atcBtn.disabled = false;
       });
