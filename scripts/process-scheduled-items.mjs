@@ -3,8 +3,10 @@
  * Processes time-limited sale prices and collections stored as Shopify metaobjects.
  *
  * scheduled_sale:
- *   - Active (end_date >= today): apply sale_price as variant price, original_price as compareAtPrice
- *   - Expired (end_date < today): restore original_price as price, remove compareAtPrice, delete entry
+ *   - Active (end_date >= today): saves current variant price as pre_sale_price (once),
+ *     then applies sale_price as variant price and original_price as compareAtPrice.
+ *   - Expired (end_date < today): restores pre_sale_price (or original_price as fallback),
+ *     removes compareAtPrice, deletes entry.
  *
  * scheduled_collection:
  *   - Expired (end_date < today): delete the collection, delete entry
@@ -70,6 +72,7 @@ async function processScheduledSales() {
     const origPrice    = field(entry.fields, 'original_price');
     const endDate      = field(entry.fields, 'end_date');
     const note         = field(entry.fields, 'note') || entry.id;
+    const preSalePrice = field(entry.fields, 'pre_sale_price');
 
     if (!variantId || !salePrice || !origPrice || !endDate) {
       console.warn(`  [SKIP] Incomplete entry ${entry.id} — missing required fields`);
@@ -95,14 +98,15 @@ async function processScheduledSales() {
     const productId = product.id;
 
     if (expired) {
-      console.log(`    Restoring price ${origPrice} (was ${currentPrice})`);
+      const restorePrice = preSalePrice || origPrice;
+      console.log(`    Restoring price ${restorePrice} (was ${currentPrice}${preSalePrice ? '' : ', pre_sale_price not set — using original_price as fallback'})`);
       const upd = await gql(
         `mutation($pid: ID!, $variants: [ProductVariantsBulkInput!]!) {
           productVariantsBulkUpdate(productId: $pid, variants: $variants) {
             userErrors { field message }
           }
         }`,
-        { pid: productId, variants: [{ id: variantId, price: origPrice, compareAtPrice: null }] }
+        { pid: productId, variants: [{ id: variantId, price: restorePrice, compareAtPrice: null }] }
       );
       const errs = upd.productVariantsBulkUpdate.userErrors;
       if (errs.length) { console.error(`    Price restore failed:`, errs); continue; }
@@ -114,6 +118,21 @@ async function processScheduledSales() {
       if (Math.abs(currentNum - salePriceNum) < 0.005) {
         console.log(`    Sale already applied (${currentPrice}), skipping`);
       } else {
+        // Save current price as pre_sale_price before applying sale (only on first application)
+        if (!preSalePrice) {
+          const save = await gql(
+            `mutation($id: ID!, $metaobject: MetaobjectUpdateInput!) {
+              metaobjectUpdate(id: $id, metaobject: $metaobject) {
+                metaobject { id }
+                userErrors { field message }
+              }
+            }`,
+            { id: entry.id, metaobject: { fields: [{ key: 'pre_sale_price', value: currentPrice }] } }
+          );
+          const errs2 = save.metaobjectUpdate.userErrors;
+          if (errs2.length) console.warn(`    Warning saving pre_sale_price:`, errs2);
+          else console.log(`    Saved pre-sale price ${currentPrice}`);
+        }
         console.log(`    Applying sale: ${salePrice} (original ${origPrice})`);
         const upd = await gql(
           `mutation($pid: ID!, $variants: [ProductVariantsBulkInput!]!) {
