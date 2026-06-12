@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       oauth_code:
-        description: 'OAuth code aus webhook.site (URL-Parameter code=...)\''
+        description: OAuth code aus webhook.site
         required: true
         type: string
 
