@@ -1008,7 +1008,7 @@
 
     var v0 = product.variants[0];
     var _basePrice = parseFloat(v0.price);
-    var _vipObj = applyVip(_basePrice, product.tags);
+    var _vipObj = applyVip(_basePrice, parseFloat(v0.compare_at_price) || 0, product.tags);
     var _priceHtml = _vipObj.original !== null
       ? 'ab ' + fmtPrice(_vipObj.price.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(_vipObj.original.toFixed(2)) + '</s>'
       : 'ab ' + fmtPrice(v0.price);
@@ -1183,7 +1183,7 @@
       var name = product.title;
       if (variant.title && variant.title !== 'Default Title') name += ' – ' + variant.title;
       var price = parseFloat(variant.price);
-      var vipObj = applyVip(price, product.tags);
+      var vipObj = applyVip(price, parseFloat(variant.compare_at_price) || 0, product.tags);
       var displayPrice = vipObj.price;
       total += displayPrice;
       var priceHtml = vipObj.original !== null
@@ -1360,9 +1360,14 @@
     return (',' + tags + ',').indexOf(',' + tag + ',') !== -1;
   }
 
-  function applyVip(price, tags) {
+  function applyVip(price, compareAtPrice, tags) {
     if (VIP_DISCOUNT <= 0 || !hasTag(tags, 'for_vip')) return { price: price, original: null };
-    return { price: price * (100 - VIP_DISCOUNT) / 100, original: price };
+    var uvp = (compareAtPrice && compareAtPrice > price) ? compareAtPrice : price;
+    var existingPct = uvp > price ? (uvp - price) / uvp * 100 : 0;
+    if (VIP_DISCOUNT > existingPct) {
+      return { price: uvp * (100 - VIP_DISCOUNT) / 100, original: uvp };
+    }
+    return { price: price, original: uvp > price ? uvp : null };
   }
 
   function esc(s) {
