@@ -141,6 +141,14 @@
     overflow: hidden;
   }
   .k-card__price { font-size: 0.82rem; font-weight: 700; }
+  .k-orig-price {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-foreground-secondary, #999);
+    text-decoration: line-through;
+    margin-left: 0.2rem;
+  }
+  .k-sum-row__price .k-orig-price { font-size: 0.8rem; }
 
   /* ---- Variant selectors ---- */
   .k-vars {
@@ -494,6 +502,16 @@
   .k-search:focus { border-color: var(--color-primary, #111); box-shadow: 0 0 0 2px rgba(0,0,0,0.06); }
 {% endstylesheet %}
 
+{%- liquid
+  assign vip_discount = 0
+  if customer.tags contains 'VIP3'
+    assign vip_discount = settings.vip3_discount | times: 1.0
+  elsif customer.tags contains 'VIP2'
+    assign vip_discount = settings.vip2_discount | times: 1.0
+  elsif customer.tags contains 'VIP1'
+    assign vip_discount = settings.vip1_discount | times: 1.0
+  endif
+-%}
 <div class="konfig" id="schlaeger-konfigurator">
   <h2 class="konfig__headline">Schläger-Konfigurator</h2>
   <p class="konfig__sub">Stelle Deinen individuellen Tischtennisschläger zusammen</p>
@@ -649,6 +667,9 @@
     'pink': '#d63384',
     'braun': '#7b4a2d', 'brown': '#7b4a2d',
   };
+
+  /* VIP discount percentage (0 = not a VIP customer) */
+  var VIP_DISCOUNT = {{ vip_discount | default: 0 }};
 
   /* ---- State ---- */
   var S = { holz: null, vorhand: null, rueckhand: null, kantenband: null, versiegelung: false };
@@ -986,13 +1007,18 @@
     }
 
     var v0 = product.variants[0];
+    var _basePrice = parseFloat(v0.price);
+    var _vipObj = applyVip(_basePrice, product.tags);
+    var _priceHtml = _vipObj.original !== null
+      ? 'ab ' + fmtPrice(_vipObj.price.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(_vipObj.original.toFixed(2)) + '</s>'
+      : 'ab ' + fmtPrice(v0.price);
     card.innerHTML =
       '<div class="k-card__img">' +
       (imgSrc ? '<img src="' + imgSrc + '" alt="' + esc(product.title) + '" loading="lazy">' : '<div class="k-card__img-empty">🏓</div>') +
       '</div>' +
       '<div class="k-card__body">' +
       '<div class="k-card__name">' + esc(product.title) + '</div>' +
-      '<div class="k-card__price">ab ' + fmtPrice(v0.price) + '</div>' +
+      '<div class="k-card__price">' + _priceHtml + '</div>' +
       '</div>';
 
     // Single-variant: click card → select
@@ -1157,12 +1183,17 @@
       var name = product.title;
       if (variant.title && variant.title !== 'Default Title') name += ' – ' + variant.title;
       var price = parseFloat(variant.price);
-      total += price;
+      var vipObj = applyVip(price, product.tags);
+      var displayPrice = vipObj.price;
+      total += displayPrice;
+      var priceHtml = vipObj.original !== null
+        ? fmtPrice(displayPrice.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(vipObj.original.toFixed(2)) + '</s>'
+        : fmtPrice(price.toFixed(2));
       rows.push(
         '<div class="k-sum-row">' +
         (img ? '<img class="k-sum-row__img" src="' + img + '" alt="">' : '<div class="k-sum-row__icon">' + icon + '</div>') +
         '<div class="k-sum-row__info"><div class="k-sum-row__lbl">' + esc(label) + '</div><div class="k-sum-row__name">' + esc(name) + '</div></div>' +
-        '<div class="k-sum-row__price">' + fmtPrice(price.toFixed(2)) + '</div>' +
+        '<div class="k-sum-row__price">' + priceHtml + '</div>' +
         '</div>'
       );
     }
@@ -1322,6 +1353,16 @@
 
   function fmtPrice(p) {
     return parseFloat(p).toFixed(2).replace('.', ',') + ' €';
+  }
+
+  function hasTag(tags, tag) {
+    if (!tags) return false;
+    return (',' + tags + ',').indexOf(',' + tag + ',') !== -1;
+  }
+
+  function applyVip(price, tags) {
+    if (VIP_DISCOUNT <= 0 || !hasTag(tags, 'for_vip')) return { price: price, original: null };
+    return { price: price * (100 - VIP_DISCOUNT) / 100, original: price };
   }
 
   function esc(s) {
