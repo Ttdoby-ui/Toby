@@ -1,0 +1,22 @@
+name: Process Scheduled Sales & Collections
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # daily at 01:00 UTC
+  workflow_dispatch:        # manual trigger from GitHub Actions tab
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Process scheduled items
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+        run: node scripts/process-scheduled-items.mjs
