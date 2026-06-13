@@ -1,0 +1,147 @@
+{%- comment -%}
+  Klebe-Service Snippet für Belag-Produkte (futurespin).
+  Zeigt "Belag kleben lassen (+2,50 €)" nur bei Produkten mit Tag "Belag".
+  Klebe-Service Variant ID: 57810488852828
+{%- endcomment -%}
+
+{% stylesheet %}
+  .klebe-service {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-block: var(--padding-sm, 0.5rem) 0;
+  }
+
+  .klebe-service__label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-family: var(--font-body--family, inherit);
+    font-size: var(--font-size--sm, 0.875rem);
+    line-height: 1.4;
+    color: var(--color-foreground);
+  }
+
+  .klebe-service__checkbox {
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    cursor: pointer;
+    accent-color: var(--color-primary, currentColor);
+    border-radius: 2px;
+  }
+
+  .klebe-service__price {
+    color: var(--color-foreground-secondary, color-mix(in srgb, var(--color-foreground) 60%, transparent));
+    font-size: var(--font-size--xs, 0.75rem);
+    white-space: nowrap;
+    margin-inline-start: 0.125rem;
+  }
+{% endstylesheet %}
+
+{% if product.tags contains 'Belag' %}
+
+<div class="klebe-service" data-klebe-block-id="{{ block.id }}">
+  <label class="klebe-service__label" for="klebe-service-{{ block.id }}">
+    <input
+      type="checkbox"
+      id="klebe-service-{{ block.id }}"
+      class="klebe-service__checkbox"
+    >
+    <span class="klebe-service__text">
+      {{ 'klebe_service.text' | t }}
+      <span class="klebe-service__price">{{ 'klebe_service.price' | t }}</span>
+    </span>
+  </label>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var KLEBE_VARIANT_ID = 57810488852828;
+  var blockId = '{{ block.id | escape }}';
+  var isAdding = false;
+  var pendingAdd = false;
+
+  function init() {
+    var checkbox = document.getElementById('klebe-service-' + blockId);
+    if (!checkbox) return;
+
+    // Die Checkbox liegt direkt im Produkt-Form -> closest('form') ist zuverlässiger
+    // als querySelector von außen nach innen
+    var form = checkbox.closest('form');
+    if (!form) return;
+
+    // Beim Form-Submit: Absicht merken (nicht schon hier adden,
+    // da handleSubmit noch event.preventDefault() und fetch ausführt)
+    form.addEventListener('submit', function () {
+      if (checkbox.checked && !isAdding) {
+        pendingAdd = true;
+      }
+    });
+
+    // Auf document-Ebene lauschen: CartAddEvent (events.js) bubbled von
+    // product-form-component -> document. Dort fangen wir es sicher ab.
+    document.addEventListener('cart:update', function (event) {
+      if (!pendingAdd || isAdding) return;
+
+      var detail = event.detail;
+      if (!detail || !detail.data) return;
+
+      // Nur auf Erfolg reagieren (didError fehlt oder ist false)
+      if (detail.data.didError === true) return;
+
+      // Nur auf Events vom Produktformular reagieren, nicht auf unsere eigenen
+      if (detail.data.source !== 'product-form-component') return;
+
+      pendingAdd = false;
+      addKlebeService();
+    });
+  }
+
+  function addKlebeService() {
+    isAdding = true;
+
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        items: [{ id: KLEBE_VARIANT_ID, quantity: 1 }]
+      })
+    })
+      .then(function (r) {
+        if (!r.ok) {
+          return r.json().then(function (d) {
+            throw new Error(d.description || 'Cart-Add fehlgeschlagen');
+          });
+        }
+        return r.json();
+      })
+      .then(function () {
+        // cart:update erneut feuern damit Theme-Warenkorb-Zähler aktualisiert wird
+        document.dispatchEvent(new CustomEvent('cart:update', {
+          bubbles: true,
+          detail: { data: { source: 'klebe-service' } }
+        }));
+        isAdding = false;
+      })
+      .catch(function (err) {
+        console.warn('[Klebe-Service] Fehler:', err);
+        isAdding = false;
+      });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    requestAnimationFrame(init);
+  }
+})();
+</script>
+
+{% endif %}

@@ -1,0 +1,247 @@
+{% stylesheet %}
+  .schlaeger-konfig-wrap {
+    width: 100%;
+    margin-block-start: 0.5rem;
+  }
+
+  .schlaeger-konfig-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: var(--padding-lg, 0.75rem) var(--padding-4xl, 1.5rem);
+    background: var(--color-foreground, #111);
+    color: var(--color-background, #fff);
+    border: 2px solid var(--color-foreground, #111);
+    border-radius: var(--buttons-radius, 4px);
+    font-size: var(--font-size--sm, 0.875rem);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: var(--font-body--family, inherit);
+    line-height: 1.3;
+    transition: opacity 0.15s;
+    min-height: var(--minimum-touch-target, 44px);
+  }
+  .schlaeger-konfig-btn:hover { opacity: 0.8; }
+
+  /* ---- Position dialog ---- */
+  .schlaeger-pos-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .schlaeger-pos-overlay.is-hidden { display: none; }
+
+  .schlaeger-pos-box {
+    background: var(--color-background, #fff);
+    border-radius: 10px;
+    padding: 1.75rem 1.5rem 1.5rem;
+    width: min(340px, 90vw);
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  }
+
+  .schlaeger-pos-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+    font-size: 1.1rem;
+    color: var(--color-foreground-secondary, #777);
+    min-width: 2rem;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .schlaeger-pos-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 1.5rem 1.25rem 0;
+    font-family: var(--font-heading--family, inherit);
+    line-height: 1.35;
+  }
+
+  .schlaeger-pos-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .schlaeger-pos-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    font-family: var(--font-body--family, inherit);
+  }
+
+  .schlaeger-pos-option input[type='radio'] {
+    width: 1.1rem;
+    height: 1.1rem;
+    cursor: pointer;
+    accent-color: var(--color-primary, #111);
+    flex-shrink: 0;
+  }
+
+  .schlaeger-pos-submit {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--color-primary, #111);
+    color: var(--color-background, #fff);
+    border: none;
+    border-radius: var(--buttons-radius, 4px);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    font-family: var(--font-body--family, inherit);
+    transition: opacity 0.15s;
+    min-height: var(--minimum-touch-target, 44px);
+  }
+  .schlaeger-pos-submit:hover { opacity: 0.85; }
+{% endstylesheet %}
+
+{%- assign sk_is_belag = false -%}
+{%- assign sk_is_holz  = false -%}
+{%- if product.tags contains 'Belag' -%}{%- assign sk_is_belag = true -%}{%- endif -%}
+{%- if product.tags contains 'Holz'  -%}{%- assign sk_is_holz  = true -%}{%- endif -%}
+
+{% if sk_is_belag or sk_is_holz %}
+  {%- assign sk_uid = product.id | append: '-' | append: block.id -%}
+
+  <div class="schlaeger-konfig-wrap">
+    <button
+      type="button"
+      class="schlaeger-konfig-btn"
+      id="schlaeger-konfig-open-{{ sk_uid }}"
+      data-product-id="{{ product.id }}"
+    >
+      🏓 Schläger konfigurieren
+    </button>
+  </div>
+
+  {% if sk_is_belag %}
+    <div
+      class="schlaeger-pos-overlay is-hidden"
+      id="schlaeger-pos-overlay-{{ sk_uid }}"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="schlaeger-pos-title-{{ sk_uid }}"
+    >
+      <div class="schlaeger-pos-box">
+        <button
+          type="button"
+          class="schlaeger-pos-close"
+          id="schlaeger-pos-close-{{ sk_uid }}"
+          aria-label="Schließen"
+        >✕</button>
+        <p class="schlaeger-pos-title" id="schlaeger-pos-title-{{ sk_uid }}">
+          Wähle die Position in der Konfiguration
+        </p>
+        <div class="schlaeger-pos-options">
+          <label class="schlaeger-pos-option">
+            <input
+              type="radio"
+              name="schlaeger-pos-{{ sk_uid }}"
+              value="vorhand"
+              checked
+            >
+            Vorhand
+          </label>
+          <label class="schlaeger-pos-option">
+            <input
+              type="radio"
+              name="schlaeger-pos-{{ sk_uid }}"
+              value="rueckhand"
+            >
+            Rückhand
+          </label>
+        </div>
+        <button
+          type="button"
+          class="schlaeger-pos-submit"
+          id="schlaeger-pos-submit-{{ sk_uid }}"
+        >
+          Auswählen
+        </button>
+      </div>
+    </div>
+  {% endif %}
+
+  <script>
+  (function () {
+    'use strict';
+    var uid           = '{{ sk_uid | escape }}';
+    var productId     = '{{ product.id }}';
+    var productHandle = '{{ product.handle }}';
+    var isHolz        = {{ sk_is_holz | json }};
+
+    var openBtn = document.getElementById('schlaeger-konfig-open-' + uid);
+    if (!openBtn) return;
+
+    function getVariantId() {
+      var inp = document.querySelector(
+        'product-form-component[data-product-id="' + productId + '"] input[name="id"]'
+      );
+      if (inp) return inp.value;
+      var fallback = document.querySelector('[data-type="add-to-cart-form"] input[name="id"]');
+      return fallback ? fallback.value : '';
+    }
+
+    function goToKonfigurator(position) {
+      var variantId = getVariantId();
+      var previewId = new URLSearchParams(window.location.search).get('preview_theme_id');
+      window.location.href = '/pages/schlaeger-konfigurator'
+        + '?position=' + encodeURIComponent(position)
+        + '&product_id=' + encodeURIComponent(productId)
+        + '&product_handle=' + encodeURIComponent(productHandle)
+        + (variantId ? '&variant_id=' + encodeURIComponent(variantId) : '')
+        + (previewId ? '&preview_theme_id=' + encodeURIComponent(previewId) : '');
+    }
+
+    if (isHolz) {
+      openBtn.addEventListener('click', function () { goToKonfigurator('holz'); });
+    } else {
+      var overlay   = document.getElementById('schlaeger-pos-overlay-'   + uid);
+      var closeBtn  = document.getElementById('schlaeger-pos-close-'     + uid);
+      var submitBtn = document.getElementById('schlaeger-pos-submit-'    + uid);
+      if (!overlay) return;
+
+      openBtn.addEventListener('click', function () {
+        overlay.classList.remove('is-hidden');
+      });
+      closeBtn.addEventListener('click', function () {
+        overlay.classList.add('is-hidden');
+      });
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) overlay.classList.add('is-hidden');
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') overlay.classList.add('is-hidden');
+      });
+      submitBtn.addEventListener('click', function () {
+        var radio    = overlay.querySelector('input[name="schlaeger-pos-' + uid + '"]:checked');
+        var position = radio ? radio.value : 'vorhand';
+        goToKonfigurator(position);
+      });
+    }
+  })();
+  </script>
+{% endif %}

@@ -1,0 +1,103 @@
+{
+  "konfigurator": {
+    "headline": "Schläger-Konfigurator",
+    "sub": "Stelle Deinen individuellen Tischtennisschläger zusammen",
+    "nav_aria": "Konfigurator Schritte",
+    "optional": "(optional)",
+    "steps": {
+      "holz": "Holz",
+      "vorhandbelag": "Vorhandbelag",
+      "rueckhandbelag": "Rückhandbelag",
+      "kantenband": "Kantenband",
+      "versiegelung": "Versiegelung",
+      "zusammenfassung": "Zusammenfassung"
+    },
+    "titles": {
+      "holz": "Schritt 1: Wähle Dein Holz",
+      "vorhand": "Schritt 2: Vorhandbelag auswählen",
+      "rueckhand": "Schritt 3: Rückhandbelag auswählen",
+      "kantenband": "Schritt 4: Kantenband auswählen",
+      "versiegelung": "Schritt 5: Schlägerversiegelung",
+      "summary": "Dein individueller Schläger"
+    },
+    "search": {
+      "holz": "Holz suchen…",
+      "belag": "Belag suchen…",
+      "kantenband": "Kantenband suchen…"
+    },
+    "klebeservice": {
+      "bold": "Klebeservice inklusive:",
+      "text": "Deine Beläge werden professionell aufgeklebt (+{{ price }} € werden automatisch hinzugefügt)."
+    },
+    "versiegelung": {
+      "desc": "Das Kantenband wird professionell versiegelt – für optimalen Schutz und längere Haltbarkeit.",
+      "yes": "Ja, versiegeln",
+      "no": "Nein, danke",
+      "no_price": "Ohne Versiegelung"
+    },
+    "total": "Gesamtpreis",
+    "black_hint": "⚠️ Du hast für die Vorhand einen schwarzen Belag gewählt – bitte wähle für die Rückhand eine andere Farbe (max. ein schwarzer Belag erlaubt).",
+    "black_warning_pre": "⚠️ Tischtennisregel: Bitte wähle mindestens einen",
+    "black_warning_bold": "schwarzen",
+    "black_warning_post": "Belag. Der andere darf eine beliebige Farbe haben.",
+    "btn": {
+      "next_holz": "Weiter zu Vorhandbelag →",
+      "next_vorhand": "Weiter zu Rückhandbelag →",
+      "next_rueckhand": "Weiter zu Kantenband →",
+      "next_kantenband": "Weiter zur Versiegelung →",
+      "next_versiegelung": "Zur Zusammenfassung →",
+      "back": "← Zurück",
+      "atc": "In den Warenkorb"
+    },
+    "js": {
+      "already_selected": "Bereits ausgewählt",
+      "change": "Ändern",
+      "no_rubbers": "Keine Beläge gefunden.",
+      "no_kantenband": "Kein Kantenband gefunden.",
+      "no_products": "Keine Produkte gefunden.",
+      "selected": "✓ Ausgewählt",
+      "select": "Auswählen",
+      "black_blocked_title": "Schwarz nicht möglich – bereits auf Vorhand",
+      "black_taken": "Schwarz bereits auf Vorhand vergeben",
+      "not_available": "Nicht verfügbar",
+      "adding": "Wird hinzugefügt…",
+      "in_cart": "✓ Im Warenkorb!",
+      "error_no_holz": "Schritt 1: Holz wurde noch nicht ausgewählt",
+      "error_no_belag": "Schritt 2: Kein Belag ausgewählt",
+      "klebeservice_auto": "Klebeservice (automatisch)",
+      "klebeservice_desc": "Beläge professionell aufkleben",
+      "versiegelung_label": "Schlägerversiegelung",
+      "versiegelung_desc": "Kanten professionell versiegeln",
+      "row_holz": "Holz",
+      "row_vorhand": "Belag Vorhand",
+      "row_rueckhand": "Belag Rückhand",
+      "row_kantenband": "Kantenband",
+      "note_header": "=== SCHLÄGERKONFIGURATION ===",
+      "note_holz": "Holz:             ",
+      "note_vorhand": "Vorhand-Belag:    ",
+      "note_rueckhand": "Rückhand-Belag:   ",
+      "note_kantenband": "Kantenband:       ",
+      "note_klebeservice": "Klebeservice:     ",
+      "note_versiegelung": "Versiegelung:     ",
+      "note_footer": "============================",
+      "note_klebeservice_val": "Ja (Beläge aufkleben)",
+      "note_none": "keins",
+      "attr_holz": "Schlägerbau – Holz",
+      "attr_vorhand": "Schlägerbau – Vorhand-Belag",
+      "attr_rueckhand": "Schlägerbau – Rückhand-Belag",
+      "attr_klebeservice": "Schlägerbau – Klebeservice",
+      "attr_kantenband": "Schlägerbau – Kantenband",
+      "attr_versiegelung": "Schlägerbau – Versiegelung",
+      "yes": "Ja",
+      "no": "Nein",
+      "price_from": "ab",
+      "badge_sale": "Angebot",
+      "error_prefix": "Fehler: ",
+      "decimal_sep": ","
+    }
+  },
+  "klebe_service": {
+    "text": "Belag kleben lassen",
+    "price": "(+2,50 €)"
+  }
+}

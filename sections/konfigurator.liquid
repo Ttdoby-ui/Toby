@@ -1,0 +1,1536 @@
+{% stylesheet %}
+  .konfig {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 4rem;
+    font-family: var(--font-body--family, sans-serif);
+    color: var(--color-foreground, #111);
+  }
+  .konfig__headline {
+    text-align: center;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .konfig__sub {
+    text-align: center;
+    color: var(--color-foreground-secondary, #666);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+
+  /* ---- Progress nav ---- */
+  .konfig__nav {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 2px solid var(--color-border, #e0e0e0);
+    margin-bottom: 2rem;
+    gap: 0;
+  }
+  .konfig__nav::-webkit-scrollbar { display: none; }
+  .konfig__nav-btn {
+    flex: 1;
+    min-width: 6rem;
+    padding: 0.7rem 0.5rem 0.6rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-foreground-secondary, #999);
+    text-align: center;
+    white-space: nowrap;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+  .konfig__nav-btn .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    background: var(--color-border, #ccc);
+    color: var(--color-background, #fff);
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .konfig__nav-btn.is-active {
+    color: var(--color-foreground, #111);
+    border-bottom-color: var(--color-primary, #111);
+    font-weight: 700;
+  }
+  .konfig__nav-btn.is-active .num { background: var(--color-primary, #111); }
+  .konfig__nav-btn.is-done { color: var(--color-foreground, #333); }
+  .konfig__nav-btn.is-done .num { background: var(--color-primary, #111); }
+
+  /* ---- Panel ---- */
+  .konfig__panel { display: block; }
+  .konfig__panel.is-hidden { display: none; }
+  .konfig__panel-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+  }
+
+  /* ---- Grid ---- */
+  .konfig__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+    min-height: 80px;
+  }
+  @media (min-width: 600px) {
+    .konfig__grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  }
+
+  /* ---- Card ---- */
+  .k-card {
+    border: 2px solid var(--color-border, #e2e2e2);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--color-background, #fff);
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    cursor: default;
+  }
+  .k-card.is-clickable { cursor: pointer; }
+  .k-card.is-clickable:hover {
+    border-color: var(--color-primary, #555);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+  .k-card.is-selected {
+    border-color: var(--color-primary, #111);
+    box-shadow: 0 0 0 2px var(--color-primary, #111);
+  }
+  .k-card__img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--color-background-secondary, #f4f4f4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .k-card__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .k-card__img-empty { font-size: 2.5rem; opacity: 0.25; }
+  .k-card__body { padding: 0.6rem; flex: 1; }
+  .k-card__name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 0.2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .k-card__price { font-size: 0.82rem; font-weight: 700; }
+  .k-orig-price {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-foreground-secondary, #999);
+    text-decoration: line-through;
+    margin-left: 0.2rem;
+  }
+  .k-sum-row__price .k-orig-price { font-size: 0.8rem; }
+  .k-price-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    margin-right: 0.2rem;
+    vertical-align: middle;
+    line-height: 1.4;
+  }
+  .k-price-badge--sale { background: #dc2626; color: #fff; }
+  .k-price-badge--vip  { background: #111; color: #fff; }
+
+  /* ---- Variant selectors ---- */
+  .k-vars {
+    padding: 0.5rem 0.6rem 0.65rem;
+    border-top: 1px solid var(--color-border, #ececec);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .k-vars__lbl {
+    display: block;
+    font-size: 0.67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-foreground-secondary, #888);
+    margin-bottom: 0.25rem;
+  }
+  .k-swatches { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .k-swatch {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
+    outline: none;
+    padding: 0;
+  }
+  .k-swatch:hover:not(:disabled) { transform: scale(1.18); }
+  .k-swatch.is-on { border-color: var(--color-primary, #111); box-shadow: 0 0 0 1px var(--color-primary,#111); }
+  .k-swatch:disabled, .k-swatch.is-blocked { opacity: 0.28; cursor: not-allowed; transform: none; }
+  .k-pills { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+  .k-pill {
+    padding: 0.18rem 0.5rem;
+    border: 1px solid var(--color-border, #ccc);
+    border-radius: 999px;
+    font-size: 0.73rem;
+    background: none;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    line-height: 1.5;
+  }
+  .k-pill:hover:not(:disabled) { border-color: var(--color-primary, #111); }
+  .k-pill.is-on {
+    background: var(--color-primary, #111);
+    color: var(--color-background, #fff);
+    border-color: var(--color-primary, #111);
+  }
+  .k-pill:disabled { opacity: 0.35; cursor: not-allowed; }
+  .k-pick-btn {
+    width: 100%;
+    margin-top: 0.3rem;
+    padding: 0.4rem 0.5rem;
+    background: var(--color-primary, #111);
+    color: var(--color-background, #fff);
+    border: none;
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .k-pick-btn:hover:not(:disabled) { opacity: 0.82; }
+  .k-pick-btn:disabled { background: var(--color-foreground-secondary, #aaa); cursor: not-allowed; }
+  .k-pick-btn.is-hidden { display: none; }
+
+  /* ---- Dienstleistungen ---- */
+  .k-services {
+    margin-bottom: 1.5rem;
+    padding: 0.9rem 1rem;
+    background: var(--color-background-secondary, #f8f8f8);
+    border: 1px solid var(--color-border, #e0e0e0);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .k-service-notice {
+    font-size: 0.88rem;
+    color: var(--color-foreground, #111);
+    line-height: 1.5;
+  }
+  .k-service-opt {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 500;
+    font-family: var(--font-body--family, inherit);
+  }
+  .k-service-opt input { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--color-primary, #111); flex-shrink: 0; }
+
+  /* ---- Black hint ---- */
+  .k-hint {
+    background: #fffbeb;
+    border: 1px solid #f59e0b;
+    color: #78350f;
+    padding: 0.7rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .k-hint.is-hidden { display: none; }
+
+  /* ---- Loading / empty / error ---- */
+  .k-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+  }
+  .k-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid var(--color-border, #ddd);
+    border-top-color: var(--color-primary, #111);
+    border-radius: 50%;
+    animation: konfig-spin 0.7s linear infinite;
+  }
+  @keyframes konfig-spin { to { transform: rotate(360deg); } }
+  .k-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--color-foreground-secondary, #888);
+  }
+  .k-msg.is-error { color: #b91c1c; }
+
+  /* ---- Footer buttons ---- */
+  .konfig__footer {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-border, #e0e0e0);
+    flex-wrap: wrap;
+  }
+  .k-btn {
+    padding: 0.7rem 1.4rem;
+    border-radius: 5px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    line-height: 1.3;
+  }
+  .k-btn:hover:not(:disabled) { opacity: 0.82; }
+  .k-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .k-btn--next { background: var(--color-primary, #111); color: var(--color-background, #fff); }
+  .k-btn--back { background: none; color: var(--color-foreground-secondary, #555); border: 1px solid var(--color-border, #ccc); }
+  .k-btn--atc { background: var(--color-primary, #111); color: var(--color-background, #fff); font-size: 1rem; padding: 0.85rem 2rem; }
+  .k-btn--atc.is-ok { background: #15803d; }
+  .k-btn--atc.is-err { background: #b91c1c; }
+
+  /* ---- Summary ---- */
+  .konfig__summary { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.5rem; }
+  .k-sum-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem;
+    background: var(--color-background-secondary, #f8f8f8);
+    border-radius: 8px;
+  }
+  .k-sum-row__img {
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+    border-radius: 5px;
+    background: var(--color-background, #fff);
+    flex-shrink: 0;
+  }
+  .k-sum-row__icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 5px;
+    background: var(--color-border, #e4e4e4);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+  }
+  .k-sum-row__info { flex: 1; min-width: 0; }
+  .k-sum-row__lbl {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-foreground-secondary, #888);
+  }
+  .k-sum-row__name { font-size: 0.88rem; font-weight: 600; margin-top: 0.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .k-sum-row__price { font-size: 0.92rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+  .konfig__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0.5rem;
+    border-top: 2px solid var(--color-foreground, #111);
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .konfig__total-price { font-size: 1.35rem; }
+
+  /* ---- Nav thumbnail images ---- */
+  .k-nav-img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    border-radius: 4px;
+    background: var(--color-background, #fff);
+    flex-shrink: 0;
+    display: block;
+    border: 1px solid var(--color-border, #e0e0e0);
+  }
+
+  /* ---- Kantenband optional badge ---- */
+  .k-optional {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-foreground-secondary, #888);
+    margin-left: 0.4rem;
+  }
+
+  /* ---- Pre-selection banner (from product page) ---- */
+  .k-pre-sel {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-background-secondary, #f3f3f3);
+    border: 2px solid var(--color-primary, #111);
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+  }
+  .k-pre-sel.is-hidden { display: none; }
+  .k-pre-sel__img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: var(--color-background, #fff);
+    flex-shrink: 0;
+  }
+  .k-pre-sel__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+    background: var(--color-border, #e4e4e4);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+  }
+  .k-pre-sel__info { flex: 1; min-width: 0; }
+  .k-pre-sel__lbl {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-primary, #111);
+    margin-bottom: 0.15rem;
+  }
+  .k-pre-sel__name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .k-pre-sel__var { font-size: 0.8rem; color: var(--color-foreground-secondary, #777); }
+  .k-pre-sel__clear {
+    font-size: 0.78rem;
+    color: var(--color-foreground-secondary, #888);
+    background: none;
+    border: 1px solid var(--color-border, #ccc);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0.3rem 0.6rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .k-pre-sel__clear:hover { border-color: var(--color-foreground, #111); color: var(--color-foreground, #111); }
+
+  /* ---- Versiegelung step ---- */
+  .k-vers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 480px) { .k-vers-grid { grid-template-columns: 1fr; } }
+  .k-vers-opt {
+    border: 2px solid var(--color-border, #e2e2e2);
+    border-radius: 10px;
+    padding: 1.75rem 1rem;
+    background: var(--color-background, #fff);
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-align: center;
+    font-family: var(--font-body--family, inherit);
+  }
+  .k-vers-opt:hover { border-color: var(--color-primary, #111); box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+  .k-vers-opt.is-selected { border-color: var(--color-primary, #111); box-shadow: 0 0 0 2px var(--color-primary, #111); }
+  .k-vers-opt__icon { font-size: 2.2rem; display: block; margin-bottom: 0.6rem; }
+  .k-vers-opt__title { font-size: 1rem; font-weight: 700; display: block; margin-bottom: 0.3rem; }
+  .k-vers-opt__price { font-size: 0.85rem; color: var(--color-foreground-secondary, #777); display: block; }
+
+  /* ---- Nav emoji fallback ---- */
+  .k-nav-emoji {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  /* ---- Search inputs ---- */
+  .k-search-wrap {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+  .k-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .k-search {
+    width: 100%;
+    padding: 0.55rem 0.75rem 0.55rem 2.25rem;
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-family: var(--font-body--family, inherit);
+    color: var(--color-foreground, #111);
+    background: var(--color-background, #fff);
+    outline: none;
+    box-sizing: border-box;
+  }
+  .k-search:focus { border-color: var(--color-primary, #111); box-shadow: 0 0 0 2px rgba(0,0,0,0.06); }
+{% endstylesheet %}
+
+{%- liquid
+  assign vip_discount = 0
+  if customer.tags contains 'VIP3'
+    assign vip_discount = settings.vip3_discount | times: 1.0
+  elsif customer.tags contains 'VIP2'
+    assign vip_discount = settings.vip2_discount | times: 1.0
+  elsif customer.tags contains 'VIP1'
+    assign vip_discount = settings.vip1_discount | times: 1.0
+  endif
+-%}
+<div class="konfig" id="schlaeger-konfigurator">
+  <h2 class="konfig__headline">{{ 'konfigurator.headline' | t }}</h2>
+  <p class="konfig__sub">{{ 'konfigurator.sub' | t }}</p>
+
+  <nav class="konfig__nav" aria-label="{{ 'konfigurator.nav_aria' | t }}">
+    <button class="konfig__nav-btn is-active" data-panel="0"><span class="num">1</span> {{ 'konfigurator.steps.holz' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="1"><span class="num">2</span> {{ 'konfigurator.steps.vorhandbelag' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="2"><span class="num">3</span> {{ 'konfigurator.steps.rueckhandbelag' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="3"><span class="num">4</span> {{ 'konfigurator.steps.kantenband' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="4"><span class="num">5</span> {{ 'konfigurator.steps.versiegelung' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="5"><span class="num">6</span> {{ 'konfigurator.steps.zusammenfassung' | t }}</button>
+  </nav>
+
+  <!-- Panel 0: Holz -->
+  <div class="konfig__panel" id="kp-0">
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.holz' | t }}</p>
+    <div class="k-search-wrap">
+      <span class="k-search-icon">🔍</span>
+      <input type="search" class="k-search" id="k-search-holz" placeholder="{{ 'konfigurator.search.holz' | t }}" autocomplete="off">
+    </div>
+    <div class="konfig__grid" id="kg-holz">
+      <div class="k-loading"><div class="k-spinner"></div></div>
+    </div>
+    <div class="k-services" id="k-services-row">
+      {%- assign klebe_preis_display = section.settings.klebe_preis | default: '5.00' -%}
+      <div class="k-service-notice">
+        🔧 <strong>{{ 'konfigurator.klebeservice.bold' | t }}</strong>
+        {{ 'konfigurator.klebeservice.text' | t: price: klebe_preis_display }}
+      </div>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--next" id="k-next-0" disabled>{{ 'konfigurator.btn.next_holz' | t }}</button>
+    </div>
+  </div>
+
+  <!-- Panel 1: Vorhandbelag -->
+  <div class="konfig__panel is-hidden" id="kp-1">
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.vorhand' | t }}</p>
+    <div class="k-pre-sel is-hidden" id="k-pre-sel-vorhand"></div>
+    <div class="k-search-wrap">
+      <span class="k-search-icon">🔍</span>
+      <input type="search" class="k-search" id="k-search-vorhand" placeholder="{{ 'konfigurator.search.belag' | t }}" autocomplete="off">
+    </div>
+    <div class="konfig__grid" id="kg-vorhand">
+      <div class="k-loading"><div class="k-spinner"></div></div>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="0">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--next" id="k-next-1" disabled>{{ 'konfigurator.btn.next_vorhand' | t }}</button>
+    </div>
+  </div>
+
+  <!-- Panel 2: Rückhandbelag -->
+  <div class="konfig__panel is-hidden" id="kp-2">
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.rueckhand' | t }}</p>
+    <div class="k-pre-sel is-hidden" id="k-pre-sel-rueckhand"></div>
+    <div class="k-hint is-hidden" id="k-black-hint">
+      {{ 'konfigurator.black_hint' | t }}
+    </div>
+    <div class="k-search-wrap">
+      <span class="k-search-icon">🔍</span>
+      <input type="search" class="k-search" id="k-search-rueckhand" placeholder="{{ 'konfigurator.search.belag' | t }}" autocomplete="off">
+    </div>
+    <div class="konfig__grid" id="kg-rueckhand">
+      <div class="k-loading"><div class="k-spinner"></div></div>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="1">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--next" id="k-next-2" disabled>{{ 'konfigurator.btn.next_rueckhand' | t }}</button>
+    </div>
+  </div>
+
+  <!-- Panel 3: Kantenband -->
+  <div class="konfig__panel is-hidden" id="kp-3">
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.kantenband' | t }}<span class="k-optional">{{ 'konfigurator.optional' | t }}</span></p>
+    <div class="k-search-wrap">
+      <span class="k-search-icon">🔍</span>
+      <input type="search" class="k-search" id="k-search-kantenband" placeholder="{{ 'konfigurator.search.kantenband' | t }}" autocomplete="off">
+    </div>
+    <div class="konfig__grid" id="kg-kantenband">
+      <div class="k-loading"><div class="k-spinner"></div></div>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="2">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--next" id="k-next-3">{{ 'konfigurator.btn.next_kantenband' | t }}</button>
+    </div>
+  </div>
+
+  <!-- Panel 4: Schlägerversiegelung -->
+  <div class="konfig__panel is-hidden" id="kp-4">
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.versiegelung' | t }}<span class="k-optional">{{ 'konfigurator.optional' | t }}</span></p>
+    <p style="font-size:0.9rem;color:var(--color-foreground-secondary,#666);margin-bottom:1.25rem;">
+      {{ 'konfigurator.versiegelung.desc' | t }}
+    </p>
+    <div class="k-vers-grid">
+      <button type="button" class="k-vers-opt" id="k-vers-ja">
+        <span class="k-vers-opt__icon">🛡️</span>
+        <span class="k-vers-opt__title">{{ 'konfigurator.versiegelung.yes' | t }}</span>
+        <span class="k-vers-opt__price">+{{ section.settings.versiegelung_preis | default: '5.00' }}&nbsp;€</span>
+      </button>
+      <button type="button" class="k-vers-opt" id="k-vers-nein">
+        <span class="k-vers-opt__icon">✕</span>
+        <span class="k-vers-opt__title">{{ 'konfigurator.versiegelung.no' | t }}</span>
+        <span class="k-vers-opt__price">{{ 'konfigurator.versiegelung.no_price' | t }}</span>
+      </button>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="3">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--next" id="k-next-4">{{ 'konfigurator.btn.next_versiegelung' | t }}</button>
+    </div>
+  </div>
+
+  <!-- Panel 5: Zusammenfassung -->
+  <div class="konfig__panel is-hidden" id="kp-5">
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.summary' | t }}</p>
+    <div class="konfig__summary" id="k-summary"></div>
+    <div class="k-hint is-hidden" id="k-black-warning">
+      {{ 'konfigurator.black_warning_pre' | t }} <strong>{{ 'konfigurator.black_warning_bold' | t }}</strong> {{ 'konfigurator.black_warning_post' | t }}
+    </div>
+    <div class="konfig__total">
+      <span>{{ 'konfigurator.total' | t }}</span>
+      <span class="konfig__total-price" id="k-total">–</span>
+    </div>
+    <div class="konfig__footer">
+      <button class="k-btn k-btn--back" data-target="4">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--atc" id="k-atc">{{ 'konfigurator.btn.atc' | t }}</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.KonfigT = {
+    already_selected:   {{ 'konfigurator.js.already_selected'   | t | json }},
+    change:             {{ 'konfigurator.js.change'             | t | json }},
+    no_rubbers:         {{ 'konfigurator.js.no_rubbers'         | t | json }},
+    no_kantenband:      {{ 'konfigurator.js.no_kantenband'      | t | json }},
+    no_products:        {{ 'konfigurator.js.no_products'        | t | json }},
+    selected:           {{ 'konfigurator.js.selected'           | t | json }},
+    select:             {{ 'konfigurator.js.select'             | t | json }},
+    black_blocked_title:{{ 'konfigurator.js.black_blocked_title'| t | json }},
+    black_taken:        {{ 'konfigurator.js.black_taken'        | t | json }},
+    not_available:      {{ 'konfigurator.js.not_available'      | t | json }},
+    adding:             {{ 'konfigurator.js.adding'             | t | json }},
+    in_cart:            {{ 'konfigurator.js.in_cart'            | t | json }},
+    error_no_holz:      {{ 'konfigurator.js.error_no_holz'      | t | json }},
+    error_no_belag:     {{ 'konfigurator.js.error_no_belag'     | t | json }},
+    klebeservice_auto:  {{ 'konfigurator.js.klebeservice_auto'  | t | json }},
+    klebeservice_desc:  {{ 'konfigurator.js.klebeservice_desc'  | t | json }},
+    versiegelung_label: {{ 'konfigurator.js.versiegelung_label' | t | json }},
+    versiegelung_desc:  {{ 'konfigurator.js.versiegelung_desc'  | t | json }},
+    row_holz:           {{ 'konfigurator.js.row_holz'           | t | json }},
+    row_vorhand:        {{ 'konfigurator.js.row_vorhand'        | t | json }},
+    row_rueckhand:      {{ 'konfigurator.js.row_rueckhand'      | t | json }},
+    row_kantenband:     {{ 'konfigurator.js.row_kantenband'     | t | json }},
+    note_header:        {{ 'konfigurator.js.note_header'        | t | json }},
+    note_holz:          {{ 'konfigurator.js.note_holz'          | t | json }},
+    note_vorhand:       {{ 'konfigurator.js.note_vorhand'       | t | json }},
+    note_rueckhand:     {{ 'konfigurator.js.note_rueckhand'     | t | json }},
+    note_kantenband:    {{ 'konfigurator.js.note_kantenband'    | t | json }},
+    note_klebeservice:  {{ 'konfigurator.js.note_klebeservice'  | t | json }},
+    note_versiegelung:  {{ 'konfigurator.js.note_versiegelung'  | t | json }},
+    note_footer:        {{ 'konfigurator.js.note_footer'        | t | json }},
+    note_klebeservice_val: {{ 'konfigurator.js.note_klebeservice_val' | t | json }},
+    note_none:          {{ 'konfigurator.js.note_none'          | t | json }},
+    attr_holz:          {{ 'konfigurator.js.attr_holz'          | t | json }},
+    attr_vorhand:       {{ 'konfigurator.js.attr_vorhand'       | t | json }},
+    attr_rueckhand:     {{ 'konfigurator.js.attr_rueckhand'     | t | json }},
+    attr_klebeservice:  {{ 'konfigurator.js.attr_klebeservice'  | t | json }},
+    attr_kantenband:    {{ 'konfigurator.js.attr_kantenband'    | t | json }},
+    attr_versiegelung:  {{ 'konfigurator.js.attr_versiegelung'  | t | json }},
+    yes:                {{ 'konfigurator.js.yes'                | t | json }},
+    no:                 {{ 'konfigurator.js.no'                 | t | json }},
+    price_from:         {{ 'konfigurator.js.price_from'         | t | json }},
+    badge_sale:         {{ 'konfigurator.js.badge_sale'         | t | json }},
+    error_prefix:       {{ 'konfigurator.js.error_prefix'       | t | json }},
+    decimal_sep:        {{ 'konfigurator.js.decimal_sep'        | t | json }},
+    atc:                {{ 'konfigurator.btn.atc'               | t | json }}
+  };
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var KonfigT = window.KonfigT || {};
+
+  /* ---- Config (set via section settings) ---- */
+  var HANDLE_HOLZ      = {{ section.settings.collection_holz | default: 'holzer' | json }};
+  var HANDLE_BELAG     = {{ section.settings.collection_belag | default: 'belage' | json }};
+  var HANDLE_KANTENBAND= {{ section.settings.collection_kantenband | default: 'kantenbander' | json }};
+  var KLEBE_ID           = {{ section.settings.klebe_variant_id | default: '57810488852828' }};
+  var KLEBE_PRICE        = parseFloat('{{ section.settings.klebe_preis | default: "5.00" }}') || 5.00;
+  var VERSIEGELUNG_ID    = '{{ section.settings.versiegelung_variant_id | default: "" }}';
+  var VERSIEGELUNG_PRICE = parseFloat('{{ section.settings.versiegelung_preis | default: "5.00" }}') || 5.00;
+
+  var COLOR_CSS = {
+    'schwarz': '#111', 'black': '#111',
+    'rot': '#cc1a1a', 'red': '#cc1a1a',
+    'dunkelrot': '#8b0000',
+    'grün': '#2a6e2a', 'green': '#2a6e2a',
+    'blau': '#1a4db5', 'blue': '#1a4db5',
+    'orange': '#e85c00',
+    'gelb': '#c8a000', 'yellow': '#c8a000',
+    'lila': '#7b2fbf', 'violet': '#7b2fbf', 'purple': '#7b2fbf',
+    'weiß': '#ddd', 'weiss': '#ddd', 'white': '#ddd',
+    'pink': '#d63384',
+    'braun': '#7b4a2d', 'brown': '#7b4a2d',
+  };
+
+  /* VIP discount percentage (0 = not a VIP customer) */
+  var VIP_DISCOUNT = {{ vip_discount | default: 0 }};
+
+  /* ---- State ---- */
+  var S = { holz: null, vorhand: null, rueckhand: null, kantenband: null, versiegelung: false };
+
+  /* ---- Cache ---- */
+  var _cache = {};
+
+  /* ---- DOM shortcuts ---- */
+  function ge(id) { return document.getElementById(id); }
+  var panels   = [0,1,2,3,4,5].map(function(i){ return ge('kp-' + i); });
+  var navBtns  = Array.from(document.querySelectorAll('.konfig__nav-btn'));
+  var nxt      = { 0: ge('k-next-0'), 1: ge('k-next-1'), 2: ge('k-next-2'), 3: ge('k-next-3'), 4: ge('k-next-4') };
+  var blackHint= ge('k-black-hint');
+  var atcBtn   = ge('k-atc');
+
+  /* ---- Wire navigation ---- */
+  navBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() { goTo(+btn.dataset.panel); });
+  });
+  document.querySelectorAll('.k-btn--back').forEach(function(b) {
+    b.addEventListener('click', function() { goTo(+b.dataset.target); });
+  });
+  [0,1,2,3,4].forEach(function(i) {
+    if (nxt[i]) nxt[i].addEventListener('click', function() { goTo(i + 1); });
+  });
+  // Versiegelung Ja/Nein
+  var versJa   = ge('k-vers-ja');
+  var versNein = ge('k-vers-nein');
+  function pickVers(val) {
+    S.versiegelung = val;
+    if (versJa)   versJa.classList.toggle('is-selected',  val);
+    if (versNein) versNein.classList.toggle('is-selected', !val);
+    updateNavBtns();
+    setTimeout(function() { goTo(5); }, 200);
+  }
+  if (versJa)   versJa.addEventListener('click',   function() { pickVers(true); });
+  if (versNein) versNein.addEventListener('click',  function() { pickVers(false); });
+  if (atcBtn) atcBtn.addEventListener('click', addToCart);
+
+  /* ---- Init ---- */
+  loadProducts(HANDLE_HOLZ).then(function(ps) { renderSimple(ge('kg-holz'), ps, 'holz'); });
+  var _belagPromise = loadProducts(HANDLE_BELAG);   // single shared promise – reused below
+  loadProducts(HANDLE_KANTENBAND);
+
+  // Pre-select from URL params when navigating from a product page
+  (function () {
+    var params      = new URLSearchParams(window.location.search);
+    var prePos      = params.get('position');
+    var preProdId   = params.get('product_id');
+    var preHandle   = params.get('product_handle');
+    var preVarId    = params.get('variant_id');
+    if (!prePos || (!preProdId && !preHandle)) return;
+
+    var targetStep = prePos === 'vorhand' ? 1 : prePos === 'rueckhand' ? 2 : prePos === 'holz' ? 1 : null;
+    if (targetStep === null) return;
+
+    function applyPreSelection(prod) {
+      if (!prod) return;
+      var vari = prod.variants[0];
+      if (preVarId) {
+        for (var j = 0; j < prod.variants.length; j++) {
+          if (String(prod.variants[j].id) === preVarId) { vari = prod.variants[j]; break; }
+        }
+      }
+      if (prePos === 'vorhand') {
+        S.vorhand = { product: prod, variant: vari };
+        if (nxt[1]) nxt[1].disabled = false;
+      } else if (prePos === 'rueckhand') {
+        S.rueckhand = { product: prod, variant: vari };
+        if (nxt[2]) nxt[2].disabled = false;
+      } else if (prePos === 'holz') {
+        S.holz = { product: prod, variant: vari };
+        if (nxt[0]) nxt[0].disabled = false;
+      }
+      updateNavBtns();
+    }
+
+    if (preHandle) {
+      // Use .json endpoint — returns same image/price format as /products.json
+      // (.js endpoint returns images as plain strings and prices in cents, incompatible)
+      fetch('/products/' + encodeURIComponent(preHandle) + '.json')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          applyPreSelection(data && data.product ? data.product : null);
+          goTo(targetStep);
+        })
+        .catch(function() { goTo(targetStep); });
+    } else {
+      // Fallback: search in tag-filtered cache by product ID
+      _belagPromise.then(function(products) {
+        var prod = null;
+        for (var i = 0; i < products.length; i++) {
+          if (String(products[i].id) === preProdId) { prod = products[i]; break; }
+        }
+        applyPreSelection(prod);
+        goTo(targetStep);
+      });
+    }
+  }());
+
+  /* ---- Navigate ---- */
+  function goTo(idx) {
+    if (idx === 1) { renderBelagPanel(ge('kg-vorhand'), 'vorhand'); }
+    if (idx === 2) {
+      var vh = S.vorhand && isBlk(S.vorhand.variant);
+      if (blackHint) blackHint.classList.toggle('is-hidden', !vh);
+      if (vh && S.rueckhand && isBlk(S.rueckhand.variant)) {
+        S.rueckhand = null; if (nxt[2]) nxt[2].disabled = true;
+      }
+      renderBelagPanel(ge('kg-rueckhand'), 'rueckhand');
+    }
+    if (idx === 3) { renderKantenbandPanel(); }
+    if (idx === 4) { renderVersiegelungPanel(); }
+    if (idx === 5) { renderSummary(); }
+
+    panels.forEach(function(p, i) { if (p) p.classList.toggle('is-hidden', i !== idx); });
+    updateNavBtns(idx);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---- Update nav bar (active/done classes + thumbnails) ---- */
+  var NAV_ICONS = ['🏓', '⚫', '🔴', '📏', '🛡️'];
+  function updateNavBtns(activeIdx) {
+    var stateMap = [S.holz, S.vorhand, S.rueckhand, S.kantenband, S.versiegelung !== undefined ? S.versiegelung : null];
+    navBtns.forEach(function(b, i) {
+      if (activeIdx !== undefined) {
+        b.classList.toggle('is-active', i === activeIdx);
+        b.classList.toggle('is-done', i < activeIdx);
+      }
+      // Remove any existing thumbnail/emoji
+      var existImg   = b.querySelector('.k-nav-img');
+      var existEmoji = b.querySelector('.k-nav-emoji');
+
+      // Step 4 (Versiegelung) uses boolean, not a product
+      if (i === 4) {
+        if (S.versiegelung) {
+          if (!existEmoji) {
+            existEmoji = document.createElement('span');
+            existEmoji.className = 'k-nav-emoji';
+            b.insertBefore(existEmoji, b.firstChild);
+          }
+          existEmoji.textContent = '🛡️';
+        } else {
+          if (existEmoji) existEmoji.remove();
+        }
+        return;
+      }
+
+      var sel = stateMap[i];
+      if (sel && sel.product && sel.product.images && sel.product.images[0]) {
+        // Product image available → show thumbnail
+        var src = sel.product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_40x$1$2');
+        if (existEmoji) existEmoji.remove();
+        if (!existImg) {
+          existImg = document.createElement('img');
+          existImg.className = 'k-nav-img';
+          existImg.alt = '';
+          b.insertBefore(existImg, b.firstChild);
+        }
+        existImg.src = src;
+      } else if (sel && sel.product) {
+        // Product selected but no image → show emoji fallback
+        if (existImg) existImg.remove();
+        if (!existEmoji) {
+          existEmoji = document.createElement('span');
+          existEmoji.className = 'k-nav-emoji';
+          b.insertBefore(existEmoji, b.firstChild);
+        }
+        existEmoji.textContent = NAV_ICONS[i] || '✓';
+      } else {
+        // Nothing selected → remove both
+        if (existImg)   existImg.remove();
+        if (existEmoji) existEmoji.remove();
+      }
+    });
+  }
+
+  /* ---- Load (paginated collection fetch) ---- */
+  function loadProducts(handle) {
+    if (_cache[handle] !== undefined) return Promise.resolve(_cache[handle]);
+    function fetchPage(url, acc) {
+      return fetch(url)
+        .then(function(r) {
+          var link = r.headers.get('Link') || '';
+          return r.json().then(function(d) { return { products: d.products || [], link: link }; });
+        })
+        .then(function(res) {
+          var all = acc.concat(res.products);
+          var m = res.link.match(/<([^>]+)>;\s*rel="next"/);
+          if (m && res.products.length === 250) return fetchPage(m[1], all);
+          _cache[handle] = all;
+          return all;
+        });
+    }
+    return fetchPage('/collections/' + encodeURIComponent(handle) + '/products.json?limit=250', [])
+      .catch(function() { _cache[handle] = []; return []; });
+  }
+
+  function spinner() { return '<div class="k-loading"><div class="k-spinner"></div></div>'; }
+
+  /* ---- Render: simple grid (Holz / Kantenband, single- or multi-variant) ---- */
+  function renderSimple(grid, products, type) {
+    if (!grid) return;
+    grid.innerHTML = '';
+    if (!products.length) {
+      grid.innerHTML = '<p class="k-msg">' + KonfigT.no_products + '<br><small>Kollektion <em>' + esc(type === 'holz' ? HANDLE_HOLZ : HANDLE_KANTENBAND) + '</em> ist leer oder existiert nicht.</small></p>';
+      return;
+    }
+    products.forEach(function(p) {
+      var card = buildCard(p, type);
+      if (p.variants.length > 1) {
+        addVarSelectors(card, p, type, false);
+      }
+      // Restore selection highlight when re-rendering
+      if (type === 'holz'      && S.holz      && S.holz.product.id      === p.id) card.classList.add('is-selected');
+      if (type === 'kantenband'&& S.kantenband && S.kantenband.product.id === p.id) card.classList.add('is-selected');
+      grid.appendChild(card);
+    });
+  }
+
+  /* ---- Render: Belag grid (multi-variant with selectors) ---- */
+  function renderBelagPanel(grid, type) {
+    if (!grid) return;
+
+    // Pre-selection banner
+    var bannerEl = ge('k-pre-sel-' + type);
+    var current  = type === 'vorhand' ? S.vorhand : S.rueckhand;
+    if (bannerEl) {
+      if (current) {
+        var bImg = current.product.images && current.product.images[0]
+          ? current.product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_120x$1$2')
+          : '';
+        var bVar = current.variant.title && current.variant.title !== 'Default Title'
+          ? current.variant.title : '';
+        bannerEl.innerHTML =
+          (bImg
+            ? '<img class="k-pre-sel__img" src="' + bImg + '" alt="">'
+            : '<div class="k-pre-sel__icon">🏓</div>') +
+          '<div class="k-pre-sel__info">' +
+            '<div class="k-pre-sel__lbl">' + KonfigT.already_selected + '</div>' +
+            '<div class="k-pre-sel__name">' + esc(current.product.title) + '</div>' +
+            (bVar ? '<div class="k-pre-sel__var">' + esc(bVar) + '</div>' : '') +
+          '</div>' +
+          '<button class="k-pre-sel__clear" id="k-pre-sel-clear-' + type + '">' + KonfigT.change + '</button>';
+        bannerEl.classList.remove('is-hidden');
+
+        var clearBtn = ge('k-pre-sel-clear-' + type);
+        if (clearBtn) clearBtn.onclick = function () {
+          if (type === 'vorhand') { S.vorhand = null; if (nxt[1]) nxt[1].disabled = true; }
+          else                   { S.rueckhand = null; if (nxt[2]) nxt[2].disabled = true; }
+          bannerEl.classList.add('is-hidden');
+          grid.querySelectorAll('.k-card').forEach(function(c) { c.classList.remove('is-selected'); });
+        };
+      } else {
+        bannerEl.classList.add('is-hidden');
+      }
+    }
+
+    grid.innerHTML = spinner();
+    loadProducts(HANDLE_BELAG).then(function(products) {
+      grid.innerHTML = '';
+      if (!products.length) {
+        grid.innerHTML = '<p class="k-msg">' + KonfigT.no_rubbers + '<br><small>Kollektion <em>' + esc(HANDLE_BELAG) + '</em> ist leer oder existiert nicht.</small></p>';
+        return;
+      }
+      var vorhandIsBlack = S.vorhand && isBlk(S.vorhand.variant);
+      products.forEach(function(p) {
+        var card = buildCard(p, type);
+        addVarSelectors(card, p, type, type === 'rueckhand' && vorhandIsBlack);
+        grid.appendChild(card);
+        // Restore selection highlight
+        if (type === 'vorhand'   && S.vorhand   && S.vorhand.product.id   === p.id) card.classList.add('is-selected');
+        if (type === 'rueckhand' && S.rueckhand && S.rueckhand.product.id === p.id) card.classList.add('is-selected');
+      });
+      // Re-apply search filter if user already typed something
+      var si = ge('k-search-' + type);
+      if (si && si.value) filterGrid(grid, si.value);
+    });
+  }
+
+  /* ---- Render: Kantenband grid ---- */
+  function renderKantenbandPanel() {
+    var grid = ge('kg-kantenband');
+    if (!grid) return;
+    grid.innerHTML = spinner();
+    loadProducts(HANDLE_KANTENBAND).then(function(products) {
+      grid.innerHTML = '';
+      if (!products.length) {
+        grid.innerHTML = '<p class="k-msg">' + KonfigT.no_kantenband + '<br><small>Kollektion <em>' + esc(HANDLE_KANTENBAND) + '</em> ist leer oder existiert nicht.</small></p>';
+        return;
+      }
+      products.forEach(function(p) {
+        var card = buildCard(p, 'kantenband');
+        if (p.variants.length > 1) {
+          addVarSelectors(card, p, 'kantenband', false);
+        } else {
+          // Single-variant: add explicit Auswählen/Entfernen button
+          var v0 = p.variants[0];
+          var isPreSel = S.kantenband && S.kantenband.product.id === p.id;
+          var btnWrap = document.createElement('div');
+          btnWrap.className = 'k-vars';
+          var pickBtn = document.createElement('button');
+          pickBtn.type = 'button';
+          pickBtn.className = 'k-pick-btn';
+          pickBtn.textContent = isPreSel ? KonfigT.selected : KonfigT.select;
+          pickBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            pickProduct('kantenband', p, v0, card);
+            var nowSel = S.kantenband && S.kantenband.product.id === p.id;
+            pickBtn.textContent = nowSel ? KonfigT.selected : KonfigT.select;
+            updateNavBtns();
+          });
+          btnWrap.appendChild(pickBtn);
+          card.appendChild(btnWrap);
+        }
+        if (S.kantenband && S.kantenband.product.id === p.id) card.classList.add('is-selected');
+        grid.appendChild(card);
+      });
+      // Re-apply search filter if user already typed something
+      var si = ge('k-search-kantenband');
+      if (si && si.value) filterGrid(grid, si.value);
+    });
+  }
+
+  /* ---- Build base card ---- */
+  function buildCard(product, type) {
+    var card = document.createElement('div');
+    card.className = 'k-card';
+    card.dataset.productId = product.id;
+    card.dataset.type = type;
+
+    var imgSrc = '';
+    if (product.images && product.images[0]) {
+      imgSrc = product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_300x$1$2');
+    }
+
+    var v0 = product.variants[0];
+    var _basePrice = parseFloat(v0.price);
+    var _vipObj = applyVip(_basePrice, parseFloat(v0.compare_at_price) || 0, product.tags);
+    var _badgeHtml = _vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale">' + KonfigT.badge_sale + '</span> ' :
+                   _vipObj.badge === 'vip'  ? '<span class="k-price-badge k-price-badge--vip">VIP</span> ' : '';
+    var _priceHtml = _vipObj.original !== null
+      ? _badgeHtml + KonfigT.price_from + ' ' + fmtPrice(_vipObj.price.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(_vipObj.original.toFixed(2)) + '</s>'
+      : _badgeHtml + KonfigT.price_from + ' ' + fmtPrice(v0.price);
+    card.innerHTML =
+      '<div class="k-card__img">' +
+      (imgSrc ? '<img src="' + imgSrc + '" alt="' + esc(product.title) + '" loading="lazy">' : '<div class="k-card__img-empty">🏓</div>') +
+      '</div>' +
+      '<div class="k-card__body">' +
+      '<div class="k-card__name">' + esc(product.title) + '</div>' +
+      '<div class="k-card__price">' + _priceHtml + '</div>' +
+      '</div>';
+
+    // Single-variant: click card → select
+    if (product.variants.length === 1) {
+      card.classList.add('is-clickable');
+      card.addEventListener('click', function() { pickProduct(type, product, v0, card); });
+    }
+
+    return card;
+  }
+
+  /* ---- Add variant selectors to card ---- */
+  function addVarSelectors(card, product, type, blackForbidden) {
+    var opts = product.options || [];
+    var vars = product.variants || [];
+    if (!opts.length || vars.length <= 1) return;
+
+    var sel = {};
+
+    var wrap = document.createElement('div');
+    wrap.className = 'k-vars';
+
+    opts.forEach(function(opt, oi) {
+      var isColor = /farbe|color|colour|couleur/i.test(opt.name);
+      var grp = document.createElement('div');
+      var lbl = document.createElement('span');
+      lbl.className = 'k-vars__lbl';
+      lbl.textContent = opt.name;
+      grp.appendChild(lbl);
+
+      if (isColor) {
+        var sw = document.createElement('div');
+        sw.className = 'k-swatches';
+        opt.values.forEach(function(val) {
+          var blkVal = /schwarz|black/i.test(val);
+          var blocked = blackForbidden && blkVal;
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'k-swatch' + (blocked ? ' is-blocked' : '');
+          btn.style.background = COLOR_CSS[val.toLowerCase()] || '#aaa';
+          btn.title = blocked ? KonfigT.black_blocked_title : val;
+          btn.disabled = blocked;
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            sw.querySelectorAll('.k-swatch').forEach(function(x){ x.classList.remove('is-on'); });
+            btn.classList.add('is-on');
+            sel[oi] = val;
+            tryMatch();
+          });
+          sw.appendChild(btn);
+        });
+        grp.appendChild(sw);
+      } else {
+        var pl = document.createElement('div');
+        pl.className = 'k-pills';
+        opt.values.forEach(function(val) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'k-pill';
+          btn.textContent = val;
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            pl.querySelectorAll('.k-pill').forEach(function(x){ x.classList.remove('is-on'); });
+            btn.classList.add('is-on');
+            sel[oi] = val;
+            tryMatch();
+          });
+          pl.appendChild(btn);
+        });
+        grp.appendChild(pl);
+      }
+
+      wrap.appendChild(grp);
+    });
+
+    var pickBtn = document.createElement('button');
+    pickBtn.type = 'button';
+    pickBtn.className = 'k-pick-btn is-hidden';
+    pickBtn.textContent = KonfigT.select;
+    wrap.appendChild(pickBtn);
+    card.appendChild(wrap);
+
+    function tryMatch() {
+      if (Object.keys(sel).length < opts.length) return;
+      var match = null;
+      for (var i = 0; i < vars.length; i++) {
+        var v = vars[i];
+        var ok = opts.every(function(o, oi) { return v['option' + (oi+1)] === sel[oi]; });
+        if (ok) { match = v; break; }
+      }
+      if (!match) { pickBtn.classList.add('is-hidden'); return; }
+
+      if (blackForbidden && isBlk(match)) {
+        pickBtn.textContent = KonfigT.black_taken;
+        pickBtn.disabled = true;
+        pickBtn.classList.remove('is-hidden');
+        return;
+      }
+      if (!match.available) {
+        pickBtn.textContent = KonfigT.not_available;
+        pickBtn.disabled = true;
+        pickBtn.classList.remove('is-hidden');
+        return;
+      }
+
+      pickBtn.textContent = KonfigT.select;
+      pickBtn.disabled = false;
+      pickBtn.classList.remove('is-hidden');
+      pickBtn.onclick = function() { pickProduct(type, product, match, card); };
+    }
+  }
+
+  /* ---- Select a product/variant ---- */
+  function pickProduct(type, product, variant, card) {
+    // Deselect siblings
+    var grid = card.closest('.konfig__grid');
+    if (grid) grid.querySelectorAll('.k-card').forEach(function(c){ c.classList.remove('is-selected'); });
+    card.classList.add('is-selected');
+
+    if (type === 'holz') {
+      S.holz = { product: product, variant: variant };
+      if (nxt[0]) nxt[0].disabled = false;
+      updateNavBtns();
+      setTimeout(function() { goTo(1); }, 200);
+    } else if (type === 'vorhand') {
+      S.vorhand = { product: product, variant: variant };
+      if (nxt[1]) nxt[1].disabled = false;
+      updateNavBtns();
+      setTimeout(function() { goTo(2); }, 200);
+    } else if (type === 'rueckhand') {
+      S.rueckhand = { product: product, variant: variant };
+      if (nxt[2]) nxt[2].disabled = false;
+      updateNavBtns();
+      setTimeout(function() { goTo(3); }, 200);
+    } else if (type === 'kantenband') {
+      var prev = S.kantenband;
+      var same = prev && prev.product.id === product.id && prev.variant.id === variant.id;
+      if (same) {
+        S.kantenband = null;
+        card.classList.remove('is-selected');
+      } else {
+        S.kantenband = { product: product, variant: variant };
+      }
+    }
+  }
+
+  /* ---- Render versiegelung step ---- */
+  function renderVersiegelungPanel() {
+    if (versJa)   versJa.classList.toggle('is-selected',  S.versiegelung === true);
+    if (versNein) versNein.classList.toggle('is-selected', S.versiegelung === false);
+  }
+
+  /* ---- Render summary ---- */
+  function renderSummary() {
+    var rows = [];
+    var total = 0;
+
+    function addRow(label, product, variant, icon) {
+      var img = product.images && product.images[0]
+        ? product.images[0].src.replace(/(\.[^.?]+)(\?.*)?$/, '_80x$1$2')
+        : '';
+      var name = product.title;
+      if (variant.title && variant.title !== 'Default Title') name += ' – ' + variant.title;
+      var price = parseFloat(variant.price);
+      var vipObj = applyVip(price, parseFloat(variant.compare_at_price) || 0, product.tags);
+      var displayPrice = vipObj.price;
+      total += displayPrice;
+      var _rowBadge = vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale">' + KonfigT.badge_sale + '</span> ' :
+                   vipObj.badge === 'vip'  ? '<span class="k-price-badge k-price-badge--vip">VIP</span> ' : '';
+      var priceHtml = vipObj.original !== null
+        ? _rowBadge + fmtPrice(displayPrice.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(vipObj.original.toFixed(2)) + '</s>'
+        : fmtPrice(price.toFixed(2));
+      rows.push(
+        '<div class="k-sum-row">' +
+        (img ? '<img class="k-sum-row__img" src="' + img + '" alt="">' : '<div class="k-sum-row__icon">' + icon + '</div>') +
+        '<div class="k-sum-row__info"><div class="k-sum-row__lbl">' + esc(label) + '</div><div class="k-sum-row__name">' + esc(name) + '</div></div>' +
+        '<div class="k-sum-row__price">' + priceHtml + '</div>' +
+        '</div>'
+      );
+    }
+
+    if (S.holz) addRow(KonfigT.row_holz, S.holz.product, S.holz.variant, '🏓');
+    if (S.vorhand) addRow(KonfigT.row_vorhand, S.vorhand.product, S.vorhand.variant, '⚫');
+    if (S.rueckhand) addRow(KonfigT.row_rueckhand, S.rueckhand.product, S.rueckhand.variant, '🔴');
+    total += KLEBE_PRICE;
+    rows.push(
+      '<div class="k-sum-row">' +
+      '<div class="k-sum-row__icon">🔧</div>' +
+      '<div class="k-sum-row__info"><div class="k-sum-row__lbl">' + KonfigT.klebeservice_auto + '</div><div class="k-sum-row__name">' + KonfigT.klebeservice_desc + '</div></div>' +
+      '<div class="k-sum-row__price">' + fmtPrice(KLEBE_PRICE.toFixed(2)) + '</div>' +
+      '</div>'
+    );
+    if (S.versiegelung && VERSIEGELUNG_ID) {
+      total += VERSIEGELUNG_PRICE;
+      rows.push(
+        '<div class="k-sum-row">' +
+        '<div class="k-sum-row__icon">🛡️</div>' +
+        '<div class="k-sum-row__info"><div class="k-sum-row__lbl">' + KonfigT.versiegelung_label + '</div><div class="k-sum-row__name">' + KonfigT.versiegelung_desc + '</div></div>' +
+        '<div class="k-sum-row__price">' + fmtPrice(VERSIEGELUNG_PRICE.toFixed(2)) + '</div>' +
+        '</div>'
+      );
+    }
+    if (S.kantenband) addRow(KonfigT.row_kantenband, S.kantenband.product, S.kantenband.variant, '📏');
+
+    var sumEl = ge('k-summary');
+    var totEl = ge('k-total');
+    if (sumEl) sumEl.innerHTML = rows.join('');
+    if (totEl) totEl.textContent = fmtPrice(total.toFixed(2));
+
+    // Black rubber validation: at least one must be black
+    var selectedRubbers = [S.vorhand, S.rueckhand].filter(Boolean);
+    var hasBlack = selectedRubbers.some(function(r) { return isBlk(r.variant); });
+    var needsBlack = selectedRubbers.length > 0 && !hasBlack;
+    var warnEl = ge('k-black-warning');
+    if (warnEl) warnEl.classList.toggle('is-hidden', !needsBlack);
+
+    if (atcBtn) {
+      atcBtn.disabled = needsBlack;
+      atcBtn.textContent = KonfigT.atc;
+      atcBtn.className = 'k-btn k-btn--atc';
+    }
+  }
+
+  /* ---- Add to cart ---- */
+  function addToCart() {
+    // Validation: required steps
+    if (!S.holz) {
+      atcBtn.textContent = KonfigT.error_no_holz;
+      atcBtn.classList.add('is-err');
+      setTimeout(function() {
+        atcBtn.textContent = KonfigT.atc;
+        atcBtn.classList.remove('is-err');
+      }, 3000);
+      return;
+    }
+    if (!S.vorhand && !S.rueckhand) {
+      atcBtn.textContent = KonfigT.error_no_belag;
+      atcBtn.classList.add('is-err');
+      setTimeout(function() {
+        atcBtn.textContent = KonfigT.atc;
+        atcBtn.classList.remove('is-err');
+      }, 3000);
+      return;
+    }
+
+    var items = [];
+    if (S.holz) items.push({ id: S.holz.variant.id, quantity: 1 });
+    if (S.vorhand) items.push({ id: S.vorhand.variant.id, quantity: 1, properties: { 'Position': 'Vorhand' } });
+    if (S.rueckhand) items.push({ id: S.rueckhand.variant.id, quantity: 1, properties: { 'Position': 'Rückhand' } });
+    if (S.kantenband) items.push({ id: S.kantenband.variant.id, quantity: 1 });
+    // Klebeservice wird immer automatisch hinzugefügt
+    items.push({ id: KLEBE_ID, quantity: 1, properties: { 'Service': 'Klebeservice' } });
+    if (S.versiegelung && VERSIEGELUNG_ID) items.push({ id: +VERSIEGELUNG_ID, quantity: 1, properties: { 'Service': 'Schlägerversiegelung' } });
+
+    // Failsafe: enforce black rubber rule
+    var selectedRubbers = [S.vorhand, S.rueckhand].filter(Boolean);
+    if (selectedRubbers.length > 0 && !selectedRubbers.some(function(r) { return isBlk(r.variant); })) return;
+
+    atcBtn.disabled = true;
+    atcBtn.textContent = KonfigT.adding;
+
+    console.log('[Konfigurator] addToCart items:', JSON.stringify(items));
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: items }),
+    })
+      .then(function(r) {
+        if (!r.ok) return r.json().then(function(d) {
+          throw new Error(d.description || d.message || 'HTTP ' + r.status);
+        });
+        return r.json();
+      })
+      .then(function() {
+        atcBtn.textContent = KonfigT.in_cart;
+        atcBtn.classList.add('is-ok');
+        setOrderNote();
+        document.dispatchEvent(new CustomEvent('cart:update', {
+          bubbles: true,
+          detail: { data: { source: 'konfigurator' } },
+        }));
+      })
+      .catch(function(err) {
+        console.error('[Konfigurator] cart error:', err.message, '| items:', JSON.stringify(items));
+        atcBtn.textContent = KonfigT.error_prefix + err.message;
+        atcBtn.classList.add('is-err');
+        atcBtn.disabled = false;
+      });
+  }
+
+  /* ---- Packzettel-Notiz ---- */
+  function setOrderNote() {
+    function selName(sel) {
+      if (!sel) return '–';
+      var n = sel.product.title;
+      if (sel.variant.title && sel.variant.title !== 'Default Title') n += ' (' + sel.variant.title + ')';
+      return n;
+    }
+
+    var lines = [
+      KonfigT.note_header,
+      KonfigT.note_holz      + selName(S.holz),
+      KonfigT.note_vorhand   + selName(S.vorhand),
+      KonfigT.note_rueckhand + selName(S.rueckhand),
+      KonfigT.note_kantenband + (S.kantenband ? selName(S.kantenband) : KonfigT.note_none),
+      KonfigT.note_klebeservice + KonfigT.note_klebeservice_val,
+      KonfigT.note_versiegelung + (S.versiegelung && VERSIEGELUNG_ID ? KonfigT.yes : KonfigT.no),
+      KonfigT.note_footer,
+    ];
+
+    var attrs = {};
+    attrs[KonfigT.attr_holz]          = selName(S.holz);
+    attrs[KonfigT.attr_vorhand]       = selName(S.vorhand);
+    attrs[KonfigT.attr_rueckhand]     = selName(S.rueckhand);
+    attrs[KonfigT.attr_klebeservice]  = KonfigT.yes;
+    if (S.kantenband) attrs[KonfigT.attr_kantenband] = selName(S.kantenband);
+    if (S.versiegelung && VERSIEGELUNG_ID) attrs[KonfigT.attr_versiegelung] = KonfigT.yes;
+
+    fetch('/cart/update.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: lines.join('\n'), attributes: attrs }),
+    }).catch(function() {});
+  }
+
+  /* ---- Helpers ---- */
+  function isBlk(variant) {
+    return [variant.option1, variant.option2, variant.option3]
+      .filter(Boolean)
+      .some(function(v) { return /schwarz|black/i.test(v); });
+  }
+
+  function fmtPrice(p) {
+    return parseFloat(p).toFixed(2).replace('.', KonfigT.decimal_sep || ',') + ' €';
+  }
+
+  function hasTag(tags, tag) {
+    if (!tags) return false;
+    return (',' + tags + ',').indexOf(',' + tag + ',') !== -1;
+  }
+
+  function applyVip(price, compareAtPrice, tags) {
+    var isOnSale = compareAtPrice && compareAtPrice > price;
+    if (VIP_DISCOUNT <= 0 || !hasTag(tags, 'for_vip')) {
+      return { price: price, original: isOnSale ? compareAtPrice : null, badge: isOnSale ? 'sale' : '' };
+    }
+    var uvp = isOnSale ? compareAtPrice : price;
+    var existingPct = isOnSale ? (uvp - price) / uvp * 100 : 0;
+    if (VIP_DISCOUNT > existingPct) {
+      return { price: uvp * (100 - VIP_DISCOUNT) / 100, original: uvp, badge: 'vip' };
+    }
+    return { price: price, original: isOnSale ? uvp : null, badge: isOnSale ? 'sale' : '' };
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, function(c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' }[c];
+    });
+  }
+
+  /* ---- Grid search filter ---- */
+  function filterGrid(grid, term) {
+    var q = term.trim().toLowerCase();
+    grid.querySelectorAll('.k-card').forEach(function(card) {
+      var name = (card.querySelector('.k-card__name') || {}).textContent || '';
+      card.style.display = (!q || name.toLowerCase().indexOf(q) !== -1) ? '' : 'none';
+    });
+  }
+
+  // Wire search inputs to their grids
+  [
+    { searchId: 'k-search-holz',       gridId: 'kg-holz' },
+    { searchId: 'k-search-vorhand',    gridId: 'kg-vorhand' },
+    { searchId: 'k-search-rueckhand',  gridId: 'kg-rueckhand' },
+    { searchId: 'k-search-kantenband', gridId: 'kg-kantenband' },
+  ].forEach(function(pair) {
+    var inp = ge(pair.searchId);
+    if (!inp) return;
+    inp.addEventListener('input', function() {
+      var grid = ge(pair.gridId);
+      if (grid) filterGrid(grid, inp.value);
+    });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Schlägerkonfigurator",
+  "settings": [
+    {
+      "type": "text",
+      "id": "collection_holz",
+      "label": "Kollektion für Hölzer (Handle)",
+      "default": "holzer",
+      "info": "Handle der Shopify-Kollektion, die in Schritt 1 (Holz) erscheint. Zu finden in Shopify Admin → Kollektionen → URL."
+    },
+    {
+      "type": "text",
+      "id": "collection_belag",
+      "label": "Kollektion für Beläge (Handle)",
+      "default": "belage",
+      "info": "Handle der Shopify-Kollektion, die in Schritt 2 & 3 (Beläge) erscheint."
+    },
+    {
+      "type": "text",
+      "id": "collection_kantenband",
+      "label": "Kollektion für Kantenbänder (Handle)",
+      "default": "kantenbander",
+      "info": "Handle der Shopify-Kollektion, die in Schritt 4 (Kantenband) erscheint."
+    },
+    {
+      "type": "header",
+      "content": "Klebeservice (automatisch)"
+    },
+    {
+      "type": "text",
+      "id": "klebe_variant_id",
+      "label": "Klebeservice – Varianten-ID",
+      "default": "57810488852828",
+      "info": "Die Varianten-ID des Klebeservice-Produkts im Shopify-Backend."
+    },
+    {
+      "type": "text",
+      "id": "klebe_preis",
+      "label": "Klebeservice – Preis (z. B. 5.00)",
+      "default": "5.00",
+      "info": "Nur für die Anzeige im Konfigurator. Der tatsächliche Preis muss am Produkt im Shopify-Backend übereinstimmen."
+    },
+    {
+      "type": "header",
+      "content": "Schlägerversiegelung (optional)"
+    },
+    {
+      "type": "text",
+      "id": "versiegelung_variant_id",
+      "label": "Schlägerversiegelung – Varianten-ID",
+      "info": "Die Varianten-ID des Versiegelungs-Produkts. Leer lassen, um die Option auszublenden."
+    },
+    {
+      "type": "text",
+      "id": "versiegelung_preis",
+      "label": "Schlägerversiegelung – Preis (z. B. 5.00)",
+      "default": "5.00",
+      "info": "Nur für die Anzeige im Konfigurator. Der tatsächliche Preis muss am Produkt im Shopify-Backend übereinstimmen."
+    }
+  ]
+}
+{% endschema %}

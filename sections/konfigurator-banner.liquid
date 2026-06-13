@@ -1,0 +1,53 @@
+{% stylesheet %}
+  .kb-wrap {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+    line-height: 0;
+    overflow: hidden;
+  }
+  .kb-img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+{% endstylesheet %}
+
+{%- assign kb_link = section.settings.link | default: '/pages/schlaeger-konfigurator' -%}
+
+{%- if section.settings.image != blank -%}
+  <a class="kb-wrap" href="{{ kb_link }}">
+    {{
+      section.settings.image
+      | image_url: width: 2000
+      | image_tag:
+        class: 'kb-img',
+        alt: section.settings.image.alt | default: 'Schlägerkonfigurator',
+        loading: 'lazy',
+        widths: '375, 750, 1100, 1500, 2000'
+    }}
+  </a>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Konfigurator Banner",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Banner-Bild"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "Link (Konfigurator-Seite)"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Konfigurator Banner"
+    }
+  ]
+}
+{% endschema %}
