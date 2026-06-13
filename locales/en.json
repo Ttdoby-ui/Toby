@@ -1,0 +1,103 @@
+{
+  "konfigurator": {
+    "headline": "Racket Configurator",
+    "sub": "Configure your individual table tennis racket",
+    "nav_aria": "Configurator Steps",
+    "optional": "(optional)",
+    "steps": {
+      "holz": "Blade",
+      "vorhandbelag": "Forehand Rubber",
+      "rueckhandbelag": "Backhand Rubber",
+      "kantenband": "Edge Tape",
+      "versiegelung": "Sealing",
+      "zusammenfassung": "Summary"
+    },
+    "titles": {
+      "holz": "Step 1: Choose Your Blade",
+      "vorhand": "Step 2: Select Forehand Rubber",
+      "rueckhand": "Step 3: Select Backhand Rubber",
+      "kantenband": "Step 4: Select Edge Tape",
+      "versiegelung": "Step 5: Racket Sealing",
+      "summary": "Your Individual Racket"
+    },
+    "search": {
+      "holz": "Search blade…",
+      "belag": "Search rubber…",
+      "kantenband": "Search edge tape…"
+    },
+    "klebeservice": {
+      "bold": "Gluing service included:",
+      "text": "Your rubbers will be professionally applied (+{{ price }} € added automatically)."
+    },
+    "versiegelung": {
+      "desc": "The edge tape is professionally sealed – for optimal protection and longer durability.",
+      "yes": "Yes, seal it",
+      "no": "No, thanks",
+      "no_price": "Without sealing"
+    },
+    "total": "Total",
+    "black_hint": "⚠️ You have chosen a black rubber for the forehand – please choose a different colour for the backhand (max. one black rubber allowed).",
+    "black_warning_pre": "⚠️ Table tennis rule: Please choose at least one",
+    "black_warning_bold": "black",
+    "black_warning_post": "rubber. The other may be any colour.",
+    "btn": {
+      "next_holz": "Continue to Forehand Rubber →",
+      "next_vorhand": "Continue to Backhand Rubber →",
+      "next_rueckhand": "Continue to Edge Tape →",
+      "next_kantenband": "Continue to Sealing →",
+      "next_versiegelung": "To Summary →",
+      "back": "← Back",
+      "atc": "Add to Cart"
+    },
+    "js": {
+      "already_selected": "Already selected",
+      "change": "Change",
+      "no_rubbers": "No rubbers found.",
+      "no_kantenband": "No edge tape found.",
+      "no_products": "No products found.",
+      "selected": "✓ Selected",
+      "select": "Select",
+      "black_blocked_title": "Black not available – already used on forehand",
+      "black_taken": "Black already assigned to forehand",
+      "not_available": "Not available",
+      "adding": "Adding…",
+      "in_cart": "✓ In Cart!",
+      "error_no_holz": "Step 1: No blade selected yet",
+      "error_no_belag": "Step 2: No rubber selected",
+      "klebeservice_auto": "Gluing service (automatic)",
+      "klebeservice_desc": "Rubbers professionally applied",
+      "versiegelung_label": "Racket sealing",
+      "versiegelung_desc": "Edges professionally sealed",
+      "row_holz": "Blade",
+      "row_vorhand": "Forehand Rubber",
+      "row_rueckhand": "Backhand Rubber",
+      "row_kantenband": "Edge Tape",
+      "note_header": "=== RACKET CONFIGURATION ===",
+      "note_holz": "Blade:            ",
+      "note_vorhand": "Forehand Rubber:  ",
+      "note_rueckhand": "Backhand Rubber:  ",
+      "note_kantenband": "Edge Tape:        ",
+      "note_klebeservice": "Gluing Service:   ",
+      "note_versiegelung": "Sealing:          ",
+      "note_footer": "============================",
+      "note_klebeservice_val": "Yes (apply rubbers)",
+      "note_none": "none",
+      "attr_holz": "Racket Build – Blade",
+      "attr_vorhand": "Racket Build – Forehand Rubber",
+      "attr_rueckhand": "Racket Build – Backhand Rubber",
+      "attr_klebeservice": "Racket Build – Gluing Service",
+      "attr_kantenband": "Racket Build – Edge Tape",
+      "attr_versiegelung": "Racket Build – Sealing",
+      "yes": "Yes",
+      "no": "No",
+      "price_from": "from",
+      "badge_sale": "Sale",
+      "error_prefix": "Error: ",
+      "decimal_sep": "."
+    }
+  },
+  "klebe_service": {
+    "text": "Apply rubber",
+    "price": "(+€2.50)"
+  }
+}

@@ -525,137 +525,189 @@
   endif
 -%}
 <div class="konfig" id="schlaeger-konfigurator">
-  <h2 class="konfig__headline">Schläger-Konfigurator</h2>
-  <p class="konfig__sub">Stelle Deinen individuellen Tischtennisschläger zusammen</p>
+  <h2 class="konfig__headline">{{ 'konfigurator.headline' | t }}</h2>
+  <p class="konfig__sub">{{ 'konfigurator.sub' | t }}</p>
 
-  <nav class="konfig__nav" aria-label="Konfigurator Schritte">
-    <button class="konfig__nav-btn is-active" data-panel="0"><span class="num">1</span> Holz</button>
-    <button class="konfig__nav-btn" data-panel="1"><span class="num">2</span> Vorhandbelag</button>
-    <button class="konfig__nav-btn" data-panel="2"><span class="num">3</span> Rückhandbelag</button>
-    <button class="konfig__nav-btn" data-panel="3"><span class="num">4</span> Kantenband</button>
-    <button class="konfig__nav-btn" data-panel="4"><span class="num">5</span> Versiegelung</button>
-    <button class="konfig__nav-btn" data-panel="5"><span class="num">6</span> Zusammenfassung</button>
+  <nav class="konfig__nav" aria-label="{{ 'konfigurator.nav_aria' | t }}">
+    <button class="konfig__nav-btn is-active" data-panel="0"><span class="num">1</span> {{ 'konfigurator.steps.holz' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="1"><span class="num">2</span> {{ 'konfigurator.steps.vorhandbelag' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="2"><span class="num">3</span> {{ 'konfigurator.steps.rueckhandbelag' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="3"><span class="num">4</span> {{ 'konfigurator.steps.kantenband' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="4"><span class="num">5</span> {{ 'konfigurator.steps.versiegelung' | t }}</button>
+    <button class="konfig__nav-btn" data-panel="5"><span class="num">6</span> {{ 'konfigurator.steps.zusammenfassung' | t }}</button>
   </nav>
 
   <!-- Panel 0: Holz -->
   <div class="konfig__panel" id="kp-0">
-    <p class="konfig__panel-title">Schritt 1: Wähle Dein Holz</p>
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.holz' | t }}</p>
     <div class="k-search-wrap">
       <span class="k-search-icon">🔍</span>
-      <input type="search" class="k-search" id="k-search-holz" placeholder="Holz suchen…" autocomplete="off">
+      <input type="search" class="k-search" id="k-search-holz" placeholder="{{ 'konfigurator.search.holz' | t }}" autocomplete="off">
     </div>
     <div class="konfig__grid" id="kg-holz">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
     <div class="k-services" id="k-services-row">
+      {%- assign klebe_preis_display = section.settings.klebe_preis | default: '5.00' -%}
       <div class="k-service-notice">
-        🔧 <strong>Klebeservice inklusive:</strong> Deine Beläge werden professionell aufgeklebt
-        (+{{ section.settings.klebe_preis | default: '5.00' }}&nbsp;€ werden automatisch hinzugefügt).
+        🔧 <strong>{{ 'konfigurator.klebeservice.bold' | t }}</strong>
+        {{ 'konfigurator.klebeservice.text' | t: price: klebe_preis_display }}
       </div>
     </div>
     <div class="konfig__footer">
-      <button class="k-btn k-btn--next" id="k-next-0" disabled>Weiter zu Vorhandbelag →</button>
+      <button class="k-btn k-btn--next" id="k-next-0" disabled>{{ 'konfigurator.btn.next_holz' | t }}</button>
     </div>
   </div>
 
   <!-- Panel 1: Vorhandbelag -->
   <div class="konfig__panel is-hidden" id="kp-1">
-    <p class="konfig__panel-title">Schritt 2: Vorhandbelag auswählen</p>
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.vorhand' | t }}</p>
     <div class="k-pre-sel is-hidden" id="k-pre-sel-vorhand"></div>
     <div class="k-search-wrap">
       <span class="k-search-icon">🔍</span>
-      <input type="search" class="k-search" id="k-search-vorhand" placeholder="Belag suchen…" autocomplete="off">
+      <input type="search" class="k-search" id="k-search-vorhand" placeholder="{{ 'konfigurator.search.belag' | t }}" autocomplete="off">
     </div>
     <div class="konfig__grid" id="kg-vorhand">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
     <div class="konfig__footer">
-      <button class="k-btn k-btn--back" data-target="0">← Zurück</button>
-      <button class="k-btn k-btn--next" id="k-next-1" disabled>Weiter zu Rückhandbelag →</button>
+      <button class="k-btn k-btn--back" data-target="0">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--next" id="k-next-1" disabled>{{ 'konfigurator.btn.next_vorhand' | t }}</button>
     </div>
   </div>
 
   <!-- Panel 2: Rückhandbelag -->
   <div class="konfig__panel is-hidden" id="kp-2">
-    <p class="konfig__panel-title">Schritt 3: Rückhandbelag auswählen</p>
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.rueckhand' | t }}</p>
     <div class="k-pre-sel is-hidden" id="k-pre-sel-rueckhand"></div>
     <div class="k-hint is-hidden" id="k-black-hint">
-      ⚠️ Du hast für die Vorhand einen schwarzen Belag gewählt – bitte wähle für die Rückhand eine andere Farbe (max. ein schwarzer Belag erlaubt).
+      {{ 'konfigurator.black_hint' | t }}
     </div>
     <div class="k-search-wrap">
       <span class="k-search-icon">🔍</span>
-      <input type="search" class="k-search" id="k-search-rueckhand" placeholder="Belag suchen…" autocomplete="off">
+      <input type="search" class="k-search" id="k-search-rueckhand" placeholder="{{ 'konfigurator.search.belag' | t }}" autocomplete="off">
     </div>
     <div class="konfig__grid" id="kg-rueckhand">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
     <div class="konfig__footer">
-      <button class="k-btn k-btn--back" data-target="1">← Zurück</button>
-      <button class="k-btn k-btn--next" id="k-next-2" disabled>Weiter zu Kantenband →</button>
+      <button class="k-btn k-btn--back" data-target="1">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--next" id="k-next-2" disabled>{{ 'konfigurator.btn.next_rueckhand' | t }}</button>
     </div>
   </div>
 
   <!-- Panel 3: Kantenband -->
   <div class="konfig__panel is-hidden" id="kp-3">
-    <p class="konfig__panel-title">Schritt 4: Kantenband auswählen<span class="k-optional">(optional)</span></p>
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.kantenband' | t }}<span class="k-optional">{{ 'konfigurator.optional' | t }}</span></p>
     <div class="k-search-wrap">
       <span class="k-search-icon">🔍</span>
-      <input type="search" class="k-search" id="k-search-kantenband" placeholder="Kantenband suchen…" autocomplete="off">
+      <input type="search" class="k-search" id="k-search-kantenband" placeholder="{{ 'konfigurator.search.kantenband' | t }}" autocomplete="off">
     </div>
     <div class="konfig__grid" id="kg-kantenband">
       <div class="k-loading"><div class="k-spinner"></div></div>
     </div>
     <div class="konfig__footer">
-      <button class="k-btn k-btn--back" data-target="2">← Zurück</button>
-      <button class="k-btn k-btn--next" id="k-next-3">Weiter zur Versiegelung →</button>
+      <button class="k-btn k-btn--back" data-target="2">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--next" id="k-next-3">{{ 'konfigurator.btn.next_kantenband' | t }}</button>
     </div>
   </div>
 
   <!-- Panel 4: Schlägerversiegelung -->
   <div class="konfig__panel is-hidden" id="kp-4">
-    <p class="konfig__panel-title">Schritt 5: Schlägerversiegelung<span class="k-optional">(optional)</span></p>
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.versiegelung' | t }}<span class="k-optional">{{ 'konfigurator.optional' | t }}</span></p>
     <p style="font-size:0.9rem;color:var(--color-foreground-secondary,#666);margin-bottom:1.25rem;">
-      Das Kantenband wird professionell versiegelt – für optimalen Schutz und längere Haltbarkeit.
+      {{ 'konfigurator.versiegelung.desc' | t }}
     </p>
     <div class="k-vers-grid">
       <button type="button" class="k-vers-opt" id="k-vers-ja">
         <span class="k-vers-opt__icon">🛡️</span>
-        <span class="k-vers-opt__title">Ja, versiegeln</span>
+        <span class="k-vers-opt__title">{{ 'konfigurator.versiegelung.yes' | t }}</span>
         <span class="k-vers-opt__price">+{{ section.settings.versiegelung_preis | default: '5.00' }}&nbsp;€</span>
       </button>
       <button type="button" class="k-vers-opt" id="k-vers-nein">
         <span class="k-vers-opt__icon">✕</span>
-        <span class="k-vers-opt__title">Nein, danke</span>
-        <span class="k-vers-opt__price">Ohne Versiegelung</span>
+        <span class="k-vers-opt__title">{{ 'konfigurator.versiegelung.no' | t }}</span>
+        <span class="k-vers-opt__price">{{ 'konfigurator.versiegelung.no_price' | t }}</span>
       </button>
     </div>
     <div class="konfig__footer">
-      <button class="k-btn k-btn--back" data-target="3">← Zurück</button>
-      <button class="k-btn k-btn--next" id="k-next-4">Zur Zusammenfassung →</button>
+      <button class="k-btn k-btn--back" data-target="3">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--next" id="k-next-4">{{ 'konfigurator.btn.next_versiegelung' | t }}</button>
     </div>
   </div>
 
   <!-- Panel 5: Zusammenfassung -->
   <div class="konfig__panel is-hidden" id="kp-5">
-    <p class="konfig__panel-title">Dein individueller Schläger</p>
+    <p class="konfig__panel-title">{{ 'konfigurator.titles.summary' | t }}</p>
     <div class="konfig__summary" id="k-summary"></div>
     <div class="k-hint is-hidden" id="k-black-warning">
-      ⚠️ Tischtennisregel: Bitte wähle mindestens einen <strong>schwarzen</strong> Belag. Der andere darf eine beliebige Farbe haben.
+      {{ 'konfigurator.black_warning_pre' | t }} <strong>{{ 'konfigurator.black_warning_bold' | t }}</strong> {{ 'konfigurator.black_warning_post' | t }}
     </div>
     <div class="konfig__total">
-      <span>Gesamtpreis</span>
+      <span>{{ 'konfigurator.total' | t }}</span>
       <span class="konfig__total-price" id="k-total">–</span>
     </div>
     <div class="konfig__footer">
-      <button class="k-btn k-btn--back" data-target="4">← Zurück</button>
-      <button class="k-btn k-btn--atc" id="k-atc">In den Warenkorb</button>
+      <button class="k-btn k-btn--back" data-target="4">{{ 'konfigurator.btn.back' | t }}</button>
+      <button class="k-btn k-btn--atc" id="k-atc">{{ 'konfigurator.btn.atc' | t }}</button>
     </div>
   </div>
 </div>
 
 <script>
+  window.KonfigT = {
+    already_selected:   {{ 'konfigurator.js.already_selected'   | t | json }},
+    change:             {{ 'konfigurator.js.change'             | t | json }},
+    no_rubbers:         {{ 'konfigurator.js.no_rubbers'         | t | json }},
+    no_kantenband:      {{ 'konfigurator.js.no_kantenband'      | t | json }},
+    no_products:        {{ 'konfigurator.js.no_products'        | t | json }},
+    selected:           {{ 'konfigurator.js.selected'           | t | json }},
+    select:             {{ 'konfigurator.js.select'             | t | json }},
+    black_blocked_title:{{ 'konfigurator.js.black_blocked_title'| t | json }},
+    black_taken:        {{ 'konfigurator.js.black_taken'        | t | json }},
+    not_available:      {{ 'konfigurator.js.not_available'      | t | json }},
+    adding:             {{ 'konfigurator.js.adding'             | t | json }},
+    in_cart:            {{ 'konfigurator.js.in_cart'            | t | json }},
+    error_no_holz:      {{ 'konfigurator.js.error_no_holz'      | t | json }},
+    error_no_belag:     {{ 'konfigurator.js.error_no_belag'     | t | json }},
+    klebeservice_auto:  {{ 'konfigurator.js.klebeservice_auto'  | t | json }},
+    klebeservice_desc:  {{ 'konfigurator.js.klebeservice_desc'  | t | json }},
+    versiegelung_label: {{ 'konfigurator.js.versiegelung_label' | t | json }},
+    versiegelung_desc:  {{ 'konfigurator.js.versiegelung_desc'  | t | json }},
+    row_holz:           {{ 'konfigurator.js.row_holz'           | t | json }},
+    row_vorhand:        {{ 'konfigurator.js.row_vorhand'        | t | json }},
+    row_rueckhand:      {{ 'konfigurator.js.row_rueckhand'      | t | json }},
+    row_kantenband:     {{ 'konfigurator.js.row_kantenband'     | t | json }},
+    note_header:        {{ 'konfigurator.js.note_header'        | t | json }},
+    note_holz:          {{ 'konfigurator.js.note_holz'          | t | json }},
+    note_vorhand:       {{ 'konfigurator.js.note_vorhand'       | t | json }},
+    note_rueckhand:     {{ 'konfigurator.js.note_rueckhand'     | t | json }},
+    note_kantenband:    {{ 'konfigurator.js.note_kantenband'    | t | json }},
+    note_klebeservice:  {{ 'konfigurator.js.note_klebeservice'  | t | json }},
+    note_versiegelung:  {{ 'konfigurator.js.note_versiegelung'  | t | json }},
+    note_footer:        {{ 'konfigurator.js.note_footer'        | t | json }},
+    note_klebeservice_val: {{ 'konfigurator.js.note_klebeservice_val' | t | json }},
+    note_none:          {{ 'konfigurator.js.note_none'          | t | json }},
+    attr_holz:          {{ 'konfigurator.js.attr_holz'          | t | json }},
+    attr_vorhand:       {{ 'konfigurator.js.attr_vorhand'       | t | json }},
+    attr_rueckhand:     {{ 'konfigurator.js.attr_rueckhand'     | t | json }},
+    attr_klebeservice:  {{ 'konfigurator.js.attr_klebeservice'  | t | json }},
+    attr_kantenband:    {{ 'konfigurator.js.attr_kantenband'    | t | json }},
+    attr_versiegelung:  {{ 'konfigurator.js.attr_versiegelung'  | t | json }},
+    yes:                {{ 'konfigurator.js.yes'                | t | json }},
+    no:                 {{ 'konfigurator.js.no'                 | t | json }},
+    price_from:         {{ 'konfigurator.js.price_from'         | t | json }},
+    badge_sale:         {{ 'konfigurator.js.badge_sale'         | t | json }},
+    error_prefix:       {{ 'konfigurator.js.error_prefix'       | t | json }},
+    decimal_sep:        {{ 'konfigurator.js.decimal_sep'        | t | json }},
+    atc:                {{ 'konfigurator.btn.atc'               | t | json }}
+  };
+</script>
+
+<script>
 (function () {
   'use strict';
+  var KonfigT = window.KonfigT || {};
 
   /* ---- Config (set via section settings) ---- */
   var HANDLE_HOLZ      = {{ section.settings.collection_holz | default: 'holzer' | json }};
@@ -887,7 +939,7 @@
     if (!grid) return;
     grid.innerHTML = '';
     if (!products.length) {
-      grid.innerHTML = '<p class="k-msg">Keine Produkte gefunden.<br><small>Kollektion <em>' + esc(type === 'holz' ? HANDLE_HOLZ : HANDLE_KANTENBAND) + '</em> ist leer oder existiert nicht.</small></p>';
+      grid.innerHTML = '<p class="k-msg">' + KonfigT.no_products + '<br><small>Kollektion <em>' + esc(type === 'holz' ? HANDLE_HOLZ : HANDLE_KANTENBAND) + '</em> ist leer oder existiert nicht.</small></p>';
       return;
     }
     products.forEach(function(p) {
@@ -921,11 +973,11 @@
             ? '<img class="k-pre-sel__img" src="' + bImg + '" alt="">'
             : '<div class="k-pre-sel__icon">🏓</div>') +
           '<div class="k-pre-sel__info">' +
-            '<div class="k-pre-sel__lbl">Bereits ausgewählt</div>' +
+            '<div class="k-pre-sel__lbl">' + KonfigT.already_selected + '</div>' +
             '<div class="k-pre-sel__name">' + esc(current.product.title) + '</div>' +
             (bVar ? '<div class="k-pre-sel__var">' + esc(bVar) + '</div>' : '') +
           '</div>' +
-          '<button class="k-pre-sel__clear" id="k-pre-sel-clear-' + type + '">Ändern</button>';
+          '<button class="k-pre-sel__clear" id="k-pre-sel-clear-' + type + '">' + KonfigT.change + '</button>';
         bannerEl.classList.remove('is-hidden');
 
         var clearBtn = ge('k-pre-sel-clear-' + type);
@@ -944,7 +996,7 @@
     loadProducts(HANDLE_BELAG).then(function(products) {
       grid.innerHTML = '';
       if (!products.length) {
-        grid.innerHTML = '<p class="k-msg">Keine Beläge gefunden.<br><small>Kollektion <em>' + esc(HANDLE_BELAG) + '</em> ist leer oder existiert nicht.</small></p>';
+        grid.innerHTML = '<p class="k-msg">' + KonfigT.no_rubbers + '<br><small>Kollektion <em>' + esc(HANDLE_BELAG) + '</em> ist leer oder existiert nicht.</small></p>';
         return;
       }
       var vorhandIsBlack = S.vorhand && isBlk(S.vorhand.variant);
@@ -970,7 +1022,7 @@
     loadProducts(HANDLE_KANTENBAND).then(function(products) {
       grid.innerHTML = '';
       if (!products.length) {
-        grid.innerHTML = '<p class="k-msg">Kein Kantenband gefunden.<br><small>Kollektion <em>' + esc(HANDLE_KANTENBAND) + '</em> ist leer oder existiert nicht.</small></p>';
+        grid.innerHTML = '<p class="k-msg">' + KonfigT.no_kantenband + '<br><small>Kollektion <em>' + esc(HANDLE_KANTENBAND) + '</em> ist leer oder existiert nicht.</small></p>';
         return;
       }
       products.forEach(function(p) {
@@ -986,12 +1038,12 @@
           var pickBtn = document.createElement('button');
           pickBtn.type = 'button';
           pickBtn.className = 'k-pick-btn';
-          pickBtn.textContent = isPreSel ? '✓ Ausgewählt' : 'Auswählen';
+          pickBtn.textContent = isPreSel ? KonfigT.selected : KonfigT.select;
           pickBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             pickProduct('kantenband', p, v0, card);
             var nowSel = S.kantenband && S.kantenband.product.id === p.id;
-            pickBtn.textContent = nowSel ? '✓ Ausgewählt' : 'Auswählen';
+            pickBtn.textContent = nowSel ? KonfigT.selected : KonfigT.select;
             updateNavBtns();
           });
           btnWrap.appendChild(pickBtn);
@@ -1021,11 +1073,11 @@
     var v0 = product.variants[0];
     var _basePrice = parseFloat(v0.price);
     var _vipObj = applyVip(_basePrice, parseFloat(v0.compare_at_price) || 0, product.tags);
-    var _badgeHtml = _vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale">Angebot</span> ' :
+    var _badgeHtml = _vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale">' + KonfigT.badge_sale + '</span> ' :
                    _vipObj.badge === 'vip'  ? '<span class="k-price-badge k-price-badge--vip">VIP</span> ' : '';
     var _priceHtml = _vipObj.original !== null
-      ? _badgeHtml + 'ab ' + fmtPrice(_vipObj.price.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(_vipObj.original.toFixed(2)) + '</s>'
-      : _badgeHtml + 'ab ' + fmtPrice(v0.price);
+      ? _badgeHtml + KonfigT.price_from + ' ' + fmtPrice(_vipObj.price.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(_vipObj.original.toFixed(2)) + '</s>'
+      : _badgeHtml + KonfigT.price_from + ' ' + fmtPrice(v0.price);
     card.innerHTML =
       '<div class="k-card__img">' +
       (imgSrc ? '<img src="' + imgSrc + '" alt="' + esc(product.title) + '" loading="lazy">' : '<div class="k-card__img-empty">🏓</div>') +
@@ -1073,7 +1125,7 @@
           btn.type = 'button';
           btn.className = 'k-swatch' + (blocked ? ' is-blocked' : '');
           btn.style.background = COLOR_CSS[val.toLowerCase()] || '#aaa';
-          btn.title = blocked ? 'Schwarz nicht möglich – bereits auf Vorhand' : val;
+          btn.title = blocked ? KonfigT.black_blocked_title : val;
           btn.disabled = blocked;
           btn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -1111,7 +1163,7 @@
     var pickBtn = document.createElement('button');
     pickBtn.type = 'button';
     pickBtn.className = 'k-pick-btn is-hidden';
-    pickBtn.textContent = 'Auswählen';
+    pickBtn.textContent = KonfigT.select;
     wrap.appendChild(pickBtn);
     card.appendChild(wrap);
 
@@ -1126,19 +1178,19 @@
       if (!match) { pickBtn.classList.add('is-hidden'); return; }
 
       if (blackForbidden && isBlk(match)) {
-        pickBtn.textContent = 'Schwarz bereits auf Vorhand vergeben';
+        pickBtn.textContent = KonfigT.black_taken;
         pickBtn.disabled = true;
         pickBtn.classList.remove('is-hidden');
         return;
       }
       if (!match.available) {
-        pickBtn.textContent = 'Nicht verfügbar';
+        pickBtn.textContent = KonfigT.not_available;
         pickBtn.disabled = true;
         pickBtn.classList.remove('is-hidden');
         return;
       }
 
-      pickBtn.textContent = 'Auswählen';
+      pickBtn.textContent = KonfigT.select;
       pickBtn.disabled = false;
       pickBtn.classList.remove('is-hidden');
       pickBtn.onclick = function() { pickProduct(type, product, match, card); };
@@ -1200,7 +1252,7 @@
       var vipObj = applyVip(price, parseFloat(variant.compare_at_price) || 0, product.tags);
       var displayPrice = vipObj.price;
       total += displayPrice;
-      var _rowBadge = vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale">Angebot</span> ' :
+      var _rowBadge = vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale">' + KonfigT.badge_sale + '</span> ' :
                    vipObj.badge === 'vip'  ? '<span class="k-price-badge k-price-badge--vip">VIP</span> ' : '';
       var priceHtml = vipObj.original !== null
         ? _rowBadge + fmtPrice(displayPrice.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(vipObj.original.toFixed(2)) + '</s>'
@@ -1214,15 +1266,14 @@
       );
     }
 
-    if (S.holz) addRow('Holz', S.holz.product, S.holz.variant, '🏓');
-    if (S.vorhand) addRow('Belag Vorhand', S.vorhand.product, S.vorhand.variant, '⚫');
-    if (S.rueckhand) addRow('Belag Rückhand', S.rueckhand.product, S.rueckhand.variant, '🔴');
-    // Klebeservice wird immer automatisch hinzugefügt
+    if (S.holz) addRow(KonfigT.row_holz, S.holz.product, S.holz.variant, '🏓');
+    if (S.vorhand) addRow(KonfigT.row_vorhand, S.vorhand.product, S.vorhand.variant, '⚫');
+    if (S.rueckhand) addRow(KonfigT.row_rueckhand, S.rueckhand.product, S.rueckhand.variant, '🔴');
     total += KLEBE_PRICE;
     rows.push(
       '<div class="k-sum-row">' +
       '<div class="k-sum-row__icon">🔧</div>' +
-      '<div class="k-sum-row__info"><div class="k-sum-row__lbl">Klebeservice (automatisch)</div><div class="k-sum-row__name">Beläge professionell aufkleben</div></div>' +
+      '<div class="k-sum-row__info"><div class="k-sum-row__lbl">' + KonfigT.klebeservice_auto + '</div><div class="k-sum-row__name">' + KonfigT.klebeservice_desc + '</div></div>' +
       '<div class="k-sum-row__price">' + fmtPrice(KLEBE_PRICE.toFixed(2)) + '</div>' +
       '</div>'
     );
@@ -1231,12 +1282,12 @@
       rows.push(
         '<div class="k-sum-row">' +
         '<div class="k-sum-row__icon">🛡️</div>' +
-        '<div class="k-sum-row__info"><div class="k-sum-row__lbl">Schlägerversiegelung</div><div class="k-sum-row__name">Kanten professionell versiegeln</div></div>' +
+        '<div class="k-sum-row__info"><div class="k-sum-row__lbl">' + KonfigT.versiegelung_label + '</div><div class="k-sum-row__name">' + KonfigT.versiegelung_desc + '</div></div>' +
         '<div class="k-sum-row__price">' + fmtPrice(VERSIEGELUNG_PRICE.toFixed(2)) + '</div>' +
         '</div>'
       );
     }
-    if (S.kantenband) addRow('Kantenband', S.kantenband.product, S.kantenband.variant, '📏');
+    if (S.kantenband) addRow(KonfigT.row_kantenband, S.kantenband.product, S.kantenband.variant, '📏');
 
     var sumEl = ge('k-summary');
     var totEl = ge('k-total');
@@ -1252,7 +1303,7 @@
 
     if (atcBtn) {
       atcBtn.disabled = needsBlack;
-      atcBtn.textContent = 'In den Warenkorb';
+      atcBtn.textContent = KonfigT.atc;
       atcBtn.className = 'k-btn k-btn--atc';
     }
   }
@@ -1261,19 +1312,19 @@
   function addToCart() {
     // Validation: required steps
     if (!S.holz) {
-      atcBtn.textContent = 'Schritt 1: Holz wurde noch nicht ausgewählt';
+      atcBtn.textContent = KonfigT.error_no_holz;
       atcBtn.classList.add('is-err');
       setTimeout(function() {
-        atcBtn.textContent = 'In den Warenkorb';
+        atcBtn.textContent = KonfigT.atc;
         atcBtn.classList.remove('is-err');
       }, 3000);
       return;
     }
     if (!S.vorhand && !S.rueckhand) {
-      atcBtn.textContent = 'Schritt 2: Kein Belag ausgewählt';
+      atcBtn.textContent = KonfigT.error_no_belag;
       atcBtn.classList.add('is-err');
       setTimeout(function() {
-        atcBtn.textContent = 'In den Warenkorb';
+        atcBtn.textContent = KonfigT.atc;
         atcBtn.classList.remove('is-err');
       }, 3000);
       return;
@@ -1293,7 +1344,7 @@
     if (selectedRubbers.length > 0 && !selectedRubbers.some(function(r) { return isBlk(r.variant); })) return;
 
     atcBtn.disabled = true;
-    atcBtn.textContent = 'Wird hinzugefügt…';
+    atcBtn.textContent = KonfigT.adding;
 
     console.log('[Konfigurator] addToCart items:', JSON.stringify(items));
     fetch('/cart/add.js', {
@@ -1308,7 +1359,7 @@
         return r.json();
       })
       .then(function() {
-        atcBtn.textContent = '✓ Im Warenkorb!';
+        atcBtn.textContent = KonfigT.in_cart;
         atcBtn.classList.add('is-ok');
         setOrderNote();
         document.dispatchEvent(new CustomEvent('cart:update', {
@@ -1318,7 +1369,7 @@
       })
       .catch(function(err) {
         console.error('[Konfigurator] cart error:', err.message, '| items:', JSON.stringify(items));
-        atcBtn.textContent = 'Fehler: ' + err.message;
+        atcBtn.textContent = KonfigT.error_prefix + err.message;
         atcBtn.classList.add('is-err');
         atcBtn.disabled = false;
       });
@@ -1334,24 +1385,23 @@
     }
 
     var lines = [
-      '=== SCHLÄGERKONFIGURATION ===',
-      'Holz:              ' + selName(S.holz),
-      'Vorhand-Belag:     ' + selName(S.vorhand),
-      'Rückhand-Belag:    ' + selName(S.rueckhand),
-      'Kantenband:        ' + (S.kantenband ? selName(S.kantenband) : 'keins'),
-      'Klebeservice:      Ja (Beläge aufkleben)',
-      'Versiegelung:      ' + (S.versiegelung && VERSIEGELUNG_ID ? 'Ja' : 'Nein'),
-      '============================',
+      KonfigT.note_header,
+      KonfigT.note_holz      + selName(S.holz),
+      KonfigT.note_vorhand   + selName(S.vorhand),
+      KonfigT.note_rueckhand + selName(S.rueckhand),
+      KonfigT.note_kantenband + (S.kantenband ? selName(S.kantenband) : KonfigT.note_none),
+      KonfigT.note_klebeservice + KonfigT.note_klebeservice_val,
+      KonfigT.note_versiegelung + (S.versiegelung && VERSIEGELUNG_ID ? KonfigT.yes : KonfigT.no),
+      KonfigT.note_footer,
     ];
 
-    var attrs = {
-      'Schlägerbau – Holz':          selName(S.holz),
-      'Schlägerbau – Vorhand-Belag': selName(S.vorhand),
-      'Schlägerbau – Rückhand-Belag':selName(S.rueckhand),
-      'Schlägerbau – Klebeservice':  'Ja',
-    };
-    if (S.kantenband) attrs['Schlägerbau – Kantenband'] = selName(S.kantenband);
-    if (S.versiegelung && VERSIEGELUNG_ID) attrs['Schlägerbau – Versiegelung'] = 'Ja';
+    var attrs = {};
+    attrs[KonfigT.attr_holz]          = selName(S.holz);
+    attrs[KonfigT.attr_vorhand]       = selName(S.vorhand);
+    attrs[KonfigT.attr_rueckhand]     = selName(S.rueckhand);
+    attrs[KonfigT.attr_klebeservice]  = KonfigT.yes;
+    if (S.kantenband) attrs[KonfigT.attr_kantenband] = selName(S.kantenband);
+    if (S.versiegelung && VERSIEGELUNG_ID) attrs[KonfigT.attr_versiegelung] = KonfigT.yes;
 
     fetch('/cart/update.js', {
       method: 'POST',
@@ -1368,7 +1418,7 @@
   }
 
   function fmtPrice(p) {
-    return parseFloat(p).toFixed(2).replace('.', ',') + ' €';
+    return parseFloat(p).toFixed(2).replace('.', KonfigT.decimal_sep || ',') + ' €';
   }
 
   function hasTag(tags, tag) {
