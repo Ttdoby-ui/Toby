@@ -72,6 +72,31 @@
   .konfig__nav-btn.is-done { color: var(--color-foreground, #333); }
   .konfig__nav-btn.is-done .num { background: var(--color-primary, #111); }
 
+  @media (max-width: 749px) {
+    .konfig__nav {
+      flex-direction: column;
+      overflow-x: visible;
+      border-bottom: none;
+      border-left: 2px solid var(--color-border, #e0e0e0);
+      margin-bottom: 1.5rem;
+    }
+    .konfig__nav-btn {
+      justify-content: flex-start;
+      text-align: left;
+      border-bottom: 1px solid var(--color-border, #e0e0e0);
+      border-left: 3px solid transparent;
+      margin-bottom: 0;
+      margin-left: -2px;
+      white-space: normal;
+      padding: 0.65rem 0.75rem;
+    }
+    .konfig__nav-btn:last-child { border-bottom: none; }
+    .konfig__nav-btn.is-active {
+      border-bottom-color: var(--color-border, #e0e0e0);
+      border-left-color: var(--color-primary, #111);
+    }
+  }
+
   /* ---- Panel ---- */
   .konfig__panel { display: block; }
   .konfig__panel.is-hidden { display: none; }
