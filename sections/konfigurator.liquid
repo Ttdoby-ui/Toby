@@ -714,6 +714,20 @@ window.SaleBadges = {};
 </script>
 
 <script>
+window.ProductBadges = {};
+{%- assign _pb_handles = section.settings.collection_holz | append: '|' | append: section.settings.collection_belag | append: '|' | append: section.settings.collection_kantenband | split: '|' -%}
+{%- for _pb_handle in _pb_handles -%}
+  {%- for _pb_p in collections[_pb_handle].products -%}
+    {%- assign _pb_t = _pb_p.metafields.custom.price_badge_text -%}
+    {%- assign _pb_c = _pb_p.metafields.custom.price_badge_color -%}
+    {%- if _pb_t != blank or _pb_c != blank -%}
+    window.ProductBadges[{{ _pb_p.id | json }}] = { text: {{ _pb_t | json }}, color: {{ _pb_c | json }} };
+    {%- endif -%}
+  {%- endfor -%}
+{%- endfor -%}
+</script>
+
+<script>
 (function () {
   'use strict';
   var KonfigT = window.KonfigT || {};
@@ -1082,11 +1096,18 @@ window.SaleBadges = {};
     var v0 = product.variants[0];
     var _basePrice = parseFloat(v0.price);
     var _vipObj = applyVip(_basePrice, parseFloat(v0.compare_at_price) || 0, product.tags);
-    var _saleInfo = window.SaleBadges && window.SaleBadges[v0.id];
-    var _badgeStyle = _saleInfo && _saleInfo.color ? ' style="background:' + _saleInfo.color + ';border-color:' + _saleInfo.color + '"' : '';
-    var _badgePrefix = _saleInfo && _saleInfo.emoji ? _saleInfo.emoji + ' ' : '';
-    var _badgeHtml = _vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale"' + _badgeStyle + '>' + _badgePrefix + KonfigT.badge_sale + '</span> ' :
-                   _vipObj.badge === 'vip'  ? '<span class="k-price-badge k-price-badge--vip">VIP</span> ' : '';
+    var _saleInfo = (window.SaleBadges && window.SaleBadges[v0.id]) || null;
+    var _prodInfo = (window.ProductBadges && window.ProductBadges[product.id]) || null;
+    var _badgeEmoji = _saleInfo && _saleInfo.emoji ? _saleInfo.emoji + ' ' : '';
+    var _badgeColor = (_saleInfo && _saleInfo.color) || (_prodInfo && _prodInfo.color) || '';
+    var _badgeStyle = _badgeColor ? ' style="background:' + _badgeColor + ';border-color:' + _badgeColor + '"' : '';
+    var _badgeHtml = _vipObj.badge === 'sale'
+      ? '<span class="k-price-badge k-price-badge--sale"' + _badgeStyle + '>' + _badgeEmoji + KonfigT.badge_sale + '</span> '
+      : _vipObj.badge === 'vip'
+        ? '<span class="k-price-badge k-price-badge--vip">VIP</span> '
+        : (_prodInfo && _prodInfo.text)
+          ? '<span class="k-price-badge k-price-badge--custom"' + (_prodInfo.color ? ' style="background:' + _prodInfo.color + ';border-color:' + _prodInfo.color + '"' : '') + '>' + _prodInfo.text + '</span> '
+          : '';
     var _priceHtml = _vipObj.original !== null
       ? _badgeHtml + KonfigT.price_from + ' ' + fmtPrice(_vipObj.price.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(_vipObj.original.toFixed(2)) + '</s>'
       : _badgeHtml + KonfigT.price_from + ' ' + fmtPrice(v0.price);
@@ -1264,11 +1285,18 @@ window.SaleBadges = {};
       var vipObj = applyVip(price, parseFloat(variant.compare_at_price) || 0, product.tags);
       var displayPrice = vipObj.price;
       total += displayPrice;
-      var _rowSaleInfo = window.SaleBadges && window.SaleBadges[variant.id];
-      var _rowBadgeStyle = _rowSaleInfo && _rowSaleInfo.color ? ' style="background:' + _rowSaleInfo.color + ';border-color:' + _rowSaleInfo.color + '"' : '';
-      var _rowBadgePrefix = _rowSaleInfo && _rowSaleInfo.emoji ? _rowSaleInfo.emoji + ' ' : '';
-      var _rowBadge = vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale"' + _rowBadgeStyle + '>' + _rowBadgePrefix + KonfigT.badge_sale + '</span> ' :
-                   vipObj.badge === 'vip'  ? '<span class="k-price-badge k-price-badge--vip">VIP</span> ' : '';
+      var _rowSaleInfo = (window.SaleBadges && window.SaleBadges[variant.id]) || null;
+      var _rowProdInfo = (window.ProductBadges && window.ProductBadges[product.id]) || null;
+      var _rowEmoji = _rowSaleInfo && _rowSaleInfo.emoji ? _rowSaleInfo.emoji + ' ' : '';
+      var _rowColor = (_rowSaleInfo && _rowSaleInfo.color) || (_rowProdInfo && _rowProdInfo.color) || '';
+      var _rowBadgeStyle = _rowColor ? ' style="background:' + _rowColor + ';border-color:' + _rowColor + '"' : '';
+      var _rowBadge = vipObj.badge === 'sale'
+        ? '<span class="k-price-badge k-price-badge--sale"' + _rowBadgeStyle + '>' + _rowEmoji + KonfigT.badge_sale + '</span> '
+        : vipObj.badge === 'vip'
+          ? '<span class="k-price-badge k-price-badge--vip">VIP</span> '
+          : (_rowProdInfo && _rowProdInfo.text)
+            ? '<span class="k-price-badge k-price-badge--custom"' + (_rowProdInfo.color ? ' style="background:' + _rowProdInfo.color + ';border-color:' + _rowProdInfo.color + '"' : '') + '>' + _rowProdInfo.text + '</span> '
+            : '';
       var priceHtml = vipObj.original !== null
         ? _rowBadge + fmtPrice(displayPrice.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(vipObj.original.toFixed(2)) + '</s>'
         : fmtPrice(price.toFixed(2));
