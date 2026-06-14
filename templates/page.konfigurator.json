@@ -11,7 +11,16 @@
         "versiegelung_variant_id": "57854998970716",
         "versiegelung_preis": "5.00"
       }
+    },
+    "schlaeger-berater": {
+      "type": "schlaeger-berater",
+      "settings": {
+        "claude_api_key": "",
+        "collection_holz": "holzer",
+        "collection_belag": "belage",
+        "konfigurator_url": "/pages/konfigurator"
+      }
     }
   },
-  "order": ["konfigurator"]
+  "order": ["konfigurator", "schlaeger-berater"]
 }
