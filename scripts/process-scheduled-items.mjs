@@ -2,11 +2,25 @@
 /**
  * Processes time-limited sale prices and collections stored as Shopify metaobjects.
  *
- * scheduled_sale:
- *   - Active (end_date >= today): saves current variant price as pre_sale_price (once),
- *     then applies sale_price as variant price and original_price as compareAtPrice.
- *   - Expired (end_date < today): restores pre_sale_price (or original_price as fallback),
- *     removes compareAtPrice, deletes entry.
+ * scheduled_sale fields:
+ *   - variant (required)       – product variant reference
+ *   - sale_price (required)    – price during the sale
+ *   - original_price (required)– UVP / compare-at price displayed
+ *   - end_date (required)      – sale ends before this date (YYYY-MM-DD)
+ *   - start_date (optional)    – sale is not applied before this date
+ *   - note (optional)          – internal label
+ *   - pre_sale_price (set by script) – actual price before sale, restored on expiry
+ *   - badge_emoji (optional)   – emoji / short text shown on the sale badge, e.g. 🔥
+ *   - badge_color (optional)   – hex color for the sale badge background, e.g. #E53E3E
+ *
+ * Lifecycle:
+ *   - Not yet started (start_date > today): skip
+ *   - Active (start_date <= today AND end_date >= today):
+ *       saves pre_sale_price once, applies sale_price + compareAtPrice,
+ *       writes variant metafields custom.sale_badge_emoji / custom.sale_badge_color
+ *   - Expired (end_date < today):
+ *       restores pre_sale_price (or original_price as fallback),
+ *       removes compareAtPrice, removes badge metafields, deletes entry
  *
  * scheduled_collection:
  *   - Expired (end_date < today): delete the collection, delete entry
@@ -54,6 +68,61 @@ async function deleteMetaobject(id) {
   if (errs.length) console.warn(`    Warning deleting metaobject ${id}:`, errs);
 }
 
+async function setBadgeMetafields(variantId, emoji, color) {
+  const metafields = [];
+  if (emoji) {
+    metafields.push({
+      ownerId: variantId,
+      namespace: 'custom',
+      key: 'sale_badge_emoji',
+      type: 'single_line_text_field',
+      value: emoji,
+    });
+  }
+  if (color) {
+    metafields.push({
+      ownerId: variantId,
+      namespace: 'custom',
+      key: 'sale_badge_color',
+      type: 'color',
+      value: color,
+    });
+  }
+  if (!metafields.length) return;
+
+  const data = await gql(
+    `mutation($metafields: [MetafieldsSetInput!]!) {
+      metafieldsSet(metafields: $metafields) {
+        metafields { key }
+        userErrors { field message }
+      }
+    }`,
+    { metafields }
+  );
+  const errs = data.metafieldsSet.userErrors;
+  if (errs.length) console.warn(`    Warning setting badge metafields:`, errs);
+  else console.log(`    Badge metafields set (emoji: ${emoji || '—'}, color: ${color || '—'})`);
+}
+
+async function removeBadgeMetafields(variantId) {
+  const metafields = [
+    { ownerId: variantId, namespace: 'custom', key: 'sale_badge_emoji' },
+    { ownerId: variantId, namespace: 'custom', key: 'sale_badge_color' },
+  ];
+  const data = await gql(
+    `mutation($metafields: [MetafieldIdentifierInput!]!) {
+      metafieldsDelete(metafields: $metafields) {
+        deletedMetafields { key }
+        userErrors { field message }
+      }
+    }`,
+    { metafields }
+  );
+  const errs = data.metafieldsDelete.userErrors;
+  if (errs.length) console.warn(`    Warning removing badge metafields:`, errs);
+  else console.log(`    Badge metafields removed`);
+}
+
 async function processScheduledSales() {
   console.log('\n=== Scheduled sale prices ===');
 
@@ -71,16 +140,26 @@ async function processScheduledSales() {
     const salePrice    = field(entry.fields, 'sale_price');
     const origPrice    = field(entry.fields, 'original_price');
     const endDate      = field(entry.fields, 'end_date');
+    const startDate    = field(entry.fields, 'start_date');
     const note         = field(entry.fields, 'note') || entry.id;
     const preSalePrice = field(entry.fields, 'pre_sale_price');
+    const badgeEmoji   = field(entry.fields, 'badge_emoji');
+    const badgeColor   = field(entry.fields, 'badge_color');
 
     if (!variantId || !salePrice || !origPrice || !endDate) {
       console.warn(`  [SKIP] Incomplete entry ${entry.id} — missing required fields`);
       continue;
     }
 
-    const expired = endDate < today;
-    console.log(`  "${note}"  end: ${endDate}  →  ${expired ? 'EXPIRED' : 'active'}`);
+    const expired    = endDate < today;
+    const notStarted = startDate && startDate > today;
+
+    if (notStarted) {
+      console.log(`  "${note}"  start: ${startDate}  →  PENDING (not yet started)`);
+      continue;
+    }
+
+    console.log(`  "${note}"  ${startDate ? `start: ${startDate}  ` : ''}end: ${endDate}  →  ${expired ? 'EXPIRED' : 'active'}`);
 
     // Fetch variant to get current price and parent product ID
     const vd = await gql(
@@ -110,6 +189,7 @@ async function processScheduledSales() {
       );
       const errs = upd.productVariantsBulkUpdate.userErrors;
       if (errs.length) { console.error(`    Price restore failed:`, errs); continue; }
+      await removeBadgeMetafields(variantId);
       await deleteMetaobject(entry.id);
       console.log(`    Done — price restored, entry deleted`);
     } else {
@@ -144,6 +224,7 @@ async function processScheduledSales() {
         );
         const errs = upd.productVariantsBulkUpdate.userErrors;
         if (errs.length) { console.error(`    Price update failed:`, errs); continue; }
+        await setBadgeMetafields(variantId, badgeEmoji, badgeColor);
         console.log(`    Done`);
       }
     }

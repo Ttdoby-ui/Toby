@@ -705,6 +705,15 @@
 </script>
 
 <script>
+window.SaleBadges = {};
+{%- for sale in shop.metaobjects['scheduled_sale'].values -%}
+  {%- if sale.variant.value -%}
+    window.SaleBadges[{{ sale.variant.value.id | json }}] = { emoji: {{ sale.badge_emoji.value | default: '' | json }}, color: {{ sale.badge_color.value | default: '' | json }} };
+  {%- endif -%}
+{%- endfor -%}
+</script>
+
+<script>
 (function () {
   'use strict';
   var KonfigT = window.KonfigT || {};
@@ -1073,7 +1082,10 @@
     var v0 = product.variants[0];
     var _basePrice = parseFloat(v0.price);
     var _vipObj = applyVip(_basePrice, parseFloat(v0.compare_at_price) || 0, product.tags);
-    var _badgeHtml = _vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale">' + KonfigT.badge_sale + '</span> ' :
+    var _saleInfo = window.SaleBadges && window.SaleBadges[v0.id];
+    var _badgeStyle = _saleInfo && _saleInfo.color ? ' style="background:' + _saleInfo.color + ';border-color:' + _saleInfo.color + '"' : '';
+    var _badgePrefix = _saleInfo && _saleInfo.emoji ? _saleInfo.emoji + ' ' : '';
+    var _badgeHtml = _vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale"' + _badgeStyle + '>' + _badgePrefix + KonfigT.badge_sale + '</span> ' :
                    _vipObj.badge === 'vip'  ? '<span class="k-price-badge k-price-badge--vip">VIP</span> ' : '';
     var _priceHtml = _vipObj.original !== null
       ? _badgeHtml + KonfigT.price_from + ' ' + fmtPrice(_vipObj.price.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(_vipObj.original.toFixed(2)) + '</s>'
@@ -1252,7 +1264,10 @@
       var vipObj = applyVip(price, parseFloat(variant.compare_at_price) || 0, product.tags);
       var displayPrice = vipObj.price;
       total += displayPrice;
-      var _rowBadge = vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale">' + KonfigT.badge_sale + '</span> ' :
+      var _rowSaleInfo = window.SaleBadges && window.SaleBadges[variant.id];
+      var _rowBadgeStyle = _rowSaleInfo && _rowSaleInfo.color ? ' style="background:' + _rowSaleInfo.color + ';border-color:' + _rowSaleInfo.color + '"' : '';
+      var _rowBadgePrefix = _rowSaleInfo && _rowSaleInfo.emoji ? _rowSaleInfo.emoji + ' ' : '';
+      var _rowBadge = vipObj.badge === 'sale' ? '<span class="k-price-badge k-price-badge--sale"' + _rowBadgeStyle + '>' + _rowBadgePrefix + KonfigT.badge_sale + '</span> ' :
                    vipObj.badge === 'vip'  ? '<span class="k-price-badge k-price-badge--vip">VIP</span> ' : '';
       var priceHtml = vipObj.original !== null
         ? _rowBadge + fmtPrice(displayPrice.toFixed(2)) + ' <s class="k-orig-price">' + fmtPrice(vipObj.original.toFixed(2)) + '</s>'
