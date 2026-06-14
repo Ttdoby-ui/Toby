@@ -1,0 +1,574 @@
+{%- doc -%}
+  KI-gestützter Schläger-Berater – floating chat widget.
+  Stellt 4 Fragen (Spielstil, Spielart, Holzart, Budget), ruft die Claude API auf
+  und empfiehlt einen kompletten Schläger-Aufbau. Schreibt die Empfehlung in
+  localStorage so dass der Konfigurator sie beim Laden automatisch vorausfüllt.
+{%- enddoc -%}
+
+{% stylesheet %}
+  .berater-toggle {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9000;
+    background: var(--color-primary, #111);
+    color: #fff;
+    border: none;
+    border-radius: 2rem;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+    transition: transform 0.18s, box-shadow 0.18s;
+    font-family: inherit;
+    line-height: 1;
+  }
+  .berater-toggle:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
+
+  .berater-panel {
+    position: fixed;
+    bottom: 5.5rem;
+    right: 1.5rem;
+    width: min(380px, calc(100vw - 2rem));
+    max-height: 72vh;
+    background: #fff;
+    border-radius: 1.25rem;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.22);
+    display: flex;
+    flex-direction: column;
+    z-index: 9001;
+    overflow: hidden;
+    transition: opacity 0.2s, transform 0.2s;
+    color: var(--color-foreground, #111);
+  }
+  .berater-panel.is-hidden { opacity: 0; pointer-events: none; transform: translateY(1rem); }
+
+  .berater-header {
+    background: var(--color-primary, #111);
+    color: #fff;
+    padding: 0.9rem 1.1rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .berater-header__close {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.25rem;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+    font-family: inherit;
+  }
+  .berater-header__close:hover { opacity: 1; }
+
+  .berater-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    scroll-behavior: smooth;
+  }
+
+  .berater-msg {
+    max-width: 88%;
+    padding: 0.6rem 0.85rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+  .berater-msg--bot {
+    background: #f1f1f1;
+    align-self: flex-start;
+    border-bottom-left-radius: 0.25rem;
+  }
+  .berater-msg--user {
+    background: var(--color-primary, #111);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 0.25rem;
+  }
+  .berater-msg--thinking {
+    background: #f1f1f1;
+    align-self: flex-start;
+    border-bottom-left-radius: 0.25rem;
+    font-style: italic;
+    opacity: 0.7;
+  }
+
+  .berater-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 0 1rem 1rem;
+    flex-shrink: 0;
+  }
+  .berater-choice {
+    padding: 0.45rem 0.9rem;
+    border: 2px solid var(--color-border, #e0e0e0);
+    background: none;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--color-foreground, #111);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .berater-choice:hover {
+    background: var(--color-primary, #111);
+    border-color: var(--color-primary, #111);
+    color: #fff;
+  }
+
+  .berater-price-area {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 1rem 1rem;
+    flex-shrink: 0;
+  }
+  .berater-price-area input {
+    flex: 1;
+    padding: 0.55rem 0.8rem;
+    border: 2px solid var(--color-border, #e0e0e0);
+    border-radius: 0.6rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    outline: none;
+    color: var(--color-foreground, #111);
+    background: #fff;
+  }
+  .berater-price-area input:focus { border-color: var(--color-primary, #111); }
+  .berater-price-area__btn {
+    padding: 0.55rem 1rem;
+    background: var(--color-primary, #111);
+    color: #fff;
+    border: none;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: inherit;
+    font-size: 0.875rem;
+  }
+
+  .berater-rec-card {
+    background: #f7f7f7;
+    border-radius: 0.75rem;
+    padding: 0.8rem 0.9rem;
+    font-size: 0.8rem;
+    max-width: 96%;
+    align-self: flex-start;
+  }
+  .berater-rec-card__title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-primary, #111);
+  }
+  .berater-rec-card__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.2rem;
+    color: #444;
+  }
+  .berater-rec-card__name { flex: 1; }
+  .berater-rec-card__price { font-weight: 600; white-space: nowrap; }
+  .berater-rec-card__total {
+    border-top: 1px solid #ddd;
+    margin-top: 0.5rem;
+    padding-top: 0.4rem;
+    font-weight: 700;
+    color: var(--color-foreground, #111);
+  }
+
+  .berater-cta {
+    margin: 0 1rem 1rem;
+    padding: 0.8rem 1rem;
+    background: var(--color-primary, #111);
+    color: #fff;
+    border: none;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+  }
+  .berater-cta:hover { opacity: 0.85; }
+
+  .berater-dots span {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #999;
+    animation: berater-dot 1.2s infinite;
+    margin: 0 2px;
+  }
+  .berater-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .berater-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes berater-dot {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+{% endstylesheet %}
+
+<button id="berater-toggle" class="berater-toggle" aria-label="KI Schläger-Berater öffnen">
+  🏓 KI-Berater
+</button>
+
+<div id="berater-panel" class="berater-panel is-hidden" role="dialog" aria-label="KI Schläger-Berater">
+  <div class="berater-header">
+    <span>🏓 Schläger-Berater</span>
+    <button class="berater-header__close" id="berater-close" aria-label="Schließen">✕</button>
+  </div>
+  <div id="berater-messages" class="berater-messages"></div>
+  <div id="berater-choices" class="berater-choices" style="display:none"></div>
+  <div id="berater-price-area" class="berater-price-area" style="display:none">
+    <input type="number" id="berater-price-input" placeholder="z.B. 100" min="20" max="2000" step="5">
+    <button class="berater-price-area__btn" id="berater-price-ok">OK →</button>
+  </div>
+  <button id="berater-cta" class="berater-cta" style="display:none">🏓 Schläger konfigurieren →</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var API_KEY          = {{ section.settings.claude_api_key | default: '' | json }};
+  var HANDLE_HOLZ      = {{ section.settings.collection_holz | default: 'holzer' | json }};
+  var HANDLE_BELAG     = {{ section.settings.collection_belag | default: 'belage' | json }};
+  var KONFIGURATOR_URL = {{ section.settings.konfigurator_url | default: '/' | json }};
+
+  var answers = {};
+  var prods = { holz: [], belag: [] };
+  var started = false;
+  var recommendation = null;
+
+  var toggleBtn  = document.getElementById('berater-toggle');
+  var closeBtn   = document.getElementById('berater-close');
+  var panel      = document.getElementById('berater-panel');
+  var msgBox     = document.getElementById('berater-messages');
+  var choicesEl  = document.getElementById('berater-choices');
+  var priceArea  = document.getElementById('berater-price-area');
+  var priceInput = document.getElementById('berater-price-input');
+  var priceOk    = document.getElementById('berater-price-ok');
+  var ctaBtn     = document.getElementById('berater-cta');
+
+  function openPanel() {
+    panel.classList.remove('is-hidden');
+    if (!started) { started = true; startChat(); }
+  }
+  function closePanel() { panel.classList.add('is-hidden'); }
+
+  toggleBtn.addEventListener('click', function () {
+    panel.classList.contains('is-hidden') ? openPanel() : closePanel();
+  });
+  closeBtn.addEventListener('click', closePanel);
+
+  /* ---- Message helpers ---- */
+  function addMsg(text, type) {
+    var el = document.createElement('div');
+    el.className = 'berater-msg berater-msg--' + (type || 'bot');
+    el.textContent = text;
+    msgBox.appendChild(el);
+    msgBox.scrollTop = msgBox.scrollHeight;
+    return el;
+  }
+
+  function addThinking() {
+    var el = document.createElement('div');
+    el.className = 'berater-msg berater-msg--thinking';
+    el.innerHTML = '<span class="berater-dots"><span></span><span></span><span></span></span>';
+    msgBox.appendChild(el);
+    msgBox.scrollTop = msgBox.scrollHeight;
+    return el;
+  }
+
+  function delay(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  /* ---- Question flow ---- */
+  function showChoices(opts, cb) {
+    choicesEl.innerHTML = '';
+    choicesEl.style.display = '';
+    priceArea.style.display = 'none';
+    opts.forEach(function (opt) {
+      var b = document.createElement('button');
+      b.className = 'berater-choice';
+      b.textContent = opt.label;
+      b.addEventListener('click', function () {
+        addMsg(opt.label, 'user');
+        choicesEl.style.display = 'none';
+        cb(opt.value);
+      });
+      choicesEl.appendChild(b);
+    });
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+
+  function showPriceInput(cb) {
+    choicesEl.style.display = 'none';
+    priceArea.style.display = '';
+    priceInput.value = '';
+    setTimeout(function () { priceInput.focus(); }, 100);
+    function submit() {
+      var v = parseFloat(priceInput.value);
+      if (!v || v < 20) { priceInput.select(); return; }
+      priceArea.style.display = 'none';
+      addMsg(v.toFixed(0) + ' €', 'user');
+      cb(v);
+    }
+    priceOk.onclick = submit;
+    priceInput.onkeydown = function (e) { if (e.key === 'Enter') submit(); };
+  }
+
+  /* ---- Chat steps ---- */
+  function startChat() {
+    var t = addThinking();
+    delay(600).then(function () {
+      t.remove();
+      addMsg('Hallo! 🏓 Ich helfe dir, deinen perfekten Tischtennisschläger zu finden. Beantworte kurz 4 Fragen!');
+      return delay(700);
+    }).then(function () {
+      addMsg('Was ist dein Spielstil?');
+      showChoices([
+        { label: '⚡ Offensiv', value: 'Offensiv' },
+        { label: '⚖️ Allround', value: 'Allround' },
+        { label: '🛡️ Defensiv', value: 'Defensiv' }
+      ], function (v) { answers.spielstil = v; askSpielart(); });
+    });
+  }
+
+  function askSpielart() {
+    var t = addThinking();
+    delay(500).then(function () {
+      t.remove();
+      addMsg('Wie spielst du hauptsächlich?');
+      showChoices([
+        { label: '🏓 Am Tisch', value: 'Am Tisch' },
+        { label: '🔄 Halbdistanz', value: 'Halbdistanz' },
+        { label: '🛡️ Abwehr', value: 'Abwehr' }
+      ], function (v) { answers.spielart = v; askHolzart(); });
+    });
+  }
+
+  function askHolzart() {
+    var t = addThinking();
+    delay(500).then(function () {
+      t.remove();
+      addMsg('Holz oder Carbon?');
+      showChoices([
+        { label: '🪵 Vollholz (kontrollierter)', value: 'Vollholz' },
+        { label: '⚡ Carbon (schneller)', value: 'Carbon' }
+      ], function (v) { answers.holzart = v; askBudget(); });
+    });
+  }
+
+  function askBudget() {
+    var t = addThinking();
+    delay(500).then(function () {
+      t.remove();
+      addMsg('Wie hoch ist dein maximales Budget für den Gesamtschläger (Holz + Beläge)?');
+      showPriceInput(function (v) { answers.budget = v; loadAndRecommend(); });
+    });
+  }
+
+  /* ---- Fetch & recommend ---- */
+  function loadAndRecommend() {
+    var thinking = addThinking();
+    Promise.all([
+      fetch('/collections/' + encodeURIComponent(HANDLE_HOLZ) + '/products.json?limit=250').then(function (r) { return r.json(); }),
+      fetch('/collections/' + encodeURIComponent(HANDLE_BELAG) + '/products.json?limit=250').then(function (r) { return r.json(); })
+    ]).then(function (res) {
+      prods.holz  = (res[0] && res[0].products) || [];
+      prods.belag = (res[1] && res[1].products) || [];
+      return callClaude();
+    }).then(function (rec) {
+      thinking.remove();
+      recommendation = rec;
+      showRecommendation(rec);
+    }).catch(function (err) {
+      thinking.remove();
+      addMsg('Entschuldigung, die Empfehlung ist leider fehlgeschlagen. Bitte versuche es erneut oder kontaktiere uns.');
+      console.error('[Berater]', err);
+    });
+  }
+
+  function buildProductList(arr) {
+    return arr.slice(0, 60).map(function (p) {
+      var price = parseFloat(p.variants && p.variants[0] ? p.variants[0].price : '0').toFixed(2);
+      return p.title + ' | €' + price + ' | Tags: ' + (p.tags || '');
+    }).join('\n');
+  }
+
+  function callClaude() {
+    if (!API_KEY) return Promise.reject(new Error('Kein Claude API-Key konfiguriert.'));
+
+    var prompt = [
+      'Du bist ein Experte für Tischtennisschläger. Empfehle einen kompletten Schläger-Aufbau.',
+      '',
+      'KUNDENPRÄFERENZEN:',
+      '- Spielstil: ' + answers.spielstil,
+      '- Spielposition: ' + answers.spielart,
+      '- Holztyp: ' + answers.holzart,
+      '- Maximalbudget gesamt: €' + answers.budget,
+      '',
+      'VERFÜGBARE HÖLZER (Titel | Preis | Tags):',
+      buildProductList(prods.holz),
+      '',
+      'VERFÜGBARE BELÄGE (Titel | Preis | Tags):',
+      buildProductList(prods.belag),
+      '',
+      'REGELN:',
+      '- Wähle NUR Produkte aus den Listen oben (exakte Titel).',
+      '- Gesamtpreis (Holz + Vorhand + Rückhand) muss ≤ €' + answers.budget + ' sein.',
+      '- Holztyp muss zum Kundenwunsch passen (Vollholz oder Carbon).',
+      '- Beläge müssen zum Spielstil passen.',
+      '- Vorhand-Belag und Rückhand-Belag dürfen gleich sein.',
+      '',
+      'Antworte AUSSCHLIESSLICH mit diesem JSON (kein Text davor oder danach):',
+      '{',
+      '  "holz": "exakter Titel aus der Liste",',
+      '  "vorhand": "exakter Titel aus der Liste",',
+      '  "rueckhand": "exakter Titel aus der Liste",',
+      '  "erklaerung": "Begründung auf Deutsch, 2-3 Sätze, warum dieser Aufbau passt"',
+      '}'
+    ].join('\n');
+
+    return fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.error) throw new Error(data.error.message || 'Claude API Fehler');
+      var text = data.content && data.content[0] && data.content[0].text;
+      if (!text) throw new Error('Keine Antwort von Claude erhalten');
+      var m = text.match(/\{[\s\S]*\}/);
+      if (!m) throw new Error('Antwort konnte nicht geparst werden: ' + text);
+      return JSON.parse(m[0]);
+    });
+  }
+
+  /* ---- Show result ---- */
+  function findProd(arr, title) {
+    if (!title) return null;
+    var t = title.toLowerCase().trim();
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i].title.toLowerCase().trim() === t) return arr[i];
+    }
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i].title.toLowerCase().indexOf(t) !== -1) return arr[i];
+    }
+    return null;
+  }
+
+  function fmtPrice(p) { return '€' + parseFloat(p).toFixed(2).replace('.', ','); }
+
+  function showRecommendation(rec) {
+    var holzP  = findProd(prods.holz,  rec.holz);
+    var vhP    = findProd(prods.belag, rec.vorhand);
+    var rhP    = findProd(prods.belag, rec.rueckhand);
+
+    addMsg(rec.erklaerung);
+
+    var total = 0;
+    var rows  = [];
+    if (holzP)  { var pr = parseFloat(holzP.variants[0].price);  total += pr; rows.push(['🏓 Holz', holzP.title,  pr]); }
+    if (vhP)    { var pr = parseFloat(vhP.variants[0].price);    total += pr; rows.push(['⚫ Vorhand', vhP.title,  pr]); }
+    if (rhP)    { var pr = parseFloat(rhP.variants[0].price);    total += pr; rows.push(['🔴 Rückhand', rhP.title, pr]); }
+
+    var card = document.createElement('div');
+    card.className = 'berater-rec-card';
+    var html = '<div class="berater-rec-card__title">✅ Deine Empfehlung</div>';
+    rows.forEach(function (r) {
+      html += '<div class="berater-rec-card__row"><span class="berater-rec-card__name">' + r[0] + ' ' + r[1] + '</span><span class="berater-rec-card__price">' + fmtPrice(r[2]) + '</span></div>';
+    });
+    html += '<div class="berater-rec-card__row berater-rec-card__total"><span>Gesamt</span><span>' + fmtPrice(total) + '</span></div>';
+    card.innerHTML = html;
+    msgBox.appendChild(card);
+    msgBox.scrollTop = msgBox.scrollHeight;
+
+    try {
+      localStorage.setItem('konfigBeraterRec', JSON.stringify({
+        holz:     rec.holz,
+        vorhand:  rec.vorhand,
+        rueckhand: rec.rueckhand
+      }));
+    } catch (e) {}
+
+    ctaBtn.style.display = '';
+    ctaBtn.onclick = function () {
+      var konfEl = document.querySelector('.konfig__nav');
+      if (konfEl) {
+        closePanel();
+        konfEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.location.href = KONFIGURATOR_URL;
+      }
+    };
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "KI Schläger-Berater",
+  "settings": [
+    {
+      "type": "text",
+      "id": "claude_api_key",
+      "label": "Claude API Key (Anthropic)",
+      "info": "Anthropic API Key – erstelle einen eingeschränkten Key unter console.anthropic.com. Achtung: Der Key ist im Quelltext sichtbar."
+    },
+    {
+      "type": "text",
+      "id": "collection_holz",
+      "label": "Kollektion Hölzer (Handle)",
+      "default": "holzer"
+    },
+    {
+      "type": "text",
+      "id": "collection_belag",
+      "label": "Kollektion Beläge (Handle)",
+      "default": "belage"
+    },
+    {
+      "type": "url",
+      "id": "konfigurator_url",
+      "label": "URL der Konfigurator-Seite",
+      "info": "Wird aufgerufen wenn der Berater auf einer anderen Seite als der Konfigurator eingebunden ist."
+    }
+  ],
+  "presets": [
+    {
+      "name": "KI Schläger-Berater"
+    }
+  ]
+}
+{% endschema %}

@@ -826,6 +826,41 @@ window.ProductBadges = {};
   var _belagPromise = loadProducts(HANDLE_BELAG);   // single shared promise – reused below
   loadProducts(HANDLE_KANTENBAND);
 
+  // Auto-select from KI-Berater recommendation stored in localStorage
+  (function () {
+    var recJson;
+    try { recJson = localStorage.getItem('konfigBeraterRec'); } catch (e) {}
+    if (!recJson) return;
+    var rec;
+    try { rec = JSON.parse(recJson); } catch (e) { return; }
+    try { localStorage.removeItem('konfigBeraterRec'); } catch (e) {}
+
+    function findProd(arr, title) {
+      if (!title) return null;
+      var t = title.toLowerCase().trim();
+      for (var i = 0; i < arr.length; i++) {
+        if (arr[i].title.toLowerCase().trim() === t) return arr[i];
+      }
+      for (var i = 0; i < arr.length; i++) {
+        if (arr[i].title.toLowerCase().indexOf(t) !== -1) return arr[i];
+      }
+      return null;
+    }
+
+    Promise.all([loadProducts(HANDLE_HOLZ), loadProducts(HANDLE_BELAG)]).then(function (res) {
+      var holzProd    = findProd(res[0], rec.holz);
+      var vorhandProd = findProd(res[1], rec.vorhand);
+      var rueckhandProd = findProd(res[1], rec.rueckhand);
+
+      if (holzProd)     { S.holz     = { product: holzProd,     variant: holzProd.variants[0]     }; if (nxt[0]) nxt[0].disabled = false; }
+      if (vorhandProd)  { S.vorhand  = { product: vorhandProd,  variant: vorhandProd.variants[0]  }; if (nxt[1]) nxt[1].disabled = false; }
+      if (rueckhandProd){ S.rueckhand= { product: rueckhandProd,variant: rueckhandProd.variants[0]}; if (nxt[2]) nxt[2].disabled = false; }
+
+      updateNavBtns();
+      goTo(5);
+    });
+  })();
+
   // Pre-select from URL params when navigating from a product page
   (function () {
     var params      = new URLSearchParams(window.location.search);
