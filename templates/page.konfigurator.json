@@ -14,6 +14,7 @@
     },
     "schlaeger-berater": {
       "type": "schlaeger-berater",
+      "disabled": true,
       "settings": {
         "claude_api_key": "",
         "collection_holz": "holzer",
