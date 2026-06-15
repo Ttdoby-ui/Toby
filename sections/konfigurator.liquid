@@ -760,7 +760,7 @@ window.ProductBadges = {};
   /* ---- Config (set via section settings) ---- */
   var HANDLE_HOLZ      = {{ section.settings.collection_holz | default: 'holzer' | json }};
   var HANDLE_BELAG     = {{ section.settings.collection_belag | default: 'belage' | json }};
-  var HANDLE_KANTENBAND= {{ section.settings.collection_kantenband | default: 'kantenbander' | json }};
+  var HANDLE_KANTENBAND= {{ section.settings.collection_kantenband | default: 'kantenschutz' | json }};
   var KLEBE_ID           = {{ section.settings.klebe_variant_id | default: '57810488852828' }};
   var KLEBE_PRICE        = parseFloat('{{ section.settings.klebe_preis | default: "5.00" }}') || 5.00;
   var VERSIEGELUNG_ID    = '{{ section.settings.versiegelung_variant_id | default: "" }}';
@@ -1598,7 +1598,7 @@ window.ProductBadges = {};
       "type": "text",
       "id": "collection_kantenband",
       "label": "Kollektion für Kantenbänder (Handle)",
-      "default": "kantenbander",
+      "default": "kantenschutz",
       "info": "Handle der Shopify-Kollektion, die in Schritt 4 (Kantenband) erscheint."
     },
     {
