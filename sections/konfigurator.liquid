@@ -1320,6 +1320,8 @@ window.ProductBadges = {};
         card.classList.remove('is-selected');
       } else {
         S.kantenband = { product: product, variant: variant };
+        updateNavBtns();
+        setTimeout(function() { goTo(4); }, 200);
       }
     }
   }
