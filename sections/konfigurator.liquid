@@ -293,6 +293,21 @@
   }
   .k-hint.is-hidden { display: none; }
 
+  .k-rueckgabe-hinweis {
+    border-left: 4px solid #e02020;
+    background: #fff5f5;
+    padding: 0.75rem 1rem;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+    color: var(--color-foreground, #111);
+  }
+  .k-rueckgabe-hinweis a {
+    color: #e02020;
+    text-decoration: underline;
+  }
+
   /* ---- Loading / empty / error ---- */
   .k-loading {
     grid-column: 1 / -1;
@@ -664,6 +679,11 @@
   <!-- Panel 5: Zusammenfassung -->
   <div class="konfig__panel is-hidden" id="kp-5">
     <p class="konfig__panel-title">{{ 'konfigurator.titles.summary' | t }}</p>
+    <div class="k-rueckgabe-hinweis">
+      <strong>Bitte beachte:</strong> Einmal montiert und individuell für dich zugeschnitten,
+      <strong>erlischt das Rückgaberecht</strong> für die bei der Montage verwendeten Hölzer und Beläge.
+      Weitere Informationen findest du in unseren <a href="/pages/agb" target="_blank">AGB</a>.
+    </div>
     <div class="konfig__summary" id="k-summary"></div>
     <div class="k-hint is-hidden" id="k-black-warning">
       {{ 'konfigurator.black_warning_pre' | t }} <strong>{{ 'konfigurator.black_warning_bold' | t }}</strong> {{ 'konfigurator.black_warning_post' | t }}
