@@ -23,7 +23,7 @@
  *       removes compareAtPrice, removes badge metafields, deletes entry
  *
  * scheduled_sale_member fields:
- *   - product (required)    – product reference
+ *   - product (required)    – list of product references (mehrere Produkte möglich)
  *   - collection (required) – collection reference (e.g. Beläge-Sale)
  *   - end_date (required)   – product is removed from collection after this date
  *   - start_date (optional) – product is added to collection from this date
@@ -256,13 +256,13 @@ async function processScheduledSaleMembers() {
   console.log(`Found ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`);
 
   for (const entry of entries) {
-    const productId    = field(entry.fields, 'product');
+    const productIds   = JSON.parse(field(entry.fields, 'product') || '[]');
     const collectionId = field(entry.fields, 'collection');
     const endDate      = field(entry.fields, 'end_date');
     const startDate    = field(entry.fields, 'start_date');
     const note         = field(entry.fields, 'note') || entry.id;
 
-    if (!productId || !collectionId || !endDate) {
+    if (!productIds.length || !collectionId || !endDate) {
       console.warn(`  [SKIP] Incomplete entry ${entry.id} — missing required fields`);
       continue;
     }
@@ -277,6 +277,8 @@ async function processScheduledSaleMembers() {
 
     console.log(`  "${note}"  ${startDate ? `start: ${startDate}  ` : ''}end: ${endDate}  →  ${expired ? 'EXPIRED' : 'active'}`);
 
+    console.log(`    Products: ${productIds.length}`);
+
     if (expired) {
       const rm = await gql(
         `mutation($id: ID!, $productIds: [ID!]!) {
@@ -284,25 +286,25 @@ async function processScheduledSaleMembers() {
             userErrors { field message }
           }
         }`,
-        { id: collectionId, productIds: [productId] }
+        { id: collectionId, productIds }
       );
       const errs = rm.collectionRemoveProducts.userErrors;
       if (errs.length) { console.error(`    Remove failed:`, errs); continue; }
       await deleteMetaobject(entry.id);
-      console.log(`    Done — product removed from collection, entry deleted`);
+      console.log(`    Done — ${productIds.length} product(s) removed from collection, entry deleted`);
     } else {
-      // Ensure product is in the collection (idempotent — Shopify ignores duplicates)
+      // Ensure all products are in the collection (idempotent — Shopify ignores duplicates)
       const add = await gql(
         `mutation($id: ID!, $productIds: [ID!]!) {
           collectionAddProducts(id: $id, productIds: $productIds) {
             userErrors { field message }
           }
         }`,
-        { id: collectionId, productIds: [productId] }
+        { id: collectionId, productIds }
       );
       const errs = add.collectionAddProducts.userErrors;
-      if (errs.length) console.warn(`    Warning adding product to collection:`, errs);
-      else console.log(`    Product confirmed in collection`);
+      if (errs.length) console.warn(`    Warning adding products to collection:`, errs);
+      else console.log(`    ${productIds.length} product(s) confirmed in collection`);
     }
   }
 }
