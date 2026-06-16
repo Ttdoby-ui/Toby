@@ -22,6 +22,18 @@
  *       restores pre_sale_price (or original_price as fallback),
  *       removes compareAtPrice, removes badge metafields, deletes entry
  *
+ * scheduled_sale_member fields:
+ *   - product (required)    – product reference
+ *   - collection (required) – collection reference (e.g. Beläge-Sale)
+ *   - end_date (required)   – product is removed from collection after this date
+ *   - start_date (optional) – product is added to collection from this date
+ *   - note (optional)       – internal label
+ *
+ * Lifecycle:
+ *   - Pending (start_date > today): skip
+ *   - Active: ensures product is in collection (idempotent)
+ *   - Expired (end_date < today): removes product from collection, deletes entry
+ *
  * scheduled_collection:
  *   - Expired (end_date < today): delete the collection, delete entry
  */
@@ -231,6 +243,70 @@ async function processScheduledSales() {
   }
 }
 
+async function processScheduledSaleMembers() {
+  console.log('\n=== Scheduled sale collection members ===');
+
+  const { metaobjects } = await gql(`{
+    metaobjects(type: "scheduled_sale_member", first: 250) {
+      edges { node { id fields { key value } } }
+    }
+  }`);
+
+  const entries = metaobjects.edges.map(e => e.node);
+  console.log(`Found ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`);
+
+  for (const entry of entries) {
+    const productId    = field(entry.fields, 'product');
+    const collectionId = field(entry.fields, 'collection');
+    const endDate      = field(entry.fields, 'end_date');
+    const startDate    = field(entry.fields, 'start_date');
+    const note         = field(entry.fields, 'note') || entry.id;
+
+    if (!productId || !collectionId || !endDate) {
+      console.warn(`  [SKIP] Incomplete entry ${entry.id} — missing required fields`);
+      continue;
+    }
+
+    const expired    = endDate < today;
+    const notStarted = startDate && startDate > today;
+
+    if (notStarted) {
+      console.log(`  "${note}"  start: ${startDate}  →  PENDING (not yet started)`);
+      continue;
+    }
+
+    console.log(`  "${note}"  ${startDate ? `start: ${startDate}  ` : ''}end: ${endDate}  →  ${expired ? 'EXPIRED' : 'active'}`);
+
+    if (expired) {
+      const rm = await gql(
+        `mutation($id: ID!, $productIds: [ID!]!) {
+          collectionRemoveProducts(id: $id, productIds: $productIds) {
+            userErrors { field message }
+          }
+        }`,
+        { id: collectionId, productIds: [productId] }
+      );
+      const errs = rm.collectionRemoveProducts.userErrors;
+      if (errs.length) { console.error(`    Remove failed:`, errs); continue; }
+      await deleteMetaobject(entry.id);
+      console.log(`    Done — product removed from collection, entry deleted`);
+    } else {
+      // Ensure product is in the collection (idempotent — Shopify ignores duplicates)
+      const add = await gql(
+        `mutation($id: ID!, $productIds: [ID!]!) {
+          collectionAddProducts(id: $id, productIds: $productIds) {
+            userErrors { field message }
+          }
+        }`,
+        { id: collectionId, productIds: [productId] }
+      );
+      const errs = add.collectionAddProducts.userErrors;
+      if (errs.length) console.warn(`    Warning adding product to collection:`, errs);
+      else console.log(`    Product confirmed in collection`);
+    }
+  }
+}
+
 async function processScheduledCollections() {
   console.log('\n=== Scheduled collections ===');
 
@@ -278,6 +354,7 @@ async function processScheduledCollections() {
   try {
     console.log(`Running on ${today}`);
     await processScheduledSales();
+    await processScheduledSaleMembers();
     await processScheduledCollections();
     console.log('\nAll done.');
   } catch (err) {
