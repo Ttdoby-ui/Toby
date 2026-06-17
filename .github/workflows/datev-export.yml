@@ -1,0 +1,41 @@
+name: DATEV Export
+
+on:
+  workflow_dispatch:
+    inputs:
+      date_from:
+        description: 'Von (YYYY-MM-DD)'
+        required: true
+        default: '2026-06-01'
+      date_to:
+        description: 'Bis (YYYY-MM-DD)'
+        required: true
+        default: '2026-06-30'
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Dependencies installieren
+        working-directory: datev-export-app
+        run: npm install --omit=dev --ignore-scripts
+
+      - name: DATEV-Export generieren
+        working-directory: datev-export-app
+        env:
+          SHOPIFY_STORE: e7ee88-2.myshopify.com
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.DATEV_SHOPIFY_ACCESS_TOKEN }}
+        run: node export.mjs ${{ github.event.inputs.date_from }} ${{ github.event.inputs.date_to }}
+
+      - name: CSV herunterladen (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: DATEV-Export-${{ github.event.inputs.date_from }}-${{ github.event.inputs.date_to }}
+          path: datev-export-app/DATEV_*.csv
+          retention-days: 90
