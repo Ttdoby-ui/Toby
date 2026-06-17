@@ -1,0 +1,13 @@
+{
+  "name": "shopify-datev-export",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Eingebettete Shopify-App: exportiert Bestellungen als DATEV-Buchungsstapel (EXTF) mit eindeutiger Zahlungsweise und Rechnungszuordnung (SKR03).",
+  "scripts": {
+    "test": "node --test lib/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
