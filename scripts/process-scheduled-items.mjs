@@ -3,24 +3,27 @@
  * Processes time-limited sale prices and collections stored as Shopify metaobjects.
  *
  * scheduled_sale fields:
- *   - variant (required)       – product variant reference
- *   - sale_price (required)    – price during the sale
- *   - original_price (required)– UVP / compare-at price displayed
- *   - end_date (required)      – sale ends before this date (YYYY-MM-DD)
- *   - start_date (optional)    – sale is not applied before this date
- *   - note (optional)          – internal label
- *   - pre_sale_price (set by script) – actual price before sale, restored on expiry
- *   - badge_emoji (optional)   – emoji / short text shown on the sale badge, e.g. 🔥
- *   - badge_color (optional)   – hex color for the sale badge background, e.g. #E53E3E
+ *   - variants (required)          – list of product variant references
+ *   - discount_type (required)     – "fixed" or "percentage"
+ *   - sale_price (optional)        – fixed sale price (used when discount_type=fixed)
+ *   - discount_percentage (optional)– percentage off, e.g. 20 for 20% (used when discount_type=percentage)
+ *   - end_date (required)          – sale ends before this date (YYYY-MM-DD)
+ *   - start_date (optional)        – sale is not applied before this date
+ *   - note (optional)              – internal label
+ *   - badge_emoji (optional)       – emoji / short text shown on the sale badge, e.g. 🔥
+ *   - badge_color (optional)       – hex color for the sale badge background, e.g. #E53E3E
+ *
+ * Per-variant metafield (set by script, removed on expiry):
+ *   custom.pre_sale_price          – original price stored on the variant itself
  *
  * Lifecycle:
  *   - Not yet started (start_date > today): skip
  *   - Active (start_date <= today AND end_date >= today):
- *       saves pre_sale_price once, applies sale_price + compareAtPrice,
- *       writes variant metafields custom.sale_badge_emoji / custom.sale_badge_color
+ *       per variant: saves custom.pre_sale_price once, applies computed sale price
+ *       + compareAtPrice (original price), writes badge metafields
  *   - Expired (end_date < today):
- *       restores pre_sale_price (or original_price as fallback),
- *       removes compareAtPrice, removes badge metafields, deletes entry
+ *       per variant: restores custom.pre_sale_price, removes compareAtPrice,
+ *       removes badge + pre_sale_price metafields, then deletes entry
  *
  * scheduled_sale_member fields:
  *   - product (required)    – list of product references (mehrere Produkte möglich)
@@ -116,10 +119,11 @@ async function setBadgeMetafields(variantId, emoji, color) {
   else console.log(`    Badge metafields set (emoji: ${emoji || '—'}, color: ${color || '—'})`);
 }
 
-async function removeBadgeMetafields(variantId) {
+async function removeSaleMetafields(variantId) {
   const metafields = [
     { ownerId: variantId, namespace: 'custom', key: 'sale_badge_emoji' },
     { ownerId: variantId, namespace: 'custom', key: 'sale_badge_color' },
+    { ownerId: variantId, namespace: 'custom', key: 'pre_sale_price' },
   ];
   const data = await gql(
     `mutation($metafields: [MetafieldIdentifierInput!]!) {
@@ -131,8 +135,8 @@ async function removeBadgeMetafields(variantId) {
     { metafields }
   );
   const errs = data.metafieldsDelete.userErrors;
-  if (errs.length) console.warn(`    Warning removing badge metafields:`, errs);
-  else console.log(`    Badge metafields removed`);
+  if (errs.length) console.warn(`    Warning removing sale metafields:`, errs);
+  else console.log(`    Sale metafields removed`);
 }
 
 async function processScheduledSales() {
@@ -148,18 +152,26 @@ async function processScheduledSales() {
   console.log(`Found ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`);
 
   for (const entry of entries) {
-    const variantId    = field(entry.fields, 'variant');
-    const salePrice    = field(entry.fields, 'sale_price');
-    const origPrice    = field(entry.fields, 'original_price');
-    const endDate      = field(entry.fields, 'end_date');
-    const startDate    = field(entry.fields, 'start_date');
-    const note         = field(entry.fields, 'note') || entry.id;
-    const preSalePrice = field(entry.fields, 'pre_sale_price');
-    const badgeEmoji   = field(entry.fields, 'badge_emoji');
-    const badgeColor   = field(entry.fields, 'badge_color');
+    const variantIds    = JSON.parse(field(entry.fields, 'variants') || '[]');
+    const discountType  = field(entry.fields, 'discount_type');
+    const salePrice     = field(entry.fields, 'sale_price');
+    const discountPct   = field(entry.fields, 'discount_percentage');
+    const endDate       = field(entry.fields, 'end_date');
+    const startDate     = field(entry.fields, 'start_date');
+    const note          = field(entry.fields, 'note') || entry.id;
+    const badgeEmoji    = field(entry.fields, 'badge_emoji');
+    const badgeColor    = field(entry.fields, 'badge_color');
 
-    if (!variantId || !salePrice || !origPrice || !endDate) {
+    if (!variantIds.length || !discountType || !endDate) {
       console.warn(`  [SKIP] Incomplete entry ${entry.id} — missing required fields`);
+      continue;
+    }
+    if (discountType === 'fixed' && !salePrice) {
+      console.warn(`  [SKIP] "${note}" — discount_type=fixed but no sale_price set`);
+      continue;
+    }
+    if (discountType === 'percentage' && !discountPct) {
+      console.warn(`  [SKIP] "${note}" — discount_type=percentage but no discount_percentage set`);
       continue;
     }
 
@@ -171,74 +183,91 @@ async function processScheduledSales() {
       continue;
     }
 
-    console.log(`  "${note}"  ${startDate ? `start: ${startDate}  ` : ''}end: ${endDate}  →  ${expired ? 'EXPIRED' : 'active'}`);
+    const discountLabel = discountType === 'fixed' ? `fixed ${salePrice}` : `${discountPct}% off`;
+    console.log(`  "${note}"  ${startDate ? `start: ${startDate}  ` : ''}end: ${endDate}  [${discountLabel}]  →  ${expired ? 'EXPIRED' : 'active'}`);
 
-    // Fetch variant to get current price and parent product ID
-    const vd = await gql(
-      `query($id: ID!) { productVariant(id: $id) { id price compareAtPrice product { id } } }`,
-      { id: variantId }
-    );
+    let allOk = true;
 
-    if (!vd.productVariant) {
-      console.warn(`    Variant ${variantId} not found — deleting orphaned entry`);
-      await deleteMetaobject(entry.id);
-      continue;
-    }
-
-    const { price: currentPrice, product } = vd.productVariant;
-    const productId = product.id;
-
-    if (expired) {
-      const restorePrice = preSalePrice || origPrice;
-      console.log(`    Restoring price ${restorePrice} (was ${currentPrice}${preSalePrice ? '' : ', pre_sale_price not set — using original_price as fallback'})`);
-      const upd = await gql(
-        `mutation($pid: ID!, $variants: [ProductVariantsBulkInput!]!) {
-          productVariantsBulkUpdate(productId: $pid, variants: $variants) {
-            userErrors { field message }
+    for (const variantId of variantIds) {
+      // Fetch variant: current price, compareAtPrice, product ID, stored pre_sale_price metafield
+      const vd = await gql(
+        `query($id: ID!) {
+          productVariant(id: $id) {
+            id price compareAtPrice
+            product { id }
+            preSaleMeta: metafield(namespace: "custom", key: "pre_sale_price") { value }
           }
         }`,
-        { pid: productId, variants: [{ id: variantId, price: restorePrice, compareAtPrice: null }] }
+        { id: variantId }
       );
-      const errs = upd.productVariantsBulkUpdate.userErrors;
-      if (errs.length) { console.error(`    Price restore failed:`, errs); continue; }
-      await removeBadgeMetafields(variantId);
-      await deleteMetaobject(entry.id);
-      console.log(`    Done — price restored, entry deleted`);
-    } else {
-      const salePriceNum = parseFloat(salePrice);
-      const currentNum   = parseFloat(currentPrice);
-      if (Math.abs(currentNum - salePriceNum) < 0.005) {
-        console.log(`    Sale already applied (${currentPrice}), skipping`);
-      } else {
-        // Save current price as pre_sale_price before applying sale (only on first application)
-        if (!preSalePrice) {
-          const save = await gql(
-            `mutation($id: ID!, $metaobject: MetaobjectUpdateInput!) {
-              metaobjectUpdate(id: $id, metaobject: $metaobject) {
-                metaobject { id }
-                userErrors { field message }
-              }
-            }`,
-            { id: entry.id, metaobject: { fields: [{ key: 'pre_sale_price', value: currentPrice }] } }
-          );
-          const errs2 = save.metaobjectUpdate.userErrors;
-          if (errs2.length) console.warn(`    Warning saving pre_sale_price:`, errs2);
-          else console.log(`    Saved pre-sale price ${currentPrice}`);
-        }
-        console.log(`    Applying sale: ${salePrice} (original ${origPrice})`);
+
+      if (!vd.productVariant) {
+        console.warn(`    [${variantId.split('/').pop()}] Variant not found — skipping`);
+        continue;
+      }
+
+      const { price: currentPrice, compareAtPrice, product, preSaleMeta } = vd.productVariant;
+      const productId = product.id;
+      const shortId = variantId.split('/').pop();
+
+      if (expired) {
+        const restorePrice = preSaleMeta?.value || currentPrice;
+        console.log(`    [${shortId}] Restoring ${restorePrice}${!preSaleMeta ? ' (pre_sale_price missing — using current price as fallback)' : ''}`);
         const upd = await gql(
           `mutation($pid: ID!, $variants: [ProductVariantsBulkInput!]!) {
             productVariantsBulkUpdate(productId: $pid, variants: $variants) {
               userErrors { field message }
             }
           }`,
-          { pid: productId, variants: [{ id: variantId, price: salePrice, compareAtPrice: origPrice }] }
+          { pid: productId, variants: [{ id: variantId, price: restorePrice, compareAtPrice: null }] }
         );
         const errs = upd.productVariantsBulkUpdate.userErrors;
-        if (errs.length) { console.error(`    Price update failed:`, errs); continue; }
+        if (errs.length) { console.error(`    [${shortId}] Price restore failed:`, errs); allOk = false; continue; }
+        await removeSaleMetafields(variantId);
+      } else {
+        // Skip if sale is already applied (pre_sale_price metafield exists → sale active)
+        if (preSaleMeta) {
+          console.log(`    [${shortId}] Sale already active (${currentPrice}), skipping`);
+          continue;
+        }
+
+        // Calculate new sale price
+        const currentPriceNum = parseFloat(currentPrice);
+        const newSalePrice = discountType === 'fixed'
+          ? parseFloat(salePrice).toFixed(2)
+          : (currentPriceNum * (1 - parseFloat(discountPct) / 100)).toFixed(2);
+
+        // Store original price as variant metafield before applying sale
+        const saveMeta = await gql(
+          `mutation($metafields: [MetafieldsSetInput!]!) {
+            metafieldsSet(metafields: $metafields) {
+              userErrors { field message }
+            }
+          }`,
+          { metafields: [{ ownerId: variantId, namespace: 'custom', key: 'pre_sale_price', type: 'single_line_text_field', value: currentPrice }] }
+        );
+        const metaErrs = saveMeta.metafieldsSet.userErrors;
+        if (metaErrs.length) { console.warn(`    [${shortId}] Warning saving pre_sale_price:`, metaErrs); }
+
+        // Apply sale price (compareAtPrice = original price for strikethrough display)
+        const upd = await gql(
+          `mutation($pid: ID!, $variants: [ProductVariantsBulkInput!]!) {
+            productVariantsBulkUpdate(productId: $pid, variants: $variants) {
+              userErrors { field message }
+            }
+          }`,
+          { pid: productId, variants: [{ id: variantId, price: newSalePrice, compareAtPrice: currentPrice }] }
+        );
+        const errs = upd.productVariantsBulkUpdate.userErrors;
+        if (errs.length) { console.error(`    [${shortId}] Price update failed:`, errs); allOk = false; continue; }
         await setBadgeMetafields(variantId, badgeEmoji, badgeColor);
-        console.log(`    Done`);
+        console.log(`    [${shortId}] ${currentPrice} → ${newSalePrice} (compareAt: ${currentPrice})`);
       }
+    }
+
+    if (expired && allOk) {
+      await deleteMetaobject(entry.id);
+      console.log(`    Entry deleted`);
     }
   }
 }
