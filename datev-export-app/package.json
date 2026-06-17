@@ -5,9 +5,40 @@
   "type": "module",
   "description": "Eingebettete Shopify-App: exportiert Bestellungen als DATEV-Buchungsstapel (EXTF) mit eindeutiger Zahlungsweise und Rechnungszuordnung (SKR03).",
   "scripts": {
-    "test": "node --test lib/*.test.mjs"
+    "build": "remix vite:build",
+    "dev": "shopify app dev",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
+    "setup": "prisma generate && prisma migrate deploy",
+    "start": "remix-serve ./build/server/index.js",
+    "test": "node --test lib/*.test.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@remix-run/node": "^2.15.0",
+    "@remix-run/react": "^2.15.0",
+    "@remix-run/serve": "^2.15.0",
+    "@shopify/polaris": "^13.9.0",
+    "@shopify/shopify-api": "^11.7.0",
+    "@shopify/shopify-app-remix": "^3.5.0",
+    "@shopify/shopify-app-session-storage-prisma": "^5.1.4",
+    "iconv-lite": "^0.6.3",
+    "isbot": "^4.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "^2.15.0",
+    "@shopify/app": "^3.73.0",
+    "@types/node": "^20.16.5",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "prisma": "^5.22.0",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.11",
+    "vite-tsconfig-paths": "^5.0.1"
   }
 }

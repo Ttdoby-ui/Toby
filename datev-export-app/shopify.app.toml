@@ -1,0 +1,26 @@
+name = "Shopify DATEV Export"
+client_id = "{{ SHOPIFY_API_KEY }}"
+application_url = "{{ HOST }}"
+embedded = true
+
+[access_scopes]
+scopes = "read_orders,read_all_orders"
+use_online_tokens = false
+
+[auth]
+redirect_urls = [
+  "https://{{ HOST }}/auth/callback",
+  "https://{{ HOST }}/auth/shopify/callback",
+  "http://localhost:3000/auth/callback",
+  "http://localhost:3000/auth/shopify/callback"
+]
+
+[webhooks]
+api_version = "2025-01"
+
+[pos]
+embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = ""
