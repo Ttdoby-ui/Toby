@@ -19,16 +19,13 @@ if (!dateFrom || !dateTo) {
 }
 
 async function getToken() {
-  if (process.env.SHOPIFY_ACCESS_TOKEN) {
-    return process.env.SHOPIFY_ACCESS_TOKEN;
-  }
-  const res = await fetch(`https://${SHOP}/admin/oauth/access_token`, {
+  const res = await fetch('https://api.shopify.com/auth/access_token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       client_id: process.env.SHOPIFY_API_KEY,
       client_secret: process.env.SHOPIFY_API_SECRET,
+      grant_type: 'client_credentials',
     }),
   });
   const data = await res.json();
