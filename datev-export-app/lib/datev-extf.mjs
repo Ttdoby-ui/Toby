@@ -127,9 +127,11 @@ export function bookingRowForOrder(order, mapping) {
   const konto = paymentAccountFor(mapping, method); // Soll: Geldeingang
   const gegenkonto = revenueAccountFor(mapping, taxRate); // Haben: Erlös
 
-  // Rechnungsnummer: bevorzugt eine echte Rechnungsnummer aus einem Metafeld,
-  // sonst der Bestellname (z. B. "#8897" -> "8897").
-  const invoiceNo = (order.invoice_number || (order.name || '').replace(/^#/, '')).slice(0, 36);
+  // Rechnungsnummer: explizites Metafeld > R{order_number+1000} > Bestellname
+  const invoiceNo = (
+    order.invoice_number ||
+    (order.order_number ? 'R' + (order.order_number + 1000) : (order.name || '').replace(/^#/, ''))
+  ).slice(0, 36);
 
   const row = new Array(BOOKING_COLUMNS.length).fill('');
   row[0] = money(total); // Umsatz

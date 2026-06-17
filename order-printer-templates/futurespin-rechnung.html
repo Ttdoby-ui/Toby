@@ -2,7 +2,9 @@
 <div class="columns">
    <h1>{{ "invoice_template.title" | t }}</h1>
    <div>
+      {% assign invoice_number = order.order_number | plus: 1000 %}
       <p style="text-align: right; margin: 0;">
+         <strong>Rechnungsnummer: R{{ invoice_number }}</strong><br />
          {{ "invoice_template.order_label" | t }} {{ order.order_name }}<br />
          {% if order.po_number %}{{ "invoice_template.po_number_label" | t }} {{ order.po_number }}<br />{% endif %}
          {{ order.created_at | date: "%d.%m.%Y" }}
