@@ -24,7 +24,7 @@ jobs:
 
       - name: Dependencies installieren
         working-directory: datev-export-app
-        run: npm install --omit=dev --ignore-scripts
+        run: npm install iconv-lite
 
       - name: DATEV-Export generieren
         working-directory: datev-export-app
