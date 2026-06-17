@@ -1,6 +1,9 @@
 <div>
 <div class="columns">
-   <h1>{{ "invoice_template.title" | t }}</h1>
+   <div>
+      <img src="https://cdn.shopify.com/s/files/1/0780/9607/3052/files/futurespin-logo.jpg?v=1781695724"
+           alt="futurespin" style="height: 48px; width: auto; display: block;" />
+   </div>
    <div>
       {% assign invoice_number = order.order_number | plus: 1000 %}
       <p style="text-align: right; margin: 0;">
