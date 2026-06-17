@@ -1,0 +1,203 @@
+<div>
+<div class="columns">
+   <h1>{{ "invoice_template.title" | t }}</h1>
+   <div>
+      <p style="text-align: right; margin: 0;">
+         {{ "invoice_template.order_label" | t }} {{ order.order_name }}<br />
+         {% if order.po_number %}{{ "invoice_template.po_number_label" | t }} {{ order.po_number }}<br />{% endif %}
+         {{ order.created_at | date: "%d.%m.%Y" }}
+      </p>
+   </div>
+</div>
+
+<div class="columns" style="margin-top: 1.5em;">
+   <div class="address">
+      <strong>{{ "invoice_template.from_label" | t }}</strong><br/>
+      {{ shop.name }}<br/>
+      {{ shop.address | format_address }}
+      {% if shop.phone %}{{ shop.phone }}{% endif %}
+   </div>
+   {% if order.billing_address %}
+   <div class="address">
+      <strong>{{ "invoice_template.bill_to_label" | t }}</strong>
+      {{ order.billing_address | format_address }}
+   </div>
+   {% endif %}
+   {% if order.shipping_address %}
+   <div class="address">
+      <strong>{{ "invoice_template.ship_to_label" | t }}</strong>
+      {{ order.shipping_address | format_address }}
+      {% if order.shipping_address.phone %}{{ order.shipping_address.phone }}{% endif %}
+   </div>
+   {% endif %}
+</div>
+
+<hr />
+
+<h2>{{ "invoice_template.order_details_title" | t }}</h2>
+<table class="table-tabular" style="margin: 1em 0 0 0;">
+   <thead>
+      <tr>
+         <th>{{ "invoice_template.column_headings.quantity" | t }}</th>
+         <th>{{ "invoice_template.column_headings.item" | t }}</th>
+         <th style="text-align: right;">{{ "invoice_template.column_headings.price" | t }}</th>
+      </tr>
+   </thead>
+   <tbody>
+      {% for line_item in order.line_items %}
+      <tr>
+         <td>{{ line_item.quantity }}</td>
+         <td>{{ line_item.title }}
+            {% if line_item.variant_title %}<br /><span class="subduedText">{{ line_item.variant_title }}</span>{% endif %}
+            {% if line_item.sku != blank %}<br /><span class="subduedText">SKU: {{ line_item.sku }}</span>{% endif %}
+            {% if line_item.line_level_discount_allocations.size > 0 %}
+            <span class="subduedText">
+            {% for discount_allocation in line_item.line_level_discount_allocations %}
+            <br>{{ discount_allocation.discount_application.title }} (-{{ discount_allocation.amount | money }})
+            {% endfor %}
+            </span>
+            {% endif %}
+         </td>
+         <td style="text-align: right;">
+            {% if line_item.original_price != line_item.final_price %}
+            <span class="subduedText"><s>{{ line_item.original_price | money }}</s></span><br />
+            {% endif %}
+            {{ line_item.final_price | money }}
+         </td>
+      </tr>
+      {% endfor %}
+
+      <tr>
+         <td colspan="2" style="text-align: right;">{{ "invoice_template.subtotal_label" | t }}</td>
+         <td style="text-align: right;">{{ order.line_items_subtotal_price | money }}</td>
+      </tr>
+
+      {% assign has_shipping_discount = false %}
+      {% for discount_application in order.discount_applications %}
+         {% if discount_application.target_type == 'shipping_line' %}
+            {% assign has_shipping_discount = true %}
+         {% endif %}
+         {% if discount_application.target_selection == 'all' and discount_application.target_type != 'shipping_line' %}
+         <tr>
+            <td colspan="2" style="text-align: right;">
+               {% if discount_application.title %}<span class="subduedText">{{ discount_application.title }}</span>{% endif %}
+            </td>
+            <td style="text-align: right;">-{{ discount_application.total_allocated_amount | money }}</td>
+         </tr>
+         {% endif %}
+      {% endfor %}
+
+      <tr>
+         <td colspan="2" style="text-align: right;">{{ "invoice_template.tax_label" | t }}</td>
+         <td style="text-align: right;">{{ order.tax_price | money }}</td>
+      </tr>
+
+      {% if order.shipping_address %}
+      <tr>
+         <td colspan="2" style="text-align: right;">{{ "invoice_template.shipping_label" | t }}</td>
+         <td style="text-align: right;">
+            {% if has_shipping_discount %}{{ "invoice_template.free_shipping" | t }}{% else %}{{ order.shipping_price | money }}{% endif %}
+         </td>
+      </tr>
+      {% endif %}
+
+      <tr>
+         <td colspan="2" style="text-align: right;"><strong>{{ "invoice_template.total_label" | t }}</strong></td>
+         <td style="text-align: right;"><strong>{{ order.total_price | money }}</strong></td>
+      </tr>
+
+      {% if order.net_payment != order.total_net_amount %}
+      <tr>
+         <td colspan="2" style="text-align: right;">{{ "invoice_template.total_paid_label" | t }}</td>
+         <td style="text-align: right;">{{ order.net_payment | money }}</td>
+      </tr>
+      {% endif %}
+
+      {% if order.total_refunded_amount > 0 %}
+      <tr>
+         <td colspan="2" style="text-align: right;">{{ "invoice_template.total_refunded_label" | t }}</td>
+         <td style="text-align: right;">-{{ order.total_refunded_amount | money }}</td>
+      </tr>
+      {% endif %}
+
+      {% if order.net_payment != order.total_net_amount %}
+      <tr>
+         <td colspan="2" style="text-align: right;"><strong>{{ "invoice_template.outstanding_amount_label" | t }}</strong></td>
+         <td style="text-align: right;"><strong>{{ order.total_price | minus: order.net_payment | money }}</strong></td>
+      </tr>
+      {% endif %}
+   </tbody>
+</table>
+
+{% if transactions.size > 1 %}
+<h2>{{ "invoice_template.transaction_details_title" | t }}</h2>
+<table class="table-tabular" style="margin: 0 0 1.5em 0;">
+   <thead>
+      <tr>
+         <th>{{ "invoice_template.transaction_headings.type" | t }}</th>
+         <th>{{ "invoice_template.transaction_headings.amount" | t }}</th>
+         <th>{{ "invoice_template.transaction_headings.kind" | t }}</th>
+         <th>{{ "invoice_template.transaction_headings.status" | t }}</th>
+      </tr>
+   </thead>
+   <tbody>
+      {% for transaction in transactions %}
+      <tr>
+         <td>{{ transaction.gateway | payment_method }}</td>
+         <td>{{ transaction.amount | money }}</td>
+         <td>{{ transaction.kind }}</td>
+         <td>{{ transaction.status }}</td>
+      </tr>
+      {% endfor %}
+   </tbody>
+</table>
+{% endif %}
+
+<h2>Zahlungsinformationen</h2>
+<table class="table-tabular" style="margin: 0 0 1.5em 0;">
+   <thead>
+      <tr>
+         <th>Zahlungsart</th>
+         <th>Datum</th>
+         <th style="text-align: right;">Betrag</th>
+         <th>Referenz / Zuordnung</th>
+      </tr>
+   </thead>
+   <tbody>
+      {% for transaction in order.transactions %}
+         {% if transaction.status == 'success' and transaction.kind != 'authorization' %}
+         <tr>
+            <td>
+               {% if transaction.gateway == 'shopify_payments' %}
+                  Shopify Payments
+                  {% if transaction.payment_details.credit_card_company %}
+                     <br /><span class="subduedText">{{ transaction.payment_details.credit_card_company }}
+                     {{ transaction.payment_details.credit_card_number }}</span>
+                  {% endif %}
+               {% else %}
+                  {{ transaction.gateway | replace: '_', ' ' | capitalize }}
+               {% endif %}
+            </td>
+            <td>{{ transaction.created_at | date: "%d.%m.%Y" }}</td>
+            <td style="text-align: right;">{{ transaction.amount | money }}</td>
+            <td style="font-family: monospace; font-size: .85em;">
+               {% if transaction.gateway == 'shopify_payments' %}
+                  Charge: {{ transaction.authorization }}<br />
+                  Txn-ID: {{ transaction.id }}
+               {% else %}
+                  {{ transaction.authorization }}
+               {% endif %}
+            </td>
+         </tr>
+         {% endif %}
+      {% endfor %}
+   </tbody>
+</table>
+
+{% if order.note %}
+<h2>{{ "invoice_template.note_title" | t }}</h2>
+<p>{{ order.note }}</p>
+{% endif %}
+
+<p style="margin-bottom: 0;">{{ "invoice_template.email_footer" | t: email: shop.email }}</p>
+</div>
