@@ -29,6 +29,9 @@ async function getToken() {
     }),
   });
   const data = await res.json();
+  console.log('Token-Response-Felder:', Object.keys(data).join(', '));
+  if (data.scope !== undefined) console.log('Scope:', data.scope);
+  if (data.token_type !== undefined) console.log('Token-Typ:', data.token_type);
   if (!data.access_token) {
     throw new Error(`Token-Fehler: ${JSON.stringify(data)}`);
   }
