@@ -37,4 +37,4 @@ jobs:
         env:
           SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
           SHOPIFY_FLAG_CLIENT_ID: ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}
-        run: echo "" | shopify app deploy --client-id ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}
+        run: shopify app deploy --client-id ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }} --force
