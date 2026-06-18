@@ -1,0 +1,63 @@
+<div>
+<div class="columns">
+   <div>
+      <img src="https://cdn.shopify.com/s/files/1/0780/9607/3052/files/futurespin-logo-clean.jpg?v=1781696186"
+           alt="futurespin" style="height: 32px; width: auto; display: block; background: #fff;" />
+   </div>
+   <div>
+      <p style="text-align: right; margin: 0;">
+         <strong>Packliste {{ order.order_name }}</strong><br />
+         {{ order.created_at | date: "%d.%m.%Y" }}<br />
+         {% if order.shipping_address %}
+            {{ order.shipping_address.first_name }} {{ order.shipping_address.last_name }}
+         {% endif %}
+      </p>
+   </div>
+</div>
+
+<hr />
+
+{% if order.note %}
+<div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 4px; padding: 10px 14px; margin: 12px 0;">
+   <strong>⚠ Kundennotiz:</strong><br />
+   {{ order.note }}
+</div>
+<hr />
+{% endif %}
+
+{% if order.shipping_address %}
+<div style="margin-bottom: 1em;">
+   <strong>Lieferadresse</strong><br />
+   {{ order.shipping_address | format_address }}
+   {% if order.shipping_address.phone %}{{ order.shipping_address.phone }}{% endif %}
+</div>
+{% endif %}
+
+<table class="table-tabular" style="margin: 1em 0 0 0;">
+   <thead>
+      <tr>
+         <th>Menge</th>
+         <th>Artikel</th>
+         <th>SKU</th>
+         <th style="text-align: center;">✓</th>
+      </tr>
+   </thead>
+   <tbody>
+      {% for line_item in order.line_items %}
+      <tr>
+         <td><strong>{{ line_item.quantity }}</strong></td>
+         <td>
+            {{ line_item.title }}
+            {% if line_item.variant_title %}<br /><span class="subduedText">{{ line_item.variant_title }}</span>{% endif %}
+         </td>
+         <td><span class="subduedText">{{ line_item.sku }}</span></td>
+         <td style="text-align: center;">☐</td>
+      </tr>
+      {% endfor %}
+   </tbody>
+</table>
+
+<p style="margin-top: 2em; font-size: 0.85em; color: #666;">
+   {{ shop.name }} · {{ shop.email }}
+</p>
+</div>
