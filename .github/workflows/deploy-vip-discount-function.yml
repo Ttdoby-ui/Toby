@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - claude/shopify-adhesive-service-vkfNR
     paths:
       - "vip-discount-function/**"
   workflow_dispatch:
