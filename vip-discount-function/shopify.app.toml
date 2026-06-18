@@ -1,5 +1,5 @@
 name = "VIP Beläge Discount"
-client_id = ""
+client_id = "9fe6aa2d03cc52e54d29fdba8ee8d823"
 application_url = "https://{{ HOST }}"
 embedded = false
 
