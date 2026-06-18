@@ -1,0 +1,14 @@
+{
+  "name": "vip-discount-function",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "shopify app build",
+    "deploy": "shopify app deploy",
+    "dev": "shopify app dev"
+  },
+  "devDependencies": {
+    "@shopify/app": "^3.58.2"
+  }
+}

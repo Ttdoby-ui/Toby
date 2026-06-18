@@ -1,0 +1,64 @@
+name: Deploy VIP Discount Function
+
+# Requires GitHub Secret: SHOPIFY_PARTNERS_TOKEN
+# → Partners Dashboard → Settings → Partner API → Generate access token (prtapi_...)
+# → Sicherstellen: Partner-Account hat Zugriff auf App 9fe6aa2d03cc52e54d29fdba8ee8d823
+
+on:
+  push:
+    branches:
+      - main
+      - claude/vip-discount-deployment-ugv32f
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install extension dependencies
+        working-directory: vip-discount-function/extensions/vip-belage
+        run: npm install
+
+      - name: Run tests
+        working-directory: vip-discount-function/extensions/vip-belage
+        run: npm test
+
+  deploy:
+    name: Deploy to Shopify
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Shopify CLI
+        run: npm install -g @shopify/cli@3.58.2 @shopify/app@3.58.2
+
+      - name: Install extension dependencies
+        working-directory: vip-discount-function/extensions/vip-belage
+        run: npm install
+
+      - name: Deploy function to Shopify
+        working-directory: vip-discount-function
+        env:
+          CI: "1"
+          SHOPIFY_CLI_TTY: "0"
+          SHOPIFY_CLI_NO_ANALYTICS: "1"
+          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
+        run: |
+          echo "Deploying VIP Discount Function (client-id: ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }})"
+          shopify app deploy \
+            --client-id "${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}" \
+            --force \
+            --no-release

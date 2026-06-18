@@ -1,0 +1,18 @@
+name = "VIP Beläge Discount"
+client_id = "9fe6aa2d03cc52e54d29fdba8ee8d823"
+application_url = "https://{{ HOST }}"
+embedded = false
+
+[access_scopes]
+scopes = "read_discounts,write_discounts"
+
+[auth]
+redirect_urls = [
+  "https://{{ HOST }}/auth/callback"
+]
+
+[webhooks]
+api_version = "2025-01"
+
+[pos]
+embedded = false

@@ -1,0 +1,15 @@
+api_version = "2025-01"
+
+[[extensions]]
+name = "VIP Beläge Discount"
+handle = "vip-belage-discount"
+type = "product_discounts"
+
+[extensions.build]
+command = "npm run build"
+path = "dist/function.wasm"
+watch = ["src/**/*.{js,ts}"]
+
+[extensions.input.variables]
+namespace = "vip-belage-discount"
+key = "percentage"
