@@ -9,3 +9,7 @@ type = "product_discounts"
 command = "npm run build"
 path = "dist/function.wasm"
 watch = ["src/**/*.{js,ts}"]
+
+[extensions.input.variables]
+namespace = "vip-belage-discount"
+key = "percentage"

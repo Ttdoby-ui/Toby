@@ -1,0 +1,46 @@
+name: Deploy VIP Discount Function
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "vip-discount-function/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Shopify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Shopify CLI
+        run: npm install -g @shopify/cli
+
+      - name: Install extension dependencies
+        working-directory: vip-discount-function/extensions/vip-belage
+        run: npm install
+
+      - name: Run tests
+        working-directory: vip-discount-function/extensions/vip-belage
+        run: npm test
+
+      - name: Link app config
+        working-directory: vip-discount-function
+        env:
+          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
+        run: shopify app config link --client-id ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}
+
+      - name: Deploy function to Shopify
+        working-directory: vip-discount-function
+        env:
+          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
+        run: shopify app deploy --force

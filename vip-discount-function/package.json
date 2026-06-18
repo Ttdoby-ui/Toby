@@ -9,6 +9,6 @@
     "dev": "shopify app dev"
   },
   "devDependencies": {
-    "@shopify/app": "^3.73.0"
+    "@shopify/app": "^3.58.2"
   }
 }

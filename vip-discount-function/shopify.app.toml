@@ -1,5 +1,5 @@
 name = "VIP Beläge Discount"
-client_id = "{{ SHOPIFY_API_KEY }}"
+client_id = ""
 application_url = "https://{{ HOST }}"
 embedded = false
 

@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "javy compile src/run.js -o dist/function.wasm",
+    "build": "npx --yes @shopify/shopify-function-build",
     "test": "node --test src/run.test.js"
   },
   "devDependencies": {
-    "@shopify/shopify_function": "^0.2.0"
+    "@shopify/shopify_function": "^0.3.0"
   }
 }
