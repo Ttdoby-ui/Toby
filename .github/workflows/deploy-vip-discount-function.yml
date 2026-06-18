@@ -21,8 +21,8 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install Shopify CLI
-        run: npm install -g @shopify/cli
+      - name: Install Shopify CLI 3.x
+        run: npm install -g @shopify/cli@3.58.2 @shopify/app@3.58.2
 
       - name: Install extension dependencies
         working-directory: vip-discount-function/extensions/vip-belage
@@ -32,14 +32,9 @@ jobs:
         working-directory: vip-discount-function/extensions/vip-belage
         run: npm test
 
-      - name: Link app config
-        working-directory: vip-discount-function
-        env:
-          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
-        run: shopify app config link --client-id ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}
-
       - name: Deploy function to Shopify
         working-directory: vip-discount-function
         env:
           SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
-        run: shopify app deploy --force
+          SHOPIFY_FLAG_CLIENT_ID: ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}
+        run: echo "" | shopify app deploy --client-id ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}
