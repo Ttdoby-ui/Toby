@@ -1,0 +1,17 @@
+name = "Futurespin B2B"
+client_id = "HIER_CLIENT_ID_EINTRAGEN"
+
+application_url = "https://shopify.dev/apps/tools/cli"
+embedded = false
+
+[access_scopes]
+scopes = "write_discounts,read_products,write_payment_customizations,write_delivery_customizations"
+
+[auth]
+redirect_urls = ["https://redirect.shopifyapps.com"]
+
+[webhooks]
+api_version = "2025-01"
+
+[pos]
+embedded = false

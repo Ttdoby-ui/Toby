@@ -1,0 +1,8 @@
+{
+  "name": "futurespin-b2b",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "shopify app deploy"
+  }
+}

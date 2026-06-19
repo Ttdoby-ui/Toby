@@ -1,0 +1,15 @@
+query Input {
+  cart {
+    buyerIdentity {
+      customer {
+        b2b1: hasAnyTag(tags: ["B2B1"])
+        b2b2: hasAnyTag(tags: ["B2B2"])
+        b2b3: hasAnyTag(tags: ["B2B3"])
+      }
+    }
+  }
+  paymentMethods {
+    id
+    name
+  }
+}
