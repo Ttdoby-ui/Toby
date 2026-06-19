@@ -8,7 +8,7 @@ description = "Zeigt 'Rechnung' nur für B2B-Kunden (B2B1/B2B2/B2B3) an und setz
 
 [extensions.build]
 command = "node -e \"process.exit(0)\""
-path = "src/run.js"
+path = "dist/index.wasm"
 watch = ["src/**"]
 
 [[extensions.targeting]]
