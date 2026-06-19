@@ -89,8 +89,23 @@
     {%- if customer.tags contains 'B2B1' or customer.tags contains 'B2B2' or customer.tags contains 'B2B3' -%}
       {%- assign b2b_vat_rate = settings.b2b_vat_rate | default: 19 -%}
       {%- assign b2b_vat_divisor = 100 | plus: b2b_vat_rate -%}
-      {%- assign b2b_total_net = cart.total_price | times: 100 | divided_by: b2b_vat_divisor -%}
-      {%- assign b2b_total_tax = cart.total_price | minus: b2b_total_net -%}
+      {%- assign b2b_total_net = 0 -%}
+      {%- for item in cart.items -%}
+        {%- if customer.tags contains 'B2B1' -%}
+          {%- assign b2b_mf = item.product.metafields.custom.preis_b2b1 -%}
+        {%- elsif customer.tags contains 'B2B2' -%}
+          {%- assign b2b_mf = item.product.metafields.custom.preis_b2b2 -%}
+        {%- elsif customer.tags contains 'B2B3' -%}
+          {%- assign b2b_mf = item.product.metafields.custom.preis_b2b3 -%}
+        {%- endif -%}
+        {%- if b2b_mf != blank and b2b_mf.value != blank -%}
+          {%- assign item_net = b2b_mf.value | times: 100 | round | times: item.quantity -%}
+        {%- else -%}
+          {%- assign item_net = item.final_line_price | times: 100 | divided_by: b2b_vat_divisor -%}
+        {%- endif -%}
+        {%- assign b2b_total_net = b2b_total_net | plus: item_net -%}
+      {%- endfor -%}
+      {%- assign b2b_total_tax = b2b_total_net | times: b2b_vat_rate | divided_by: 100 | round -%}
       <span class="cart__summary-item">
         <span class="cart__total-label cart-primary-typography">Zwischensumme (netto)</span>
         <span class="cart-secondary-typography">{{ b2b_total_net | money }}</span>
