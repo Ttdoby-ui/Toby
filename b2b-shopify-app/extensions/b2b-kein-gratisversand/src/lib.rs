@@ -32,11 +32,16 @@ fn process(input_str: &str) -> String {
         for group in groups {
             if let Some(options) = group["deliveryOptions"].as_array() {
                 for opt in options {
-                    let amount: f64 = opt["cost"]["amount"]
-                        .as_str()
-                        .unwrap_or("1")
-                        .parse()
-                        .unwrap_or(1.0);
+                    let cost = &opt["cost"];
+                    let amount: f64 = if cost.is_null() {
+                        0.0
+                    } else {
+                        cost["amount"]
+                            .as_str()
+                            .and_then(|s| s.parse().ok())
+                            .or_else(|| cost["amount"].as_f64())
+                            .unwrap_or(1.0)
+                    };
                     if amount == 0.0 {
                         let handle = opt["handle"].as_str().unwrap_or("");
                         ops.push(serde_json::json!({
