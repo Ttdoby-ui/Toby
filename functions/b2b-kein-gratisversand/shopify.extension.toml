@@ -1,0 +1,12 @@
+api_version = "2025-01"
+
+[[extensions]]
+name = "B2B Kein Gratisversand"
+handle = "b2b-kein-gratisversand"
+type = "function"
+description = "Blendet kostenlose Versandoptionen für B2B-Kunden (B2B1/B2B2/B2B3) aus."
+
+  [[extensions.targeting]]
+  target = "purchase.delivery-customization.run"
+  input_query = "src/run.graphql"
+  export = "run"
