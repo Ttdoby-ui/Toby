@@ -28,7 +28,7 @@ fn process(input_str: &str) -> String {
 
     let mut ops: Vec<serde_json::Value> = Vec::new();
 
-    if let Some(groups) = input["deliveryGroups"].as_array() {
+    if let Some(groups) = input["cart"]["deliveryGroups"].as_array() {
         for group in groups {
             if let Some(options) = group["deliveryOptions"].as_array() {
                 for opt in options {
