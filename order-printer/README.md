@@ -1,42 +1,35 @@
-# Order Printer – B2B-Rechnungsvorlage (Netto zzgl. MwSt)
+# Order Printer – B2B-Rechnung (Netto-Ausweis)
 
-Die Datei `rechnung-b2b.liquid` ist eine fertige Vorlage für die kostenlose
-**Shopify Order Printer** App. Sie weist den **Nettobetrag, die MwSt
-(aufgeschlüsselt nach Steuersätzen) und den Bruttobetrag** aus – passend für
-Geschäftskunden (Tag `b2b`).
+`rechnung-b2b.liquid` ist eine Rechnungsvorlage für die **Shopify Order Printer**
+App – im selben Stil wie die Standard-Vorlage, aber mit **Netto-Positionen +
+MwSt-Aufschlüsselung nach Steuersätzen** für Geschäftskunden (B2B1/B2B2/B2B3).
 
-> Hinweis: Order-Printer-Vorlagen liegen **in der App**, nicht im Theme. Sie
-> lassen sich nicht per API hochladen, sondern müssen einmalig manuell
-> eingefügt werden (Copy & Paste).
+> Empfehlung: Als **separate** Vorlage „Rechnung B2B" anlegen und für
+> B2B-Bestellungen nutzen. Endkunden (B2C) erhalten weiter die Standard-Vorlage
+> mit Brutto-Ausweis (gesetzeskonform für Verbraucher).
 
 ## Einrichtung
 
-1. Im Shopify Admin **Order Printer** öffnen (falls nicht installiert: kostenlos
-   aus dem App Store „Order Printer" von Shopify installieren).
-2. **Vorlagen → Vorlage hinzufügen**.
-3. Als Namen z. B. `Rechnung B2B` vergeben.
-4. Den **kompletten Inhalt** von `rechnung-b2b.liquid` in das Vorlagenfeld
-   einfügen und speichern.
-5. Test: Eine Bestellung öffnen → **Mehr Aktionen → Drucken → Rechnung B2B**.
+1. Shopify Admin → **Order Printer** öffnen.
+2. **Vorlagen → Vorlage hinzufügen**, Name z. B. `Rechnung B2B`.
+3. Inhalt von `rechnung-b2b.liquid` komplett einfügen, speichern.
+4. Bestellung → **Mehr Aktionen → Drucken → Rechnung B2B**.
 
-## Vor dem Live-Einsatz anpassen
+## Vor dem Einsatz ausfüllen
 
-- **USt-IdNr.** in der Vorlage eintragen (Platzhalter `DE000000000` ersetzen).
-- **Absenderadresse** prüfen – sie kommt aus den Shop-Einstellungen
-  (`Einstellungen → Allgemein → Geschäftsdaten`).
-- Voraussetzung: Shop steht auf **„Preise inkl. MwSt"** (aktuell der Fall).
-  Die Vorlage rechnet die gespeicherten Bruttobeträge in Netto um.
+- **USt-IdNr.** eintragen (Platzhalter `DE000000000` ersetzen).
+- **Absenderadresse**: Einstellungen → Geschäftsdaten.
+- Voraussetzungen (Shop-Konfiguration, aktuell erfüllt): „Preise inkl. MwSt"
+  und Versand unbesteuert (`taxShipping = false`).
 
-## Pflichtangaben & rechtlicher Hinweis
+## Erfüllte Pflichtangaben (§14 UStG)
 
-Die Vorlage enthält die nach **§14 UStG** üblichen Pflichtangaben:
-Name/Anschrift von Verkäufer und Käufer, USt-IdNr., Rechnungsdatum,
-Rechnungsnummer (= Bestellnummer), Menge/Art der Artikel, Lieferdatum,
-nach Steuersätzen aufgeschlüsseltes Netto-Entgelt sowie Steuersatz und
-Steuerbetrag.
+Name/Anschrift Verkäufer **+ USt-IdNr.**, Name/Anschrift Käufer,
+Rechnungsdatum, **Liefer-/Leistungsdatum**, fortlaufende Rechnungsnummer
+(`R` + Bestellnummer + 1000), Menge/Art der Artikel, **nach Steuersätzen
+aufgeschlüsseltes Netto-Entgelt**, **Steuersatz + Steuerbetrag**, Bruttobetrag.
 
-**Zwei Punkte bitte mit dem Steuerberater abstimmen:**
-1. **Fortlaufende Rechnungsnummer** – hier wird die Shopify-Bestellnummer
-   verwendet. Das ist gängige Praxis, sollte aber freigegeben werden.
-2. **Archivierung (GoBD)** – Order Printer erzeugt PDFs auf Abruf, archiviert
-   sie aber nicht revisionssicher. Aufbewahrung separat organisieren.
+**Mit Steuerberater abstimmen:**
+1. Rechnungsnummernkreis (hier Bestellnummer + 1000) freigeben.
+2. Revisionssichere Archivierung (GoBD) separat sicherstellen – Order Printer
+   erzeugt PDFs nur auf Abruf.
