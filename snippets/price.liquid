@@ -56,17 +56,26 @@
   endif
 
   comment
-    B2B-Netto-Anzeige: Für freigeschaltete Händler (Tag 'b2b') den Bruttopreis
-    in den Nettopreis umrechnen. MwSt-Satz über settings.b2b_vat_rate (Standard 19).
+    B2B-Netto-Anzeige für Händler (Tag 'b2b'):
+    - Ist am Produkt ein "Preis B2B" (Metafeld custom.preis_b2b) gesetzt,
+      wird dieser Netto-Preis direkt angezeigt.
+    - Sonst Fallback: Bruttopreis in Netto umrechnen (settings.b2b_vat_rate, Standard 19).
   endcomment
   assign show_b2b_net = false
   if customer.tags contains 'b2b'
     assign show_b2b_net = true
     assign b2b_vat_rate = settings.b2b_vat_rate | default: 19
     assign b2b_vat_divisor = 100 | plus: b2b_vat_rate
-    assign price = price | times: 100 | divided_by: b2b_vat_divisor
-    if compare_at_price > 0
-      assign compare_at_price = compare_at_price | times: 100 | divided_by: b2b_vat_divisor
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b
+    if b2b_price_field != blank and b2b_price_field.value != blank
+      assign price = b2b_price_field.value.amount | times: 100 | round
+      assign compare_at_price = 0
+      assign show_compare_price = false
+    else
+      assign price = price | times: 100 | divided_by: b2b_vat_divisor
+      if compare_at_price > 0
+        assign compare_at_price = compare_at_price | times: 100 | divided_by: b2b_vat_divisor
+      endif
     endif
   endif
 
