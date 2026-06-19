@@ -1,6 +1,6 @@
 // Setzt preis_b2b1 für alle Andro-Beläge nach der Formel:
-//   Netto_B2B1 = round((UVP / 2 * 0.95) / 1.19, 2)
-// → B2B1-Kunde zahlt (UVP/2)*0,95 brutto inkl. 19% MwSt.
+//   Netto_B2B1 = round(UVP / 2 * 0.95, 2)
+// → B2B1-Kunde zahlt diesen Netto-Preis; brutto = Netto × 1,19.
 //
 // Aufruf (Windows CMD), im Ordner b2b-shopify-app:
 //   set CLIENT_ID=deine-client-id
@@ -43,9 +43,9 @@ function isBelag(productType) {
   return t.includes("nopp") || t.includes("anti");
 }
 
-// Formel: Netto = round((UVP/2 * 0.95) / 1.19, 2)
+// Formel: Netto = round(UVP / 2 * 0.95, 2)
 function berechneNettoB2B1(uvp) {
-  return Math.round((uvp / 2 * 0.95) / 1.19 * 100) / 100;
+  return Math.round(uvp / 2 * 0.95 * 100) / 100;
 }
 
 async function holeAlleAndroProdukte(token) {
@@ -116,7 +116,7 @@ async function main() {
 
   console.log(`Gefundene Beläge (${belaege.length} Stück):`);
   belaege.forEach(b =>
-    console.log(`  ${b.title.padEnd(45)} UVP ${b.uvp.toFixed(2).padStart(6)}€  →  B2B1 Netto ${b.netto.toFixed(2).padStart(6)}€  (Brutto ca. ${(b.netto * 1.19).toFixed(2)}€)`)
+    console.log(`  ${b.title.padEnd(45)} UVP ${b.uvp.toFixed(2).padStart(6)}€  →  B2B1 Netto ${b.netto.toFixed(2).padStart(6)}€  (Brutto ${(b.netto * 1.19).toFixed(2).padStart(6)}€)`)
   );
 
   if (belaege.length === 0) {
@@ -145,7 +145,7 @@ async function main() {
   }
 
   console.log(`\n✔ Fertig! ${gesetzt} Beläge mit B2B1-Netto-Preisen versehen.`);
-  console.log("  Der B2B1-Kunde zahlt jetzt (UVP ÷ 2 × 0,95) als Brutto-Preis.");
+  console.log("  Netto = UVP ÷ 2 × 0,95 | Brutto (inkl. 19% MwSt) = Netto × 1,19");
 }
 
 main().catch(e => {
