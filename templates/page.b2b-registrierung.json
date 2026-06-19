@@ -1,0 +1,78 @@
+{
+  "sections": {
+    "hero": {
+      "type": "main-page",
+      "blocks": {
+        "title": {
+          "type": "text",
+          "name": "Überschrift",
+          "settings": {
+            "text": "<h1>B2B Händlerbereich</h1>",
+            "width": "100%",
+            "max_width": "narrow",
+            "alignment": "center",
+            "type_preset": "h1",
+            "font": "var(--font-primary--family)",
+            "font_size": "",
+            "line_height": "normal",
+            "letter_spacing": "normal",
+            "case": "none",
+            "wrap": "pretty",
+            "color": "",
+            "background": false,
+            "background_color": "#00000026",
+            "corner_radius": 0,
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {}
+        },
+        "subtitle": {
+          "type": "text",
+          "name": "Einleitung",
+          "settings": {
+            "text": "<p>Werden Sie Teil unseres B2B-Händlernetzwerks und profitieren Sie von exklusiven Konditionen für Tischtenniszubehör. Als freigeschalteter Händler erhalten Sie <strong>15 % Rabatt</strong> auf Ihr gesamtes Sortiment, persönliche Beratung und bevorzugten Zugang zu Neuheiten.</p>",
+            "width": "100%",
+            "max_width": "narrow",
+            "alignment": "center",
+            "type_preset": "rte",
+            "font": "var(--font-primary--family)",
+            "font_size": "",
+            "line_height": "normal",
+            "letter_spacing": "normal",
+            "case": "none",
+            "wrap": "pretty",
+            "color": "",
+            "background": false,
+            "background_color": "#00000026",
+            "corner_radius": 0,
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": ["title", "subtitle"],
+      "settings": {
+        "content_direction": "column",
+        "gap": 24,
+        "color_scheme": "",
+        "padding-block-start": 60,
+        "padding-block-end": 20
+      }
+    },
+    "b2b_form": {
+      "type": "b2b-registration",
+      "settings": {
+        "color_scheme": "",
+        "padding-block-start": 40,
+        "padding-block-end": 80
+      }
+    }
+  },
+  "order": ["hero", "b2b_form"]
+}

@@ -1,0 +1,364 @@
+{% stylesheet %}
+  .b2b-registration-wrapper {
+    max-width: 860px;
+    margin-inline: auto;
+    padding-block-start: {{ section.settings.padding-block-start }}px;
+    padding-block-end: {{ section.settings.padding-block-end }}px;
+    padding-inline: var(--padding-lg, 24px);
+  }
+
+  .b2b-intro {
+    background-color: rgba(0, 0, 0, 0.04);
+    border-left: 4px solid currentColor;
+    border-radius: 4px;
+    padding: var(--padding-lg, 24px);
+    margin-block-end: var(--gap-lg, 32px);
+    font-size: 0.95em;
+  }
+
+  .b2b-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap-md, 16px);
+  }
+
+  .b2b-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .b2b-form-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .b2b-form-group--full {
+    grid-column: 1 / -1;
+  }
+
+  .b2b-approved-notice {
+    text-align: center;
+    padding: var(--padding-lg, 24px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+
+  .b2b-approved-notice h2 {
+    margin-block-end: var(--gap-md, 16px);
+  }
+
+  .b2b-code-box {
+    background-color: rgba(0, 0, 0, 0.04);
+    border-radius: 6px;
+    padding: var(--gap-md, 16px) var(--padding-lg, 24px);
+    margin-block: var(--gap-md, 16px);
+    display: inline-block;
+  }
+
+  .b2b-code {
+    font-family: monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .b2b-success-notice {
+    text-align: center;
+    padding: var(--padding-lg, 24px);
+    border: 1px solid rgba(0, 128, 0, 0.3);
+    border-radius: 8px;
+    background-color: rgba(0, 128, 0, 0.05);
+  }
+
+  .b2b-success-notice h2 {
+    margin-block-end: var(--gap-md, 16px);
+  }
+
+  .b2b-submit-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-block-start: var(--gap-lg, 32px);
+  }
+
+  @media (max-width: 749px) {
+    .b2b-form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .b2b-form-group--full {
+      grid-column: 1;
+    }
+  }
+{% endstylesheet %}
+
+<div class="b2b-registration-wrapper color-{{ section.settings.color_scheme }}">
+
+  {%- if customer and customer.tags contains 'b2b' -%}
+
+    <div class="b2b-approved-notice">
+      <h2>Willkommen im B2B-Bereich!</h2>
+      <p>Ihr Konto ist als B2B-Händler freigeschaltet. Verwenden Sie bei Ihrer nächsten Bestellung den folgenden Rabattcode:</p>
+      <div class="b2b-code-box">
+        <span class="b2b-code">B2B-FUTURESPIN</span>
+      </div>
+      <p><strong>15 % Rabatt</strong> auf Ihre gesamte Bestellung – einfach beim Checkout eingeben.</p>
+    </div>
+
+  {%- else -%}
+
+    {%- form 'contact', id: 'B2BRegistrationForm' -%}
+
+      {%- if form.posted_successfully? -%}
+
+        <div class="b2b-success-notice">
+          <h2>Vielen Dank für Ihre Anfrage!</h2>
+          <p>Wir haben Ihren B2B-Registrierungsantrag erhalten und werden Ihre Anfrage so bald wie möglich prüfen. Sie erhalten eine Benachrichtigung per E-Mail, sobald Ihr Konto freigeschaltet wurde.</p>
+        </div>
+
+      {%- else -%}
+
+        {%- if form.errors -%}
+          <div class="form__message form__message--error" role="alert">
+            {{ form.errors | default_errors }}
+          </div>
+        {%- endif -%}
+
+        <div class="b2b-intro">
+          <strong>Wichtiger Hinweis:</strong> Dieses Formular richtet sich ausschließlich an gewerbliche Händler, Vereine und Bildungseinrichtungen. Nach Prüfung Ihrer Angaben erhalten Sie Zugang zu unseren B2B-Konditionen inklusive 15&nbsp;% Rabatt mit dem Code <strong>B2B-FUTURESPIN</strong>.
+        </div>
+
+      <div class="b2b-form-grid">
+
+        <!-- Ansprechpartner -->
+        <div class="b2b-form-group">
+          <label for="contact-name">Ansprechpartner <span aria-hidden="true">*</span></label>
+          <input
+            class="contact-form__input"
+            type="text"
+            id="contact-name"
+            name="contact[name]"
+            value="{{ form.name }}"
+            autocomplete="name"
+            required
+            placeholder="Vor- und Nachname"
+          >
+        </div>
+
+        <!-- E-Mail -->
+        <div class="b2b-form-group">
+          <label for="contact-email">E-Mail-Adresse <span aria-hidden="true">*</span></label>
+          <input
+            class="contact-form__input"
+            type="email"
+            id="contact-email"
+            name="contact[email]"
+            value="{{ form.email }}"
+            autocomplete="email"
+            required
+            placeholder="ihre@email.de"
+          >
+        </div>
+
+        <!-- Firmenname -->
+        <div class="b2b-form-group">
+          <label for="b2b-firma">Firmenname <span aria-hidden="true">*</span></label>
+          <input
+            class="contact-form__input"
+            type="text"
+            id="b2b-firma"
+            required
+            placeholder="Muster GmbH"
+          >
+        </div>
+
+        <!-- USt-IdNr. -->
+        <div class="b2b-form-group">
+          <label for="b2b-vat">USt-IdNr.</label>
+          <input
+            class="contact-form__input"
+            type="text"
+            id="b2b-vat"
+            placeholder="DE123456789"
+          >
+        </div>
+
+        <!-- Unternehmensart -->
+        <div class="b2b-form-group">
+          <label for="b2b-type">Unternehmensart</label>
+          <select class="contact-form__input" id="b2b-type">
+            <option value="">Bitte wählen …</option>
+            <option value="Einzelhändler">Einzelhändler</option>
+            <option value="Onlinehändler">Onlinehändler</option>
+            <option value="Veranstaltungsorganisator">Veranstaltungsorganisator</option>
+            <option value="Verein / Schule">Verein / Schule</option>
+            <option value="Großhändler">Großhändler</option>
+            <option value="Sonstiges">Sonstiges</option>
+          </select>
+        </div>
+
+        <!-- Telefon -->
+        <div class="b2b-form-group">
+          <label for="contact-phone">Telefon</label>
+          <input
+            class="contact-form__input"
+            type="tel"
+            id="contact-phone"
+            name="contact[phone]"
+            value="{{ form.phone }}"
+            autocomplete="tel"
+            placeholder="+49 123 456789"
+          >
+        </div>
+
+        <!-- Geschäftsadresse -->
+        <div class="b2b-form-group b2b-form-group--full">
+          <label for="b2b-address">Geschäftsadresse</label>
+          <input
+            class="contact-form__input"
+            type="text"
+            id="b2b-address"
+            placeholder="Straße, PLZ, Ort, Land"
+          >
+        </div>
+
+        <!-- Website -->
+        <div class="b2b-form-group b2b-form-group--full">
+          <label for="b2b-website">Website</label>
+          <input
+            class="contact-form__input"
+            type="url"
+            id="b2b-website"
+            placeholder="https://www.beispiel.de"
+          >
+        </div>
+
+        <!-- Bestellvolumen -->
+        <div class="b2b-form-group">
+          <label for="b2b-volume">Monatl. Bestellvolumen</label>
+          <select class="contact-form__input" id="b2b-volume">
+            <option value="">Bitte wählen …</option>
+            <option value="bis 500 €">bis 500 €</option>
+            <option value="500 – 2.000 €">500 – 2.000 €</option>
+            <option value="2.000 – 5.000 €">2.000 – 5.000 €</option>
+            <option value="über 5.000 €">über 5.000 €</option>
+          </select>
+        </div>
+
+        <!-- Leerfeld für Grid-Ausrichtung -->
+        <div class="b2b-form-group" aria-hidden="true"></div>
+
+        <!-- Produktinteressen -->
+        <div class="b2b-form-group b2b-form-group--full">
+          <label for="b2b-products">Produktinteressen</label>
+          <textarea
+            class="contact-form__input"
+            id="b2b-products"
+            rows="3"
+            placeholder="Welche Produktkategorien interessieren Sie? (z. B. Schläger, Bälle, Tische …)"
+          ></textarea>
+        </div>
+
+        <!-- Anmerkungen -->
+        <div class="b2b-form-group b2b-form-group--full">
+          <label for="b2b-notes">Weitere Anmerkungen</label>
+          <textarea
+            class="contact-form__input"
+            id="b2b-notes"
+            rows="3"
+            placeholder="Haben Sie noch weitere Fragen oder Anmerkungen?"
+          ></textarea>
+        </div>
+
+        <!-- Hidden body field populated by JS -->
+        <input type="hidden" id="b2b-body-field" name="contact[body]" value="">
+
+      </div>
+
+        <div class="b2b-submit-row">
+          <button type="submit" class="button button--primary">
+            B2B-Antrag absenden
+          </button>
+        </div>
+
+      {%- endif -%}
+
+    {%- endform -%}
+
+  {%- endif -%}
+
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById('B2BRegistrationForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function () {
+      var firma    = (document.getElementById('b2b-firma')   || {}).value   || '';
+      var vat      = (document.getElementById('b2b-vat')     || {}).value   || '';
+      var type     = (document.getElementById('b2b-type')    || {}).value   || '';
+      var address  = (document.getElementById('b2b-address') || {}).value   || '';
+      var website  = (document.getElementById('b2b-website') || {}).value   || '';
+      var volume   = (document.getElementById('b2b-volume')  || {}).value   || '';
+      var products = (document.getElementById('b2b-products')|| {}).value   || '';
+      var notes    = (document.getElementById('b2b-notes')   || {}).value   || '';
+
+      var body = [
+        '=== B2B-HÄNDLER-ANTRAG ===',
+        '',
+        'Firmenname: '            + firma,
+        'USt-IdNr.: '             + vat,
+        'Unternehmensart: '       + type,
+        'Geschäftsadresse: '      + address,
+        'Website: '               + website,
+        'Monatl. Bestellvolumen: '+ volume,
+        '',
+        'Produktinteressen:',
+        products,
+        '',
+        'Weitere Anmerkungen:',
+        notes
+      ].join('\n');
+
+      var bodyField = document.getElementById('b2b-body-field');
+      if (bodyField) bodyField.value = body;
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "B2B Registrierung",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Farbschema",
+      "default": "scheme-1"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Innenabstand oben (px)",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Innenabstand unten (px)",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "default": 80
+    }
+  ],
+  "disabled_on": {
+    "groups": ["header"]
+  }
+}
+{% endschema %}
