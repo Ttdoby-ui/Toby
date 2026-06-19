@@ -52,8 +52,16 @@ async function main() {
     }
   }`);
 
+  // Rohe Antwort zeigen (deckt Berechtigungsfehler auf)
+  if (list.errors) {
+    console.log("GraphQL-Fehler beim Lesen:");
+    list.errors.forEach((e) => console.log("  - " + e.message));
+    console.log("\nHinweis: Fehlt der App die Berechtigung 'read_payment_customizations',");
+    console.log("kann die Anpassung nicht gelesen/gelöscht werden, obwohl sie existiert.");
+  }
+
   const customizations = list.data?.paymentCustomizations?.nodes ?? [];
-  console.log("Gefundene Payment Customizations:");
+  console.log("\nGefundene Payment Customizations:");
   customizations.forEach((c) => console.log(`  - ${c.title} (${c.id}) enabled=${c.enabled}`));
 
   const target = customizations.find((c) => c.title === "B2B Rechnung Zahlung");
