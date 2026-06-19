@@ -1,4 +1,4 @@
-api_version = "2024-07"
+api_version = "2025-01"
 
 [[extensions]]
 name = "B2B Rechnung Zahlung"
@@ -8,7 +8,7 @@ description = "Zeigt 'Rechnung' nur für B2B-Kunden (B2B1/B2B2/B2B3) an und setz
 
 [extensions.build]
 command = "node -e \"process.exit(0)\""
-path = "dist/index.wasm"
+path = "src/run.js"
 watch = ["src/**"]
 
 [[extensions.targeting]]
