@@ -1,0 +1,184 @@
+{%- doc -%}
+  Renders the cart summary totals.
+{%- enddoc -%}
+
+<div class="cart__summary-totals">
+  {% # We need to keep this node in place to allow morphing to work properly # %}
+  <div class="cart__original-total-container cart-primary-typography">
+    {%- if cart.cart_level_discount_applications.size > 0 -%}
+      <span class="cart__summary-item cart__original-total">
+        <span class="cart__original-total-label">{{ 'content.cart_subtotal' | t }}</span>
+        <span class="cart__original-total-value cart-secondary-typography">
+          {{- cart.original_total_price | money -}}
+        </span>
+      </span>
+      <div class="cart__summary-discounts">
+        <ul
+          class="discounts list-unstyled"
+          role="list"
+          aria-label="{{ 'content.discounts' | t }}"
+        >
+          {%- for discount in cart.cart_level_discount_applications -%}
+            <li class="cart__summary-item cart__discount">
+              <span class="cart__discount-label">
+                {{- 'icon-discount.svg' | inline_asset_content -}}
+                {{ discount.title | escape }}
+              </span>
+              <span class="cart__discount-value cart-secondary-typography"
+                >-{{ discount.total_allocated_amount | money -}}
+              </span>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endif -%}
+  </div>
+
+  {% if settings.show_cart_note or settings.show_add_discount_code %}
+    <div class="cart-actions">
+      {% if settings.show_cart_note %}
+        {% render 'cart-note' %}
+      {% endif %}
+
+      {% if settings.show_add_discount_code %}
+        {% render 'cart-discount', section_id: section.id %}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% assign discounts = '' %}
+  {%- for discount in cart.discount_applications -%}
+    {% assign discounts = discounts | append: discount.title | upcase | append: ',' %}
+  {%- endfor -%}
+
+  {%- liquid
+    if settings.currency_code_enabled_cart_total
+      assign total_price = cart.total_price | money_with_currency
+    else
+      assign total_price = cart.total_price | money
+    endif
+  -%}
+
+  {% unless discounts contains 'VIP1' or discounts contains 'VIP2' or discounts contains 'VIP3' %}
+    {% assign total_price = 0 %}
+    {% for item in cart.items %}
+      {% if item.product.tags contains 'for_vip' %}
+        {% if customer.tags contains 'VIP1' %}
+          {% assign discount = 100 | minus: settings.vip1_discount %}
+          {% assign product_price = item.final_line_price | times: discount | divided_by: 100 %}
+          {% assign total_price = total_price | plus: product_price %}
+        {% elsif customer.tags contains 'VIP2' %}
+          {% assign discount = 100 | minus: settings.vip2_discount %}
+          {% assign product_price = item.final_line_price | times: discount | divided_by: 100 %}
+          {% assign total_price = total_price | plus: product_price %}
+        {% elsif customer.tags contains 'VIP3' %}
+          {% assign discount = 100 | minus: settings.vip3_discount %}
+          {% assign product_price = item.final_line_price | times: discount | divided_by: 100 %}
+          {% assign total_price = total_price | plus: product_price %}
+        {% else %}
+          {% assign total_price = total_price | plus: item.final_line_price %}
+        {% endif %}
+      {% else %}
+        {% assign total_price = total_price | plus: item.final_line_price %}
+      {% endif %}
+    {% endfor %}
+    {% assign total_price = total_price | money_with_currency %}
+  {% endunless %}
+
+  <div class="cart__total-container">
+    {%- if customer.tags contains 'b2b' -%}
+      {%- assign b2b_vat_rate = settings.b2b_vat_rate | default: 19 -%}
+      {%- assign b2b_vat_divisor = 100 | plus: b2b_vat_rate -%}
+      {%- assign b2b_total_net = cart.total_price | times: 100 | divided_by: b2b_vat_divisor -%}
+      {%- assign b2b_total_tax = cart.total_price | minus: b2b_total_net -%}
+      <span class="cart__summary-item">
+        <span class="cart__total-label cart-primary-typography">Zwischensumme (netto)</span>
+        <span class="cart-secondary-typography">{{ b2b_total_net | money }}</span>
+      </span>
+      <span class="cart__summary-item">
+        <span class="cart__total-label cart-primary-typography">zzgl. {{ b2b_vat_rate }} % MwSt.</span>
+        <span class="cart-secondary-typography">{{ b2b_total_tax | money }}</span>
+      </span>
+    {%- endif -%}
+    <span
+      class="cart__summary-item cart__total"
+      role="status"
+    >
+      <span class="cart__total-label cart-primary-typography">{{ 'content.cart_estimated_total' | t }}</span>
+      <text-component
+        ref="cartTotal"
+        value="{{ total_price | strip_html }}"
+        class="cart__total-value cart-secondary-typography"
+        {% comment %} Used by payment_terms web component {% endcomment %}
+        data-cart-subtotal
+      >
+        {{ total_price }}
+      </text-component>
+    </span>
+    {% if settings.show_installments %}
+      <span class="cart__summary-item cart__installments">
+        {% form 'cart', cart %}
+          {{ form | payment_terms }}
+        {% endform %}
+      </span>
+    {% endif %}
+    <div class="cart__summary-item tax-note cart-primary-typography">
+      {% render 'tax-info', has_discounts_enabled: settings.show_add_discount_code %}
+    </div>
+  </div>
+</div>
+
+{% if customer.tags contains 'VIP1' %}
+  {% assign discount_code = 'VIP1' %}
+{% elsif customer.tags contains 'VIP2' %}
+  {% assign discount_code = 'VIP2' %}
+{% elsif customer.tags contains 'VIP3' %}
+  {% assign discount_code = 'VIP3' %}
+{% endif %}
+
+<div class="cart__ctas">
+  {% if customer %}
+    <a class="cart__checkout-button button" href="/checkout?discount={{ discount_code }}">{{ 'content.checkout' | t }}</a>
+  {% else %}
+    <button
+      type="submit"
+      id="checkout"
+      class="cart__checkout-button button"
+      name="checkout"
+      {% if cart == empty %}
+        disabled
+      {% endif %}
+      form="cart-form"
+    >
+      {{ 'content.checkout' | t }}
+    </button>
+  {% endif %}
+
+  {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
+    <div class="additional-checkout-buttons additional-checkout-buttons--vertical">
+      {{ content_for_additional_checkout_buttons }}
+    </div>
+  {% endif %}
+</div>
+
+{% stylesheet %}
+  .cart-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2xs);
+    border-block: 1px solid var(--color-border);
+    padding-block: var(--padding-sm);
+    margin-block-start: var(--margin-3xs);
+  }
+
+  .cart__summary-totals:not(:has(.cart-actions)) {
+    margin-block-start: var(--margin-3xs);
+    border-block-start: 1px solid var(--color-border);
+    padding-block-start: var(--margin-xl);
+  }
+
+  .cart__installments {
+    color: var(--color-foreground);
+  }
+{% endstylesheet %}
+

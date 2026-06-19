@@ -1,0 +1,142 @@
+{%- doc -%}
+  This snippet is used to render a product card.
+  It is used in the product block,featured product block, and the product card block.
+
+  @param {product} product_resource - The product to render
+  @param {boolean} [show_unit_price] - Whether to show the unit price
+  @param {boolean} [show_sale_price_first] - Whether to show the sale price first
+{%- enddoc -%}
+
+{%- liquid
+  assign show_unit_price = show_unit_price | default: false
+  assign show_sale_price_first = show_sale_price_first | default: false
+  assign selected_variant = product_resource.selected_or_first_available_variant
+  assign price = selected_variant.price
+  assign compare_at_price = selected_variant.compare_at_price
+
+  assign show_compare_price = false
+  assign price_badge = ''
+  if compare_at_price > price
+    assign show_compare_price = true
+    assign price_badge = 'sale'
+  endif
+
+  if product_resource.tags contains 'for_vip'
+    assign vip_pct = 0
+    if customer.tags contains 'VIP1'
+      assign vip_pct = settings.vip1_discount | times: 1.0
+    elsif customer.tags contains 'VIP2'
+      assign vip_pct = settings.vip2_discount | times: 1.0
+    elsif customer.tags contains 'VIP3'
+      assign vip_pct = settings.vip3_discount | times: 1.0
+    endif
+
+    if vip_pct > 0
+      assign uvp = price
+      if compare_at_price > price
+        assign uvp = compare_at_price
+      endif
+      assign existing_pct = 0
+      if uvp > price
+        assign price_diff = uvp | minus: price
+        assign existing_pct = price_diff | times: 100.0 | divided_by: uvp
+      endif
+      if vip_pct > existing_pct
+        assign compare_at_price = uvp
+        assign show_compare_price = true
+        assign multiplier = 100 | minus: vip_pct
+        assign price = uvp | times: multiplier | divided_by: 100
+        assign price_badge = 'vip'
+      endif
+    endif
+  endif
+
+  if product_resource == blank
+    assign price = 1999
+  endif
+
+  comment
+    B2B-Netto-Anzeige: Für freigeschaltete Händler (Tag 'b2b') den Bruttopreis
+    in den Nettopreis umrechnen. MwSt-Satz über settings.b2b_vat_rate (Standard 19).
+  endcomment
+  assign show_b2b_net = false
+  if customer.tags contains 'b2b'
+    assign show_b2b_net = true
+    assign b2b_vat_rate = settings.b2b_vat_rate | default: 19
+    assign b2b_vat_divisor = 100 | plus: b2b_vat_rate
+    assign price = price | times: 100 | divided_by: b2b_vat_divisor
+    if compare_at_price > 0
+      assign compare_at_price = compare_at_price | times: 100 | divided_by: b2b_vat_divisor
+    endif
+  endif
+
+  if product.handle == closest.product.handle and settings.currency_code_enabled_product_pages
+    assign price = price | money_with_currency
+    assign compare_at_price = compare_at_price | money_with_currency
+  elsif product.handle != closest.product.handle and settings.currency_code_enabled_product_cards
+    assign price = price | money_with_currency
+    assign compare_at_price = compare_at_price | money_with_currency
+  else
+    assign price = price | money
+    assign compare_at_price = compare_at_price | money
+  endif
+
+  assign custom_badge_text = product_resource.metafields.custom.price_badge_text
+  assign custom_badge_color = product_resource.metafields.custom.price_badge_color | default: '#dc2626'
+-%}
+
+<div class="{% if show_compare_price %}compare-at-price-container{% endif %}" ref="priceContainer">
+  {%- if price_badge == 'sale' or custom_badge_text != blank -%}
+    {%- assign badge_label = custom_badge_text | default: 'Angebot' -%}
+    <span style="display:inline-block;background:{{ custom_badge_color }};color:#fff;font-size:0.7em;font-weight:700;padding:0.12em 0.4em;border-radius:3px;margin-right:0.35em;vertical-align:middle;line-height:1.4;">{{ badge_label }}</span>
+  {%- endif -%}
+  {%- if price_badge == 'vip' -%}<span style="display:inline-block;background:#111;color:#fff;font-size:0.7em;font-weight:700;padding:0.12em 0.4em;border-radius:3px;margin-right:0.35em;vertical-align:middle;line-height:1.4;">VIP</span>{%- endif -%}
+  {% if show_sale_price_first == false and show_compare_price %}
+    <span role="group">
+      <span class="visually-hidden">{{ 'content.price_regular' | t }}&nbsp;</span>
+      <span class="compare-at-price">{{- compare_at_price -}}</span>
+    </span>
+  {% endif %}
+
+  {% if show_compare_price %}
+    <span role="group">
+      <span class="visually-hidden">{{ 'content.price_sale' | t }}&nbsp;</span>
+      <span class="price">{{ price | default: '&nbsp;' }}</span>
+    </span>
+  {% else %}
+    <span class="price">{{ price | default: '&nbsp;' }}</span>
+  {% endif %}
+
+  {% if show_sale_price_first == true and show_compare_price %}
+    <span role="group">
+      <span class="visually-hidden">{{ 'content.price_regular' | t }}&nbsp;</span>
+      <span class="compare-at-price">{{- compare_at_price -}}</span>
+    </span>
+  {% endif %}
+  {%- if selected_variant.unit_price and show_unit_price -%}
+    {%- liquid
+      if product.handle == closest.product.handle and settings.currency_code_enabled_product_pages
+        assign unit_price = selected_variant.unit_price | money_with_currency
+      elsif product.handle != closest.product.handle and settings.currency_code_enabled_product_cards
+        assign unit_price = selected_variant.unit_price | money_with_currency
+      else
+        assign unit_price = selected_variant.unit_price | money
+      endif
+    -%}
+    {% render 'unit-price', price: unit_price, measurement: selected_variant.unit_price_measurement %}
+  {%- endif -%}
+  {%- if show_b2b_net -%}
+    <span class="b2b-net-note">zzgl. MwSt.</span>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .b2b-net-note {
+    display: inline-block;
+    font-size: 0.7em;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-inline-start: 0.35em;
+    white-space: nowrap;
+  }
+{% endstylesheet %}
