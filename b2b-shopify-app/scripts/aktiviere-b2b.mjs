@@ -1,8 +1,10 @@
-// Aktiviert die drei B2B-Funktionen (Rabatt, Versand, Zahlung) per Admin API.
-// Meldet sich als Futurespin-B2B-App an (Client Credentials Grant) und legt an:
-//   1) Automatischer Rabatt  -> B2B Preise
-//   2) Versandanpassung       -> B2B Kein Gratisversand
-//   3) Zahlungsanpassung      -> B2B Rechnung Zahlung
+// Aktiviert die B2B-Funktionen korrekt:
+//   1) Automatischer Rabatt  -> B2B Preise (product_discounts)
+//   2) Versandanpassung       -> B2B Kein Gratisversand (delivery_customization)
+// Die Zahlungsanpassung (Rechnung) wird NICHT angelegt -> Blockify übernimmt das.
+//
+// Holt den Token vom korrekten Endpunkt (Shop /admin/oauth/access_token)
+// und liest die echten Function-IDs selbst aus (keine Tippfehler).
 //
 // Aufruf (Windows CMD), im Ordner b2b-shopify-app:
 //   set CLIENT_ID=deine-client-id
@@ -15,19 +17,13 @@ const API_VERSION = "2026-04";
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
-const FUNCTIONS = {
-  rabatt: "fc0df1b4-5e41-f214-d1e4-48e6120983ff5ab589f6",
-  versand: "ebb9ddca-645f-418f-6825-620be0fcc33b98c9ca2f",
-  zahlung: "fdd67d40-94ad-70f0-9ce8-66afe983c8199264199f",
-};
-
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.error("FEHLER: Bitte CLIENT_ID und CLIENT_SECRET als Umgebungsvariablen setzen.");
   process.exit(1);
 }
 
 async function getToken() {
-  const res = await fetch("https://api.shopify.com/auth/access_token", {
+  const res = await fetch(`https://${SHOP}/admin/oauth/access_token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -37,28 +33,29 @@ async function getToken() {
     }),
   });
   const data = await res.json();
-  if (!data.access_token) {
-    throw new Error("Kein Token erhalten: " + JSON.stringify(data));
-  }
+  if (!data.access_token) throw new Error("Kein Token: " + JSON.stringify(data));
   return data.access_token;
 }
 
-async function adminGraphQL(token, query, variables) {
+async function gql(token, query, variables) {
   const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}/graphql.json`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Shopify-Access-Token": token,
-    },
+    headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": token },
     body: JSON.stringify({ query, variables }),
   });
   return res.json();
 }
 
-function report(label, payload) {
-  const errors = payload?.userErrors ?? [];
-  if (errors.length > 0) {
-    console.log(`✗ ${label}: ` + errors.map((e) => e.message).join("; "));
+// Meldet ECHTE Fehler: sowohl GraphQL-Top-Level-Fehler als auch userErrors.
+function report(label, full, mutationKey) {
+  if (full.errors) {
+    console.log(`✗ ${label}: GraphQL-Fehler: ` + JSON.stringify(full.errors).slice(0, 400));
+    return;
+  }
+  const payload = full.data?.[mutationKey];
+  const userErrors = payload?.userErrors ?? [];
+  if (userErrors.length > 0) {
+    console.log(`✗ ${label}: ` + userErrors.map((e) => `${(e.field || []).join(".")}: ${e.message}`).join("; "));
   } else {
     console.log(`✔ ${label} angelegt`);
   }
@@ -68,8 +65,30 @@ async function main() {
   const token = await getToken();
   console.log("Token erhalten ✔\n");
 
-  // 1) Automatischer Rabatt
-  const rabatt = await adminGraphQL(
+  // Echte Function-IDs auslesen und nach apiType zuordnen
+  const fnRes = await gql(token, `{
+    shopifyFunctions(first: 50) { nodes { id title apiType } }
+  }`);
+  if (fnRes.errors) {
+    throw new Error("Funktionen nicht lesbar: " + JSON.stringify(fnRes.errors));
+  }
+  const fns = fnRes.data.shopifyFunctions.nodes;
+  const byType = (t) => fns.find((f) => f.apiType === t)?.id;
+
+  const rabattId = byType("product_discounts");
+  const versandId = byType("delivery_customization");
+
+  console.log("Function-IDs:");
+  console.log("  Rabatt (product_discounts):       " + rabattId);
+  console.log("  Versand (delivery_customization): " + versandId);
+  console.log("");
+
+  if (!rabattId || !versandId) {
+    throw new Error("Eine benötigte Function-ID fehlt. Abbruch.");
+  }
+
+  // 1) Automatischer Rabatt -> B2B Preise
+  const rabatt = await gql(
     token,
     `mutation($d: DiscountAutomaticAppInput!) {
       discountAutomaticAppCreate(automaticAppDiscount: $d) {
@@ -80,16 +99,16 @@ async function main() {
     {
       d: {
         title: "B2B Preise",
-        functionId: FUNCTIONS.rabatt,
-        startsAt: "2026-06-19T00:00:00Z",
+        functionId: rabattId,
+        startsAt: new Date().toISOString(),
         combinesWith: { orderDiscounts: false, productDiscounts: false, shippingDiscounts: true },
       },
     }
   );
-  report("Rabatt (B2B Preise)", rabatt.data?.discountAutomaticAppCreate ?? rabatt);
+  report("Rabatt (B2B Preise)", rabatt, "discountAutomaticAppCreate");
 
-  // 2) Versandanpassung
-  const versand = await adminGraphQL(
+  // 2) Versandanpassung -> B2B Kein Gratisversand
+  const versand = await gql(
     token,
     `mutation($d: DeliveryCustomizationInput!) {
       deliveryCustomizationCreate(deliveryCustomization: $d) {
@@ -100,33 +119,14 @@ async function main() {
     {
       d: {
         title: "B2B Kein Gratisversand",
-        functionId: FUNCTIONS.versand,
+        functionId: versandId,
         enabled: true,
       },
     }
   );
-  report("Versand (B2B Kein Gratisversand)", versand.data?.deliveryCustomizationCreate ?? versand);
+  report("Versand (B2B Kein Gratisversand)", versand, "deliveryCustomizationCreate");
 
-  // 3) Zahlungsanpassung
-  const zahlung = await adminGraphQL(
-    token,
-    `mutation($d: PaymentCustomizationInput!) {
-      paymentCustomizationCreate(paymentCustomization: $d) {
-        paymentCustomization { id title enabled }
-        userErrors { field message }
-      }
-    }`,
-    {
-      d: {
-        title: "B2B Rechnung Zahlung",
-        functionId: FUNCTIONS.zahlung,
-        enabled: true,
-      },
-    }
-  );
-  report("Zahlung (B2B Rechnung Zahlung)", zahlung.data?.paymentCustomizationCreate ?? zahlung);
-
-  console.log("\nFertig! Prüfe die Aktivierungen im Shopify Admin.");
+  console.log("\nFertig! (Rechnung-Zahlung wurde bewusst NICHT angelegt -> Blockify.)");
 }
 
 main().catch((e) => {
