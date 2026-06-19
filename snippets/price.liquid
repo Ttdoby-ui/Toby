@@ -68,7 +68,7 @@
     assign b2b_vat_divisor = 100 | plus: b2b_vat_rate
     assign b2b_price_field = product_resource.metafields.custom.preis_b2b
     if b2b_price_field != blank and b2b_price_field.value != blank
-      assign price = b2b_price_field.value.amount | times: 100 | round
+      assign price = b2b_price_field.value | times: 100 | round
       assign compare_at_price = 0
       assign show_compare_price = false
     else

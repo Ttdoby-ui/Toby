@@ -35,10 +35,15 @@ export function run(input) {
     const metafield = merchandise.product && merchandise.product.metafield;
     if (!metafield || !metafield.value) continue;
 
-    // Metafeld vom Typ "money" liefert JSON {"amount":"34.90","currency_code":"EUR"}
+    // Metafeld custom.preis_b2b (Typ number_decimal): Netto-Preis als Dezimalzahl,
+    // z. B. "34.9". (Robust auch für money-JSON, falls der Typ einmal wechselt.)
     let net = NaN;
     try {
-      net = parseFloat(JSON.parse(metafield.value).amount);
+      const parsed = JSON.parse(metafield.value);
+      net =
+        parsed && typeof parsed === "object" && parsed.amount != null
+          ? parseFloat(parsed.amount)
+          : parseFloat(metafield.value);
     } catch (e) {
       net = parseFloat(metafield.value);
     }
