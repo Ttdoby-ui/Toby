@@ -6,7 +6,12 @@ handle = "b2b-kein-gratisversand"
 type = "function"
 description = "Blendet kostenlose Versandoptionen für B2B-Kunden (B2B1/B2B2/B2B3) aus."
 
-  [[extensions.targeting]]
-  target = "purchase.delivery-customization.run"
-  input_query = "src/run.graphql"
-  export = "run"
+[extensions.build]
+command = "npx --yes javy compile src/run.js -d -o dist/function.wasm"
+path = "dist/function.wasm"
+watch = ["src/**"]
+
+[[extensions.targeting]]
+target = "purchase.delivery-customization.run"
+input_query = "src/run.graphql"
+export = "run"

@@ -4,9 +4,14 @@ api_version = "2025-01"
 name = "B2B Rechnung Zahlung"
 handle = "b2b-rechnung-zahlung"
 type = "function"
-description = "Zeigt 'Rechnung' nur für B2B-Kunden (B2B1/B2B2/B2B3) an und setzt sie an Position 1. Für alle anderen Kunden wird die Option ausgeblendet."
+description = "Zeigt 'Rechnung' nur für B2B-Kunden (B2B1/B2B2/B2B3) an und setzt sie an Position 1."
 
-  [[extensions.targeting]]
-  target = "purchase.payment-customization.run"
-  input_query = "src/run.graphql"
-  export = "run"
+[extensions.build]
+command = "npx --yes javy compile src/run.js -d -o dist/function.wasm"
+path = "dist/function.wasm"
+watch = ["src/**"]
+
+[[extensions.targeting]]
+target = "purchase.payment-customization.run"
+input_query = "src/run.graphql"
+export = "run"
