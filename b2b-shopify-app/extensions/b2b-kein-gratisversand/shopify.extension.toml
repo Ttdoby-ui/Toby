@@ -1,4 +1,4 @@
-api_version = "2025-01"
+api_version = "2024-07"
 
 [[extensions]]
 name = "B2B Kein Gratisversand"
@@ -7,8 +7,8 @@ type = "function"
 description = "Blendet kostenlose Versandoptionen für B2B-Kunden (B2B1/B2B2/B2B3) aus."
 
 [extensions.build]
-command = "npx --yes javy compile src/run.js -d -o dist/function.wasm"
-path = "dist/function.wasm"
+command = "npx --yes @shopify/shopify_function@latest build -i src/run.js -o dist/index.wasm"
+path = "dist/index.wasm"
 watch = ["src/**"]
 
 [[extensions.targeting]]
