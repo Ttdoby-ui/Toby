@@ -53,9 +53,10 @@ async function main() {
   }`);
 
   // Rohe Antwort zeigen (deckt Berechtigungsfehler auf)
-  if (list.errors) {
-    console.log("GraphQL-Fehler beim Lesen:");
-    list.errors.forEach((e) => console.log("  - " + e.message));
+  const errs = list.errors;
+  if (errs) {
+    console.log("GraphQL-Fehler beim Lesen (rohe Antwort):");
+    console.log(JSON.stringify(errs, null, 2));
     console.log("\nHinweis: Fehlt der App die Berechtigung 'read_payment_customizations',");
     console.log("kann die Anpassung nicht gelesen/gelöscht werden, obwohl sie existiert.");
   }
