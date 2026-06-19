@@ -1,35 +1,48 @@
-# Order Printer – B2B-Rechnung (Netto-Ausweis)
+# Order Printer – Rechnung (eine Vorlage für B2B & B2C)
 
-`rechnung-b2b.liquid` ist eine Rechnungsvorlage für die **Shopify Order Printer**
-App – im selben Stil wie die Standard-Vorlage, aber mit **Netto-Positionen +
-MwSt-Aufschlüsselung nach Steuersätzen** für Geschäftskunden (B2B1/B2B2/B2B3).
+`rechnung.liquid` ist **eine** Rechnungsvorlage für die **Shopify Order Printer**
+App, die automatisch unterscheidet:
 
-> Empfehlung: Als **separate** Vorlage „Rechnung B2B" anlegen und für
-> B2B-Bestellungen nutzen. Endkunden (B2C) erhalten weiter die Standard-Vorlage
-> mit Brutto-Ausweis (gesetzeskonform für Verbraucher).
+- **B2B** (Kunde hat Tag `B2B1`/`B2B2`/`B2B3`): Positionen **netto**, „zzgl. MwSt".
+- **B2C** (alle anderen): Positionen **brutto**, „inkl. MwSt".
+
+In beiden Fällen wird die MwSt nach Steuersätzen aufgeschlüsselt.
 
 ## Einrichtung
 
-1. Shopify Admin → **Order Printer** öffnen.
-2. **Vorlagen → Vorlage hinzufügen**, Name z. B. `Rechnung B2B`.
-3. Inhalt von `rechnung-b2b.liquid` komplett einfügen, speichern.
-4. Bestellung → **Mehr Aktionen → Drucken → Rechnung B2B**.
+1. Shopify Admin → **Order Printer** → **Vorlagen → Vorlage hinzufügen**.
+2. Name z. B. `Rechnung`, Inhalt von `rechnung.liquid` einfügen, speichern.
+3. Bestellung → **Mehr Aktionen → Drucken → Rechnung**.
 
-## Vor dem Einsatz ausfüllen
+## UNBEDINGT ausfüllen (Platzhalter ersetzen)
 
-- **USt-IdNr.** eintragen (Platzhalter `DE000000000` ersetzen).
-- **Absenderadresse**: Einstellungen → Geschäftsdaten.
-- Voraussetzungen (Shop-Konfiguration, aktuell erfüllt): „Preise inkl. MwSt"
-  und Versand unbesteuert (`taxShipping = false`).
+In der Vorlage stehen Platzhalter, die durch echte Daten ersetzt werden müssen:
 
-## Erfüllte Pflichtangaben (§14 UStG)
+- **USt-IdNr.** `DE000000000` (oder Steuernummer – eine davon genügt)
+- **Steuernummer** `000/000/00000` (optional, falls keine USt-IdNr.)
+- **Fußzeile (Pflichtangaben):** Rechtsform, Inhaber/Geschäftsführer, Anschrift,
+  ggf. Registergericht + HRB-Nr., **Bankverbindung (IBAN/BIC)**
+- Absenderadresse kommt aus **Einstellungen → Geschäftsdaten**
 
-Name/Anschrift Verkäufer **+ USt-IdNr.**, Name/Anschrift Käufer,
-Rechnungsdatum, **Liefer-/Leistungsdatum**, fortlaufende Rechnungsnummer
-(`R` + Bestellnummer + 1000), Menge/Art der Artikel, **nach Steuersätzen
-aufgeschlüsseltes Netto-Entgelt**, **Steuersatz + Steuerbetrag**, Bruttobetrag.
+## Abgedeckte Pflichtangaben (§14 UStG + Geschäftsbrief)
 
-**Mit Steuerberater abstimmen:**
-1. Rechnungsnummernkreis (hier Bestellnummer + 1000) freigeben.
-2. Revisionssichere Archivierung (GoBD) separat sicherstellen – Order Printer
-   erzeugt PDFs nur auf Abruf.
+- Name/Anschrift Verkäufer **+ USt-IdNr./Steuernummer**
+- Name/Anschrift Käufer
+- Rechnungsdatum **+ Liefer-/Leistungsdatum**
+- Fortlaufende Rechnungsnummer (`R` + Bestellnummer + 1000)
+- Menge/Art der Artikel
+- **Nach Steuersätzen aufgeschlüsseltes Netto-Entgelt + Steuersatz + Steuerbetrag**
+- Bruttobetrag, Zahlungsstatus
+- **Zahlungsbedingungen**, Steuerbefreiungs-/Reverse-Charge-Hinweis (automatisch,
+  wenn keine USt ausgewiesen wird)
+- **Anbieterkennzeichnung** in der Fußzeile (Rechtsform, Register, Bankverbindung)
+
+## Voraussetzungen (Shop-Konfiguration, aktuell erfüllt)
+
+- „Preise inkl. MwSt" (taxesIncluded = true)
+- Versand unbesteuert (taxShipping = false) → Versand netto = brutto
+
+## Mit Steuerberater abstimmen
+
+1. Rechnungsnummernkreis (Bestellnummer + 1000) freigeben.
+2. Revisionssichere Archivierung (GoBD) separat sicherstellen.

@@ -1,11 +1,12 @@
 {% comment %}
   ============================================================================
-  Futurespin – B2B-RECHNUNG für Order Printer (Netto-Ausweis)
+  Futurespin – RECHNUNG für Order Printer (eine Vorlage für B2B & B2C)
   ============================================================================
-  Für Geschäftskunden (Tags B2B1 / B2B2 / B2B3). Positionen werden netto
-  ausgewiesen, MwSt nach Steuersätzen aufgeschlüsselt (§14 UStG).
+  - B2B-Kunden (Tag B2B1/B2B2/B2B3): Positionen NETTO, "zzgl. MwSt".
+  - B2C-Kunden: Positionen BRUTTO, "inkl. MwSt".
+  In beiden Fällen wird die MwSt nach Steuersätzen aufgeschlüsselt (§14 UStG).
 
-  Annahmen (entsprechend Shop-Konfiguration):
+  Annahmen (entsprechen der Shop-Konfiguration):
   - "Preise inkl. MwSt" (taxesIncluded = true) -> gespeicherte Beträge sind brutto.
   - Versand unbesteuert (taxShipping = false) -> Versand netto = brutto.
 
@@ -14,6 +15,12 @@
   - Absenderadresse: Einstellungen -> Geschäftsdaten
   ============================================================================
 {% endcomment %}
+
+{% assign is_b2b = false %}
+{% if order.customer.tags contains 'B2B1' or order.customer.tags contains 'B2B2' or order.customer.tags contains 'B2B3' %}
+   {% assign is_b2b = true %}
+{% endif %}
+
 <div>
 <div class="columns">
    <div>
@@ -41,7 +48,8 @@
       {{ shop.address | format_address }}
       {% if shop.phone %}{{ shop.phone }}<br/>{% endif %}
       {% if shop.email %}{{ shop.email }}<br/>{% endif %}
-      <strong>USt-IdNr.: DE000000000</strong>
+      <strong>USt-IdNr.: DE000000000</strong><br/>
+      <span class="subduedText">Steuernummer: 000/000/00000</span>
    </div>
    {% if order.billing_address %}
    <div class="address">
@@ -58,7 +66,10 @@
    {% endif %}
 </div>
 
-<p class="subduedText" style="margin: .75em 0 0;">Alle Positionen verstehen sich netto zzgl. der gesetzlichen Umsatzsteuer.</p>
+<p class="subduedText" style="margin: .75em 0 0;">
+   {% if is_b2b %}Alle Positionen verstehen sich netto zzgl. der gesetzlichen Umsatzsteuer.
+   {% else %}Alle Preise inkl. gesetzlicher Umsatzsteuer.{% endif %}
+</p>
 
 <hr />
 
@@ -68,9 +79,9 @@
       <tr>
          <th>{{ "invoice_template.column_headings.quantity" | t }}</th>
          <th>{{ "invoice_template.column_headings.item" | t }}</th>
-         <th style="text-align: right;">Einzelpreis netto</th>
+         <th style="text-align: right;">{% if is_b2b %}Einzelpreis netto{% else %}Einzelpreis{% endif %}</th>
          <th style="text-align: right;">MwSt</th>
-         <th style="text-align: right;">Gesamt netto</th>
+         <th style="text-align: right;">{% if is_b2b %}Gesamt netto{% else %}Gesamt{% endif %}</th>
       </tr>
    </thead>
    <tbody>
@@ -81,6 +92,7 @@
          {% assign divisor = rate_pct | plus: 100 %}
          {% assign unit_net = line_item.final_price | times: 100 | divided_by: divisor %}
          {% assign line_net = line_item.final_line_price | times: 100 | divided_by: divisor %}
+         {% assign unit_net_orig = line_item.original_price | times: 100 | divided_by: divisor %}
       <tr>
          <td>{{ line_item.quantity }}</td>
          <td>{{ line_item.title }}
@@ -96,39 +108,43 @@
          </td>
          <td style="text-align: right;">
             {% if line_item.original_price != line_item.final_price %}
-               {% assign unit_net_orig = line_item.original_price | times: 100 | divided_by: divisor %}
-               <span class="subduedText"><s>{{ unit_net_orig | money }}</s></span><br />
+               <span class="subduedText"><s>{% if is_b2b %}{{ unit_net_orig | money }}{% else %}{{ line_item.original_price | money }}{% endif %}</s></span><br />
             {% endif %}
-            {{ unit_net | money }}
+            {% if is_b2b %}{{ unit_net | money }}{% else %}{{ line_item.final_price | money }}{% endif %}
          </td>
          <td style="text-align: right;">{{ rate_pct }} %</td>
-         <td style="text-align: right;">{{ line_net | money }}</td>
+         <td style="text-align: right;">
+            {% if is_b2b %}{{ line_net | money }}{% else %}{{ line_item.final_line_price | money }}{% endif %}
+         </td>
       </tr>
       {% endfor %}
 
-      {% comment %} Netto-Warenwert = Gesamt(brutto) - MwSt - Versand (Versand unbesteuert) {% endcomment %}
-      {% assign goods_net = order.total_price | minus: order.tax_price | minus: order.shipping_price %}
+      {% comment %} Summen: Versand unbesteuert -> netto = brutto {% endcomment %}
+      {% assign goods_gross = order.total_price | minus: order.shipping_price %}
+      {% assign goods_net = goods_gross | minus: order.tax_price %}
 
       <tr>
-         <td colspan="4" style="text-align: right;">Zwischensumme (netto)</td>
-         <td style="text-align: right;">{{ goods_net | money }}</td>
+         <td colspan="4" style="text-align: right;">
+            {% if is_b2b %}Zwischensumme (netto){% else %}Zwischensumme (brutto){% endif %}
+         </td>
+         <td style="text-align: right;">{% if is_b2b %}{{ goods_net | money }}{% else %}{{ goods_gross | money }}{% endif %}</td>
       </tr>
 
       {% if order.shipping_address %}
       <tr>
-         <td colspan="4" style="text-align: right;">{{ "invoice_template.shipping_label" | t }} (netto)</td>
+         <td colspan="4" style="text-align: right;">{{ "invoice_template.shipping_label" | t }}</td>
          <td style="text-align: right;">{{ order.shipping_price | money }}</td>
       </tr>
       {% endif %}
 
-      {% comment %} MwSt aufgeschlüsselt nach Steuersätzen {% endcomment %}
+      {% comment %} MwSt nach Steuersätzen aufgeschlüsselt {% endcomment %}
       {% for tax_line in order.tax_lines %}
          {% assign rate_pct = tax_line.rate | times: 100 | round %}
          {% assign net_for_rate = tax_line.price | times: 100 | divided_by: rate_pct %}
       <tr>
          <td colspan="4" style="text-align: right;">
             <span class="subduedText">Netto zu {{ rate_pct }} %: {{ net_for_rate | money }}</span><br />
-            zzgl. {{ rate_pct }} % MwSt
+            {% if is_b2b %}zzgl. {{ rate_pct }} % MwSt{% else %}darin enthalten {{ rate_pct }} % MwSt{% endif %}
          </td>
          <td style="text-align: right;">{{ tax_line.price | money }}</td>
       </tr>
@@ -161,6 +177,24 @@
       {% endif %}
    </tbody>
 </table>
+
+{% if order.total_price > 0 and order.tax_price == 0 %}
+<p class="subduedText" style="margin: 1em 0 0;">
+   Hinweis: Es wird keine Umsatzsteuer ausgewiesen
+   (z. B. steuerfreie innergemeinschaftliche Lieferung bzw. Steuerschuldnerschaft
+   des Leistungsempfängers / Reverse Charge gem. § 13b UStG).
+</p>
+{% endif %}
+
+<p style="margin: 1em 0 0;">
+   <strong>Zahlungsbedingungen:</strong>
+   {% if order.net_payment >= order.total_price %}
+      Der Rechnungsbetrag wurde vollständig beglichen. Vielen Dank.
+   {% else %}
+      Zahlbar innerhalb von 14 Tagen ohne Abzug auf das unten genannte Konto unter
+      Angabe der Rechnungsnummer R{{ invoice_number }}.
+   {% endif %}
+</p>
 
 {% if transactions.size > 1 %}
 <h2>{{ "invoice_template.transaction_details_title" | t }}</h2>
@@ -234,4 +268,17 @@
 
 <p class="subduedText" style="margin-bottom: 0;">Das Liefer-/Leistungsdatum entspricht dem Rechnungsdatum, sofern nicht anders angegeben.</p>
 <p style="margin-bottom: 0;">{{ "invoice_template.email_footer" | t: email: shop.email }}</p>
+
+{% comment %} ===== Gesetzliche Pflichtangaben (Anbieterkennzeichnung / §37a HGB, §35a GmbHG) =====
+   Platzhalter in [ ] mit euren echten Firmendaten ersetzen. {% endcomment %}
+<hr />
+<div class="subduedText" style="font-size: .8em; line-height: 1.5; margin-top: 1em;">
+   <strong>{{ shop.name }}</strong> · [Rechtsform, z. B. Einzelunternehmen / GmbH] · Inhaber/Geschäftsführer: [Name]<br />
+   [Straße Nr.], [PLZ] [Ort]
+   {% if shop.phone %} · Tel.: {{ shop.phone }}{% endif %}
+   {% if shop.email %} · E-Mail: {{ shop.email }}{% endif %}
+   {% if shop.domain %} · Web: {{ shop.domain }}{% endif %}<br />
+   USt-IdNr.: DE000000000 · Steuernummer: 000/000/00000 · [Registergericht & HRB-Nr., falls eingetragen]<br />
+   Bankverbindung: [Bank] · IBAN: [DE00 0000 0000 0000 0000 00] · BIC: [XXXXXXXX]
+</div>
 </div>
