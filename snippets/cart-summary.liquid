@@ -106,6 +106,12 @@
         {%- assign b2b_total_net = b2b_total_net | plus: item_net -%}
       {%- endfor -%}
       {%- assign b2b_total_tax = b2b_total_net | times: b2b_vat_rate | divided_by: 100 | round -%}
+      {%- assign b2b_total_gross = b2b_total_net | plus: b2b_total_tax -%}
+      {%- if settings.currency_code_enabled_cart_total -%}
+        {%- assign total_price = b2b_total_gross | money_with_currency -%}
+      {%- else -%}
+        {%- assign total_price = b2b_total_gross | money -%}
+      {%- endif -%}
       <span class="cart__summary-item">
         <span class="cart__total-label cart-primary-typography">Zwischensumme (netto)</span>
         <span class="cart-secondary-typography">{{ b2b_total_net | money }}</span>
