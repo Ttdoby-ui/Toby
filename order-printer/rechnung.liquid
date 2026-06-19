@@ -4,15 +4,13 @@
   ============================================================================
   - B2B-Kunden (Tag B2B1/B2B2/B2B3): Positionen NETTO, "zzgl. MwSt".
   - B2C-Kunden: Positionen BRUTTO, "inkl. MwSt".
-  In beiden Fällen wird die MwSt nach Steuersätzen aufgeschlüsselt (§14 UStG).
+  MwSt wird nach Steuersätzen aufgeschlüsselt (§14 UStG).
 
-  Annahmen (entsprechen der Shop-Konfiguration):
-  - "Preise inkl. MwSt" (taxesIncluded = true) -> gespeicherte Beträge sind brutto.
-  - Versand unbesteuert (taxShipping = false) -> Versand netto = brutto.
+  Beträge werden exakt aus den tatsächlichen Steuerzeilen abgeleitet
+  (Versand kann besteuert oder unbesteuert sein – beides korrekt).
+  Shop-Konfiguration: "Preise inkl. MwSt" (gespeicherte Beträge sind brutto).
 
-  VOR DEM EINSATZ AUSFÜLLEN:
-  - USt-IdNr. (Platzhalter DE000000000 ersetzen)
-  - Absenderadresse: Einstellungen -> Geschäftsdaten
+  VOR DEM EINSATZ AUSFÜLLEN: USt-IdNr./Steuernummer, Footer-Pflichtangaben.
   ============================================================================
 {% endcomment %}
 
@@ -85,14 +83,17 @@
       </tr>
    </thead>
    <tbody>
+      {% assign goods_tax = 0 %}
       {% for line_item in order.line_items %}
-         {% assign rate = 0 %}
-         {% for tl in line_item.tax_lines %}{% assign rate = tl.rate %}{% endfor %}
-         {% assign rate_pct = rate | times: 100 | round %}
-         {% assign divisor = rate_pct | plus: 100 %}
-         {% assign unit_net = line_item.final_price | times: 100 | divided_by: divisor %}
-         {% assign line_net = line_item.final_line_price | times: 100 | divided_by: divisor %}
-         {% assign unit_net_orig = line_item.original_price | times: 100 | divided_by: divisor %}
+         {% assign line_tax = 0 %}
+         {% assign rate_pct = 0 %}
+         {% for tl in line_item.tax_lines %}
+            {% assign line_tax = line_tax | plus: tl.price %}
+            {% assign rate_pct = tl.rate | times: 100 | round %}
+         {% endfor %}
+         {% assign goods_tax = goods_tax | plus: line_tax %}
+         {% assign line_net = line_item.final_line_price | minus: line_tax %}
+         {% assign unit_net = line_net | divided_by: line_item.quantity %}
       <tr>
          <td>{{ line_item.quantity }}</td>
          <td>{{ line_item.title }}
@@ -107,9 +108,6 @@
             {% endif %}
          </td>
          <td style="text-align: right;">
-            {% if line_item.original_price != line_item.final_price %}
-               <span class="subduedText"><s>{% if is_b2b %}{{ unit_net_orig | money }}{% else %}{{ line_item.original_price | money }}{% endif %}</s></span><br />
-            {% endif %}
             {% if is_b2b %}{{ unit_net | money }}{% else %}{{ line_item.final_price | money }}{% endif %}
          </td>
          <td style="text-align: right;">{{ rate_pct }} %</td>
@@ -119,9 +117,12 @@
       </tr>
       {% endfor %}
 
-      {% comment %} Summen: Versand unbesteuert -> netto = brutto {% endcomment %}
-      {% assign goods_gross = order.total_price | minus: order.shipping_price %}
-      {% assign goods_net = goods_gross | minus: order.tax_price %}
+      {% comment %} Beträge exakt aus tatsächlichen Werten ableiten {% endcomment %}
+      {% assign goods_gross = order.line_items_subtotal_price %}
+      {% assign goods_net = goods_gross | minus: goods_tax %}
+      {% assign shipping_gross = order.shipping_price %}
+      {% assign shipping_tax = order.tax_price | minus: goods_tax %}
+      {% assign shipping_net = shipping_gross | minus: shipping_tax %}
 
       <tr>
          <td colspan="4" style="text-align: right;">
@@ -130,21 +131,19 @@
          <td style="text-align: right;">{% if is_b2b %}{{ goods_net | money }}{% else %}{{ goods_gross | money }}{% endif %}</td>
       </tr>
 
-      {% if order.shipping_address %}
+      {% if shipping_gross > 0 %}
       <tr>
          <td colspan="4" style="text-align: right;">{{ "invoice_template.shipping_label" | t }}</td>
-         <td style="text-align: right;">{{ order.shipping_price | money }}</td>
+         <td style="text-align: right;">{% if is_b2b %}{{ shipping_net | money }}{% else %}{{ shipping_gross | money }}{% endif %}</td>
       </tr>
       {% endif %}
 
-      {% comment %} MwSt nach Steuersätzen aufgeschlüsselt {% endcomment %}
+      {% comment %} MwSt nach Steuersätzen {% endcomment %}
       {% for tax_line in order.tax_lines %}
-         {% assign rate_pct = tax_line.rate | times: 100 | round %}
-         {% assign net_for_rate = tax_line.price | times: 100 | divided_by: rate_pct %}
+         {% assign tl_rate = tax_line.rate | times: 100 | round %}
       <tr>
          <td colspan="4" style="text-align: right;">
-            <span class="subduedText">Netto zu {{ rate_pct }} %: {{ net_for_rate | money }}</span><br />
-            {% if is_b2b %}zzgl. {{ rate_pct }} % MwSt{% else %}darin enthalten {{ rate_pct }} % MwSt{% endif %}
+            {% if is_b2b %}zzgl. {{ tl_rate }} % MwSt{% else %}darin enthalten {{ tl_rate }} % MwSt{% endif %}
          </td>
          <td style="text-align: right;">{{ tax_line.price | money }}</td>
       </tr>
@@ -180,9 +179,9 @@
 
 {% if order.total_price > 0 and order.tax_price == 0 %}
 <p class="subduedText" style="margin: 1em 0 0;">
-   Hinweis: Es wird keine Umsatzsteuer ausgewiesen
-   (z. B. steuerfreie innergemeinschaftliche Lieferung bzw. Steuerschuldnerschaft
-   des Leistungsempfängers / Reverse Charge gem. § 13b UStG).
+   Hinweis: Es wird keine Umsatzsteuer ausgewiesen (z. B. steuerfreie
+   innergemeinschaftliche Lieferung bzw. Steuerschuldnerschaft des
+   Leistungsempfängers / Reverse Charge gem. § 13b UStG).
 </p>
 {% endif %}
 
