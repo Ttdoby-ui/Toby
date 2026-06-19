@@ -10,10 +10,13 @@
 
 - Apps werden ausschließlich über das **Dev Dashboard** (`dev.shopify.com/dashboard`) erstellt — nicht mehr direkt im Shopify Admin
 - **Kein statischer Access Token** — Shopify nutzt den **Client Credentials Grant** (Token läuft nach 24h ab)
-- Token-Endpunkt: `POST https://api.shopify.com/auth/access_token` mit JSON-Body:
+- Token-Endpunkt: `POST https://<shop>.myshopify.com/admin/oauth/access_token` mit JSON-Body:
   ```json
   { "client_id": "...", "client_secret": "...", "grant_type": "client_credentials" }
   ```
+  Antwort enthält `access_token`, der per Header `X-Shopify-Access-Token` an die Admin-API geht.
+  ⚠️ NICHT `api.shopify.com/auth/access_token` verwenden — der dort erhaltene Token wird von
+  der Shop-Admin-API mit "Invalid API key or access token" abgelehnt.
 - Secrets in GitHub Actions: `SHOPIFY_API_KEY` (Client-ID) + `SHOPIFY_API_SECRET` (Schlüssel) — **kein** `SHOPIFY_ACCESS_TOKEN`
 - Scopes im Dev Dashboard unter **Konfiguration → Admin-API-Bereiche** setzen, dann App auf Store installieren
 - Das "Schlüssel"-Feld im Dev Dashboard ist der **Client Secret** (nicht direkt als Access Token verwendbar)
