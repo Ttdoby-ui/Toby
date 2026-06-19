@@ -86,7 +86,7 @@
   {% endunless %}
 
   <div class="cart__total-container">
-    {%- if customer.tags contains 'b2b' -%}
+    {%- if customer.tags contains 'B2B1' or customer.tags contains 'B2B2' or customer.tags contains 'B2B3' -%}
       {%- assign b2b_vat_rate = settings.b2b_vat_rate | default: 19 -%}
       {%- assign b2b_vat_divisor = 100 | plus: b2b_vat_rate -%}
       {%- assign b2b_total_net = cart.total_price | times: 100 | divided_by: b2b_vat_divisor -%}

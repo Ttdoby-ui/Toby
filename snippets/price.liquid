@@ -56,17 +56,27 @@
   endif
 
   comment
-    B2B-Netto-Anzeige für Händler (Tag 'b2b'):
-    - Ist am Produkt ein "Preis B2B" (Metafeld custom.preis_b2b) gesetzt,
-      wird dieser Netto-Preis direkt angezeigt.
-    - Sonst Fallback: Bruttopreis in Netto umrechnen (settings.b2b_vat_rate, Standard 19).
+    B2B-Netto-Anzeige für Händler mit Preisstufen-Tags B2B1 / B2B2 / B2B3:
+    - Je nach Stufe wird das passende Produkt-Metafeld
+      custom.preis_b2b1 / _b2b2 / _b2b3 (Netto) angezeigt.
+    - Ist für die Stufe kein Preis gesetzt: Fallback Brutto -> Netto
+      (settings.b2b_vat_rate, Standard 19).
   endcomment
   assign show_b2b_net = false
-  if customer.tags contains 'b2b'
+  assign b2b_price_field = blank
+  if customer.tags contains 'B2B1'
     assign show_b2b_net = true
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b1
+  elsif customer.tags contains 'B2B2'
+    assign show_b2b_net = true
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b2
+  elsif customer.tags contains 'B2B3'
+    assign show_b2b_net = true
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b3
+  endif
+  if show_b2b_net
     assign b2b_vat_rate = settings.b2b_vat_rate | default: 19
     assign b2b_vat_divisor = 100 | plus: b2b_vat_rate
-    assign b2b_price_field = product_resource.metafields.custom.preis_b2b
     if b2b_price_field != blank and b2b_price_field.value != blank
       assign price = b2b_price_field.value | times: 100 | round
       assign compare_at_price = 0

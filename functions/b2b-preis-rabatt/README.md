@@ -1,18 +1,29 @@
 # B2B-Preis-Rabatt (Shopify Function)
 
-Diese Funktion berechnet im Checkout für **B2B-Kunden** (Kunden-Tag `b2b`) den
-individuellen **Netto-Preis** aus dem Produkt-Metafeld **`custom.preis_b2b`**.
-Sie ersetzt den bisherigen pauschalen 15 %-Code für B2B-Kunden.
+Diese Funktion berechnet im Checkout für **B2B-Kunden** den individuellen
+**Netto-Preis** je nach Preisstufe. Sie ersetzt den bisherigen pauschalen
+15 %-Code.
+
+## Preisstufen
+
+| Kunden-Tag | Produkt-Metafeld (Netto) |
+|------------|--------------------------|
+| `B2B1`     | `custom.preis_b2b1`      |
+| `B2B2`     | `custom.preis_b2b2`      |
+| `B2B3`     | `custom.preis_b2b3`      |
 
 ## So funktioniert es
 
-- Produkt hat `Preis B2B` (netto) gesetzt → Artikel wird im Checkout auf
-  diesen Preis rabattiert (Ziel-Brutto = Netto × 1,19).
-- Produkt ohne `Preis B2B` → kein B2B-Rabatt (regulärer Preis).
-- Greift nur für Kunden mit Tag `b2b`.
+- Kunde hat eine Stufe (`B2B1`/`B2B2`/`B2B3`) → für jeden Artikel mit gesetztem
+  Stufen-Preis wird im Checkout auf diesen Preis rabattiert
+  (Ziel-Brutto = Netto × 1,19).
+- Artikel ohne Stufen-Preis → kein B2B-Rabatt (regulärer Preis).
+- Kunden ohne Stufen-Tag → kein B2B-Rabatt.
+- Bei mehreren Stufen-Tags gilt die Reihenfolge B2B1 → B2B2 → B2B3.
 
-> Voraussetzung (bereits erledigt): Metafeld-Definition `custom.preis_b2b`
-> (Typ *money*) und die Netto-Anzeige im Theme.
+> Voraussetzung (bereits erledigt): Metafeld-Definitionen `custom.preis_b2b1`,
+> `custom.preis_b2b2`, `custom.preis_b2b3` (Typ *number_decimal*) und die
+> Netto-Anzeige im Theme.
 
 ## Deployment (über das Dev Dashboard / Shopify CLI)
 

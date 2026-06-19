@@ -222,7 +222,7 @@
                   {% endif %}
 
                   <div>
-                    {%- if customer.tags contains 'b2b' -%}
+                    {%- if customer.tags contains 'B2B1' or customer.tags contains 'B2B2' or customer.tags contains 'B2B3' -%}
                       {%- assign b2b_vat_rate = settings.b2b_vat_rate | default: 19 -%}
                       {%- assign b2b_vat_divisor = 100 | plus: b2b_vat_rate -%}
                       {%- assign b2b_net = item.final_price | times: 100 | divided_by: b2b_vat_divisor -%}
@@ -369,7 +369,7 @@
                   headers="productTotal"
                 >
                   {%- liquid
-                    if customer.tags contains 'b2b'
+                    if customer.tags contains 'B2B1' or customer.tags contains 'B2B2' or customer.tags contains 'B2B3'
                       assign b2b_vat_rate = settings.b2b_vat_rate | default: 19
                       assign b2b_vat_divisor = 100 | plus: b2b_vat_rate
                       assign b2b_line_net = item.final_line_price | times: 100 | divided_by: b2b_vat_divisor
@@ -415,7 +415,7 @@
                     endif
                   -%}
                   <text-component value="{{ price | strip_html }}">{{ price }}</text-component>
-                  {%- if customer.tags contains 'b2b' -%}
+                  {%- if customer.tags contains 'B2B1' or customer.tags contains 'B2B2' or customer.tags contains 'B2B3' -%}
                     <span class="b2b-net-note">zzgl. MwSt.</span>
                   {%- endif -%}
                   {%- if item.unit_price_measurement -%}

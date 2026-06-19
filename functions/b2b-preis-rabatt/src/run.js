@@ -2,14 +2,16 @@
 //
 // B2B-Preis-Rabatt – Shopify Function (Product Discount)
 //
-// Logik: Für Kunden mit Tag "b2b" wird jeder Artikel, der ein Metafeld
-// custom.preis_b2b (Netto-Preis) trägt, im Checkout so rabattiert, dass der
-// gezahlte Betrag dem B2B-Preis entspricht.
+// Drei Preisstufen über Kunden-Tags B2B1 / B2B2 / B2B3. Je Stufe trägt das
+// Produkt einen Netto-Preis im passenden Metafeld:
+//   B2B1 -> custom.preis_b2b1
+//   B2B2 -> custom.preis_b2b2
+//   B2B3 -> custom.preis_b2b3
 //
 // Der Shop rechnet "Preise inkl. MwSt" (taxesIncluded = true). Der Zeilenpreis
-// im Funktions-Input ist daher brutto. Ziel-Brutto = Netto-B2B-Preis × (1 + MwSt).
-// Nach dem Rabatt wird die MwSt auf dem reduzierten Brutto neu berechnet, sodass
-// der Netto-Anteil exakt dem hinterlegten B2B-Preis entspricht.
+// im Input ist daher brutto. Ziel-Brutto = Netto-B2B-Preis × (1 + MwSt). Nach
+// dem Rabatt wird die MwSt auf dem reduzierten Brutto neu berechnet, sodass der
+// Netto-Anteil exakt dem hinterlegten B2B-Preis entspricht.
 
 const VAT_RATE = 0.19; // MwSt-Satz für Netto -> Brutto Umrechnung
 
@@ -19,34 +21,45 @@ const EMPTY_DISCOUNT = {
 };
 
 /**
- * @param {{cart: {buyerIdentity: {customer: {hasAnyTag: boolean}|null}|null, lines: Array<any>}}} input
+ * @param {string|null|undefined} raw
+ * @returns {number}
  */
+function parseNet(raw) {
+  if (!raw) return NaN;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && parsed.amount != null) {
+      return parseFloat(parsed.amount);
+    }
+    return parseFloat(raw);
+  } catch (e) {
+    return parseFloat(raw);
+  }
+}
+
 export function run(input) {
   const customer = input.cart.buyerIdentity && input.cart.buyerIdentity.customer;
-  if (!customer || customer.hasAnyTag !== true) {
-    return EMPTY_DISCOUNT;
-  }
+  if (!customer) return EMPTY_DISCOUNT;
+
+  // Preisstufe bestimmen (B2B1 hat Vorrang vor B2B2 vor B2B3)
+  let tierKey = null;
+  if (customer.b2b1 === true) tierKey = "p1";
+  else if (customer.b2b2 === true) tierKey = "p2";
+  else if (customer.b2b3 === true) tierKey = "p3";
+  if (!tierKey) return EMPTY_DISCOUNT;
 
   const discounts = [];
 
   for (const line of input.cart.lines) {
     const merchandise = line.merchandise;
     if (!merchandise || merchandise.__typename !== "ProductVariant") continue;
-    const metafield = merchandise.product && merchandise.product.metafield;
+    const product = merchandise.product;
+    if (!product) continue;
+
+    const metafield = product[tierKey];
     if (!metafield || !metafield.value) continue;
 
-    // Metafeld custom.preis_b2b (Typ number_decimal): Netto-Preis als Dezimalzahl,
-    // z. B. "34.9". (Robust auch für money-JSON, falls der Typ einmal wechselt.)
-    let net = NaN;
-    try {
-      const parsed = JSON.parse(metafield.value);
-      net =
-        parsed && typeof parsed === "object" && parsed.amount != null
-          ? parseFloat(parsed.amount)
-          : parseFloat(metafield.value);
-    } catch (e) {
-      net = parseFloat(metafield.value);
-    }
+    const net = parseNet(metafield.value);
     if (!net || net <= 0) continue;
 
     const targetGrossUnit = net * (1 + VAT_RATE);
