@@ -7,7 +7,7 @@ type = "function"
 description = "Zeigt 'Rechnung' nur für B2B-Kunden (B2B1/B2B2/B2B3) an und setzt sie an Position 1."
 
 [extensions.build]
-command = "npx --yes javy compile src/run.js -d -o dist/index.wasm"
+command = "npx --yes javy-cli compile src/run.js -d -o dist/index.wasm"
 path = "dist/index.wasm"
 watch = ["src/**"]
 
