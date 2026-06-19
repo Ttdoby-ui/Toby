@@ -1,0 +1,20 @@
+# Shopify Function: B2B-Preis-Rabatt
+# Setzt für Kunden mit Tag "b2b" den individuellen Netto-Preis aus dem
+# Produkt-Metafeld custom.preis_b2b im Checkout durch.
+#
+# Hinweis: api_version ggf. an die vom `shopify app` CLI scaffoldete Version
+# anpassen. Ziel-/Ergebnis-Shape (cartLine vs. productVariant) bei Bedarf an
+# die gescaffoldete Vorlage angleichen – die Rechenlogik in src/run.js bleibt gleich.
+
+api_version = "2025-01"
+
+[[extensions]]
+name = "B2B Preis Rabatt"
+handle = "b2b-preis-rabatt"
+type = "function"
+description = "Setzt für B2B-Kunden (Tag 'b2b') den individuellen Netto-Preis aus dem Metafeld custom.preis_b2b."
+
+  [[extensions.targeting]]
+  target = "purchase.product-discount.run"
+  input_query = "src/run.graphql"
+  export = "run"
