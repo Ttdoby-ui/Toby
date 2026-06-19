@@ -1,0 +1,151 @@
+<style>
+  .op-doc { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 12px; line-height: 1.5; }
+  .op-doc h1 { font-size: 22px; margin: 0 0 4px; }
+  .op-row { display: flex; justify-content: space-between; gap: 24px; }
+  .op-muted { color: #555; }
+  .op-meta td { padding: 1px 0; }
+  .op-meta td:first-child { padding-right: 16px; color: #555; }
+  table.op-items { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  table.op-items th, table.op-items td { padding: 6px 4px; border-bottom: 1px solid #ddd; text-align: right; }
+  table.op-items th:nth-child(1), table.op-items td:nth-child(1),
+  table.op-items th:nth-child(2), table.op-items td:nth-child(2) { text-align: left; }
+  table.op-tax { border-collapse: collapse; margin-top: 12px; min-width: 320px; }
+  table.op-tax th, table.op-tax td { padding: 4px 10px; border: 1px solid #ddd; text-align: right; }
+  table.op-tax th:first-child, table.op-tax td:first-child { text-align: left; }
+  .op-totals { margin-top: 12px; width: 100%; }
+  .op-totals td { padding: 2px 0; }
+  .op-totals td:last-child { text-align: right; }
+  .op-grand { font-weight: bold; font-size: 14px; border-top: 2px solid #111; }
+  .op-footer { margin-top: 28px; color: #555; font-size: 11px; }
+</style>
+
+{% comment %}
+  Rechnungsvorlage für Order Printer – Futurespin.
+  Netto-Ausweis zzgl. MwSt, aufgeschlüsselt nach Steuersätzen (§14 UStG).
+  Voraussetzung: Shop steht auf "Preise inkl. MwSt" (taxesIncluded = true),
+  daher werden die gespeicherten Bruttobeträge hier in Netto umgerechnet.
+{% endcomment %}
+
+<div class="op-doc">
+
+  <div class="op-row">
+    <div>
+      <h1>Rechnung</h1>
+      <div class="op-muted">{{ shop.name }}</div>
+    </div>
+    <div style="text-align:right;">
+      <strong>{{ shop.name }}</strong><br>
+      {{ shop.address.street }}<br>
+      {{ shop.address.zip }} {{ shop.address.city }}<br>
+      {{ shop.address.country }}<br>
+      {% if shop.email %}{{ shop.email }}<br>{% endif %}
+      {% comment %} USt-IdNr. im Shop-Profil bzw. hier fest eintragen {% endcomment %}
+      USt-IdNr.: DE000000000
+    </div>
+  </div>
+
+  <div class="op-row" style="margin-top:20px;">
+    <div>
+      <div class="op-muted">Rechnungsadresse</div>
+      {{ order.billing_address.name }}<br>
+      {% if order.billing_address.company != blank %}{{ order.billing_address.company }}<br>{% endif %}
+      {{ order.billing_address.street }}<br>
+      {{ order.billing_address.zip }} {{ order.billing_address.city }}<br>
+      {{ order.billing_address.country }}
+    </div>
+    <div>
+      <table class="op-meta">
+        <tr><td>Rechnungsnr.</td><td><strong>{{ order.name }}</strong></td></tr>
+        <tr><td>Rechnungsdatum</td><td>{{ order.created_at | date: "%d.%m.%Y" }}</td></tr>
+        <tr><td>Lieferdatum</td><td>{{ order.created_at | date: "%d.%m.%Y" }}</td></tr>
+        <tr><td>Kundennr.</td><td>{{ order.customer.id }}</td></tr>
+        {% if order.customer.tags contains 'b2b' %}
+          <tr><td>Kundengruppe</td><td>B2B / Händler</td></tr>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+
+  <table class="op-items">
+    <thead>
+      <tr>
+        <th>Pos.</th>
+        <th>Artikel</th>
+        <th>Menge</th>
+        <th>Einzelpreis netto</th>
+        <th>MwSt</th>
+        <th>Gesamt netto</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line_item in line_items %}
+        {% assign rate = 0 %}
+        {% for tl in line_item.tax_lines %}{% assign rate = tl.rate %}{% endfor %}
+        {% assign divisor = 1 | plus: rate %}
+        {% assign unit_net = line_item.price | divided_by: divisor %}
+        {% assign line_net = line_item.line_price | divided_by: divisor %}
+        <tr>
+          <td>{{ forloop.index }}</td>
+          <td>
+            {{ line_item.title }}
+            {% if line_item.sku != blank %}<br><span class="op-muted">SKU: {{ line_item.sku }}</span>{% endif %}
+          </td>
+          <td>{{ line_item.quantity }}</td>
+          <td>{{ unit_net | money }}</td>
+          <td>{{ rate | times: 100 | round }} %</td>
+          <td>{{ line_net | money }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% comment %} Steuer-Aufschlüsselung nach Sätzen {% endcomment %}
+  <table class="op-tax">
+    <thead>
+      <tr><th>Steuersatz</th><th>Netto</th><th>MwSt</th><th>Brutto</th></tr>
+    </thead>
+    <tbody>
+      {% for tax_line in order.tax_lines %}
+        {% assign net_for_rate = tax_line.price | divided_by: tax_line.rate %}
+        {% assign gross_for_rate = net_for_rate | plus: tax_line.price %}
+        <tr>
+          <td>{{ tax_line.rate | times: 100 | round }} % MwSt</td>
+          <td>{{ net_for_rate | money }}</td>
+          <td>{{ tax_line.price | money }}</td>
+          <td>{{ gross_for_rate | money }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% comment %} Gesamtsummen {% endcomment %}
+  {% assign total_net = order.total_price | minus: order.tax_price %}
+  <table class="op-totals">
+    {% if order.shipping_price > 0 %}
+      <tr>
+        <td>davon Versand (brutto)</td>
+        <td>{{ order.shipping_price | money }}</td>
+      </tr>
+    {% endif %}
+    <tr>
+      <td>Summe netto</td>
+      <td>{{ total_net | money }}</td>
+    </tr>
+    <tr>
+      <td>zzgl. MwSt</td>
+      <td>{{ order.tax_price | money }}</td>
+    </tr>
+    <tr class="op-grand">
+      <td>Gesamtbetrag (brutto)</td>
+      <td>{{ order.total_price | money }}</td>
+    </tr>
+  </table>
+
+  <div class="op-footer">
+    {% if order.customer.tags contains 'b2b' %}
+      Alle Preise verstehen sich netto zzgl. der gesetzlichen Umsatzsteuer.
+    {% endif %}
+    Vielen Dank für Ihren Einkauf bei {{ shop.name }}.
+  </div>
+
+</div>
