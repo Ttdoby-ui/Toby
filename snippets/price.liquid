@@ -81,6 +81,7 @@
       assign price = b2b_price_field.value | times: 100 | round
       assign compare_at_price = 0
       assign show_compare_price = false
+      assign price_badge = ''
     else
       assign price = price | times: 100 | divided_by: b2b_vat_divisor
       if compare_at_price > 0
