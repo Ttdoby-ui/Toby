@@ -112,6 +112,36 @@ Danach alte VIP-Codes deaktivieren.
 > Hinweis: Der reine *Client-Credentials-Grant* liefert vermutlich **kein**
 > store-scoped Admin-Token — dafür wird der OAuth-Flow aus A benötigt.
 
+## ✅ Theme-Fix: Warenkorb-Durchstreichpreis (21.06.2026)
+
+**Problem:** Im Warenkorb zeigte der durchgestrichene Preis (~€26.21) denselben
+Wert wie der Aktionspreis (~€26.22) statt die echte UVP (€34.95).
+
+**Ursache:** `snippets/cart-products.liquid` berechnete in der
+`item.original_price != item.final_price`-Verzweigung den Vergleichspreis
+als `item.original_price × (100 − VIP%) / 100` — also den VIP-Rabatt
+**nochmals** auf den bereits vom automatischen Rabatt reduzierten Preis.
+
+**Fix (Entwurf-Horizon Theme, noch nicht live):**
+Der `<s class="compare-at-price">`-Block in dieser Verzweigung wurde vereinfacht:
+```liquid
+<s class="compare-at-price">
+  {% if item.variant.compare_at_price > item.original_price %}
+    {{ item.variant.compare_at_price | money }}
+  {% else %}
+    {{ item.original_price | money }}
+  {% endif %}
+</s>
+```
+→ Zeigt jetzt entweder die echte `compare_at_price` (UVP, falls gesetzt)
+  oder `item.original_price` (Listenpreis vor dem automatischen Rabatt).
+
+**Status:** Nur im **Entwurf-Theme** (`gid://shopify/OnlineStoreTheme/199959052636`).
+Nach Abnahme manuell ins **Live-Theme** (`gid://shopify/OnlineStoreTheme/184788123996`)
+übertragen (dieselbe Änderung in `snippets/cart-products.liquid`).
+
+---
+
 ## Verworfene Wege (dokumentiert)
 - Klassische Product-Discount-Function-API → **deprecated** (vor 2026-04 weg).
 - **Discounts Allocator** (sauberste „höchster gewinnt"-Lösung) → Shopify
