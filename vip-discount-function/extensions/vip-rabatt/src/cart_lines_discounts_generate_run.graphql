@@ -2,14 +2,26 @@ query CartInput {
   cart {
     lines {
       id
-      cost {
-        subtotalAmount {
-          amount
+      quantity
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            inVip: inCollections(ids: ["gid://shopify/Collection/664158142812"]) {
+              isMember
+            }
+            inBelage: inCollections(ids: ["gid://shopify/Collection/607791087964"]) {
+              isMember
+            }
+          }
         }
       }
     }
   }
   discount {
     discountClasses
+    metafield(key: "percentage") {
+      value
+    }
   }
 }
