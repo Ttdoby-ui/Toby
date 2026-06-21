@@ -1,9 +1,5 @@
 name: Deploy VIP Discount Function
 
-# Requires GitHub Secret: SHOPIFY_PARTNERS_TOKEN
-# → Partners Dashboard → Settings → Partner API → Generate access token (prtapi_...)
-# → Sicherstellen: Partner-Account hat Zugriff auf App 9fe6aa2d03cc52e54d29fdba8ee8d823
-
 on:
   push:
     branches:
@@ -43,7 +39,36 @@ jobs:
           node-version: "22"
 
       - name: Install Shopify CLI
-        run: npm install -g @shopify/cli@3.58.2 @shopify/app@3.58.2
+        run: npm install -g @shopify/cli@latest
+
+      - name: Diagnose Partners API token
+        env:
+          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
+        run: |
+          echo "--- Testing Partners API token validity ---"
+          curl -s -X POST https://partners.shopify.com/api/2024-10/graphql.json \
+            -H "X-Shopify-Access-Token: ${SHOPIFY_CLI_PARTNERS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"{ publicApiVersions { handle } }"}' | \
+            node -e "
+              let d='';
+              process.stdin.on('data', c => d += c);
+              process.stdin.on('end', () => {
+                try {
+                  const r = JSON.parse(d);
+                  if (r.errors) {
+                    console.log('Partners API ERROR:', JSON.stringify(r.errors));
+                    process.exit(1);
+                  } else {
+                    console.log('Partners API: Token VALID');
+                    console.log('Available versions:', r.data?.publicApiVersions?.map(v=>v.handle).join(', '));
+                  }
+                } catch(e) {
+                  console.log('Unexpected response:', d.substring(0,300));
+                  process.exit(1);
+                }
+              });
+            "
 
       - name: Install extension dependencies
         working-directory: vip-discount-function/extensions/vip-belage
@@ -57,7 +82,6 @@ jobs:
           SHOPIFY_CLI_NO_ANALYTICS: "1"
           SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
         run: |
-          echo "Deploying VIP Discount Function (client-id: ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }})"
           shopify app deploy \
             --client-id "${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}" \
             --force \
