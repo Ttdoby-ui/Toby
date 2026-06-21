@@ -1,0 +1,7 @@
+query RunInput {
+  shop {
+    metafield(namespace: "$app:best-discount-allocator", key: "function-configuration") {
+      value
+    }
+  }
+}
