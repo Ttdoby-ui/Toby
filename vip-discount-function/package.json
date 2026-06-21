@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "@shopify/app": "^3.58.2"
+  },
+  "dependencies": {
+    "@shopify/shopify_function": "~2.0.0"
   }
 }
