@@ -33,7 +33,7 @@ query CartInput {
   }
   discount {
     discountClasses
-    metafield(namespace: "vip-belage", key: "campaign") {
+    metafield(key: "function-configuration") {
       value
     }
   }

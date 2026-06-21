@@ -12,8 +12,8 @@ import {
  *   1. VIP: percentage based on the customer's tag (VIP3=30 > VIP2=25 >
  *      VIP1=15), applied to products in the VIP collection.
  *   2. Aktion (campaign): applied to products in the "Aktions-Beläge"
- *      collection. The campaign is configured per discount via the JSON
- *      metafield `vip-belage.campaign`:
+ *      collection. The campaign is configured per discount via the settings
+ *      UI extension, stored in the app metafield `function-configuration`:
  *        { "aktiv": true, "modus": "bxgy",    "kaufe": 4, "zahle": 3 }
  *        { "aktiv": true, "modus": "prozent", "prozent": 25 }
  *        { "aktiv": false }

@@ -1,20 +1,14 @@
 {
-  "name": "[Example] Discount UI extension",
-  "description": "Discount UI extension",
-  "title": "Select which discount types to apply at checkout",
-  "loading": "Loading...",
-  "label": "Percentage off",
-  "collections": {
-    "buttonLabel": "Choose collections",
-    "allProducts": "All products",
-    "collections": "Collections",
-    "appliesTo": "Applies to"
-  },
-  "discountClasses": {
-    "product": "Product discount",
-    "order": "Order discount",
-    "shipping": "Shipping discount"
-  },
-  "error": "Unable to update discount types. Please try again."
+  "name": "Bester Rabatt – Aktion",
+  "description": "Einstellungen für den 'Bester Rabatt'-Discount (VIP + Aktion).",
+  "title": "Bester Rabatt – Aktion (Beläge)",
+  "vipInfo": "VIP läuft automatisch über Kunden-Tags (VIP1 = 15 %, VIP2 = 25 %, VIP3 = 30 %) auf die VIP-Kollektion. Pro Artikel gewinnt immer der höhere Rabatt – es wird nicht gestapelt.",
+  "aktiv": "BXGY-/Prozent-Aktion auf Aktions-Beläge aktiv",
+  "aktionsInfo": "Gilt für Produkte in der Kollektion 'Aktions-Beläge (BXGY)'. Lege dort pro Kampagne die teilnehmenden Beläge ab.",
+  "modus": "Aktions-Modus",
+  "modusBxgy": "Kaufe X, zahle Y (günstigste gratis)",
+  "modusProzent": "Prozent-Rabatt",
+  "kaufe": "Kaufe (X)",
+  "zahle": "Zahle (Y)",
+  "prozent": "Rabatt"
 }
-
