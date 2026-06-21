@@ -1,7 +1,32 @@
 query RunInput {
-  shop {
-    metafield(namespace: "$app:best-discount-allocator", key: "function-configuration") {
-      value
+  cart {
+    lines {
+      id
+      quantity
+      cost {
+        amountPerQuantity {
+          amount
+        }
+      }
+    }
+  }
+  discounts {
+    discountProposals {
+      handle
+      targets {
+        cartLineId
+        quantity
+      }
+      value {
+        __typename
+        ... on Percentage {
+          value
+        }
+        ... on FixedAmount {
+          amount
+          appliesToEachItem
+        }
+      }
     }
   }
 }
