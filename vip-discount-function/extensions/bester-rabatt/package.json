@@ -1,5 +1,5 @@
 {
-  "name": "best-discount-allocator",
+  "name": "vip-rabatt",
   "version": "0.0.1",
   "license": "UNLICENSED",
   "type": "module",
@@ -26,7 +26,6 @@
     }
   },
   "dependencies": {
-    "decimal.js": "^10.5.0",
     "@shopify/shopify_function": "^2.0.1"
   },
   "devDependencies": {

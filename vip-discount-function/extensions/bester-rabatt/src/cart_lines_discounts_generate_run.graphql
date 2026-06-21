@@ -1,0 +1,40 @@
+query CartInput {
+  cart {
+    buyerIdentity {
+      customer {
+        hasTags(tags: ["VIP1", "VIP2", "VIP3"]) {
+          tag
+          hasTag
+        }
+      }
+    }
+    lines {
+      id
+      quantity
+      cost {
+        amountPerQuantity {
+          amount
+        }
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            inVip: inCollections(ids: ["gid://shopify/Collection/664158142812"]) {
+              isMember
+            }
+            inAktion: inCollections(ids: ["gid://shopify/Collection/691790971228"]) {
+              isMember
+            }
+          }
+        }
+      }
+    }
+  }
+  discount {
+    discountClasses
+    metafield(namespace: "vip-belage", key: "campaign") {
+      value
+    }
+  }
+}
