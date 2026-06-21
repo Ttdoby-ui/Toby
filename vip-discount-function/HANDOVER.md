@@ -2,6 +2,31 @@
 
 Stand: 21.06.2026 · Branch: `claude/vip-discount-deployment-ugv32f`
 
+## ✅ LIVE seit 21.06.2026 — Native VIP-Lösung (ohne App/Backend)
+
+VIP läuft jetzt **automatisch über Kunden-Tags** als native Shopify-Rabatte
+(kein Code mehr nötig). Umgesetzt direkt über die Admin-API:
+
+| Rabatt | % | Segment (Tag) | Status | ID |
+|--------|---|---------------|--------|----|
+| VIP1 | 15 | VIP1 | ACTIVE | `gid://shopify/DiscountAutomaticNode/2340297605468` |
+| VIP2 | 25 | VIP2 | ACTIVE | `gid://shopify/DiscountAutomaticNode/2340297671004` |
+| VIP3 | 30 | VIP3 | ACTIVE | `gid://shopify/DiscountAutomaticNode/2340297736540` |
+
+- Alle auf VIP-Kollektion `664158142812`, **Kombinationen AUS**.
+- Alte VIP-**Code**-Rabatte (2184356004188 / 2184361115996 / 2184361738588)
+  → **deaktiviert** (EXPIRED). Reversibel via `discountCodeActivate`.
+- **Doppelrabatt mit BXGY verhindert:** „Kombinationen aus" → Shopify wendet
+  nur **einen** automatischen Rabatt an (den besseren).
+- **Grenze:** Kein feines „pro Artikel höchster gewinnt" bei gemischtem
+  Warenkorb. Dafür die fertige Function unten (braucht App-Backend).
+
+Pflege: VIP-Prozente/Segmente unter **Rabatte** im Admin oder per
+`discountAutomaticBasicUpdate`.
+
+---
+
+
 ## Ziel (Geschäftsregel)
 
 Pro Artikel gewinnt **immer der höchste Rabatt** — **kein Stapeln**:
