@@ -3,6 +3,8 @@ api_version = "2026-04"
 [[extensions]]
 name = "t:name"
 handle = "bester-rabatt"
+
+uid = "bba97163-c707-645e-2ab9-ad3b98f1ee2d068f4506"
 type = "function"
 description = "t:description"
 

@@ -1,0 +1,18 @@
+api_version = "2026-01"
+[[extensions]]
+# Change the merchant-facing name of the extension in locales/en.default.json
+name = "t:name"
+description = "t:description"
+handle = "bester-rabatt-settings"
+uid = "5ee8a2cf-a89d-2508-0bd6-388ee9aaa216cbf260fa"
+type = "ui_extension"
+# Only 1 target can be specified for each Admin block extension
+[[extensions.targeting]]
+module = "./src/DiscountFunctionSettings.jsx"
+target = "admin.discount-details.function-settings.render"
+
+[[extensions.metafields]]
+namespace = "$app"
+key = "function-configuration"
+
+
