@@ -6,7 +6,10 @@ pub extern "C" fn run() {
     io::stdin().read_to_string(&mut input_str).unwrap_or_default();
 
     let output = process(&input_str);
-    io::stdout().write_all(output.as_bytes()).unwrap_or_default();
+    let stdout = io::stdout();
+    let mut handle = stdout.lock();
+    handle.write_all(output.as_bytes()).unwrap_or_default();
+    handle.flush().unwrap_or_default();
 }
 
 fn process(input_str: &str) -> String {
