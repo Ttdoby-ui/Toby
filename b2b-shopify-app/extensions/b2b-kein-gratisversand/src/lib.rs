@@ -42,7 +42,7 @@ fn process(input_str: &str) -> String {
                     if amount == 0.0 {
                         let handle = opt["handle"].as_str().unwrap_or("");
                         ops.push(serde_json::json!({
-                            "deliveryOptionHide": { "deliveryOptionHandle": handle }
+                            "hide": { "deliveryOptionHandle": handle }
                         }));
                     }
                 }
