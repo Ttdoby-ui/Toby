@@ -1,12 +1,7 @@
 query Input {
   cart {
-    buyerIdentity {
-      customer {
-        # Preisstufe des Kunden
-        b2b1: hasAnyTag(tags: ["B2B1"])
-        b2b2: hasAnyTag(tags: ["B2B2"])
-        b2b3: hasAnyTag(tags: ["B2B3"])
-      }
+    attribute(key: "_b2b") {
+      value
     }
     lines {
       id
@@ -21,7 +16,6 @@ query Input {
         ... on ProductVariant {
           id
           product {
-            # Netto-B2B-Preise je Stufe
             p1: metafield(namespace: "custom", key: "preis_b2b1") { value }
             p2: metafield(namespace: "custom", key: "preis_b2b2") { value }
             p3: metafield(namespace: "custom", key: "preis_b2b3") { value }

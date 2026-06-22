@@ -17,16 +17,14 @@ fn process(input_str: &str) -> String {
         }
     };
 
-    let customer = &input["cart"]["buyerIdentity"]["customer"];
-    let is_b2b1 = customer["b2b1"].as_bool().unwrap_or(false);
-    let is_b2b2 = customer["b2b2"].as_bool().unwrap_or(false);
-    let is_b2b3 = customer["b2b3"].as_bool().unwrap_or(false);
+    let b2b_level = input["cart"]["attribute"]["value"].as_str().unwrap_or("");
 
-    if !is_b2b1 && !is_b2b2 && !is_b2b3 {
-        return r#"{"discounts":[],"discountApplicationStrategy":"FIRST"}"#.to_string();
-    }
-
-    let price_key = if is_b2b1 { "p1" } else if is_b2b2 { "p2" } else { "p3" };
+    let price_key = match b2b_level {
+        "B2B1" => "p1",
+        "B2B2" => "p2",
+        "B2B3" => "p3",
+        _ => return r#"{"discounts":[],"discountApplicationStrategy":"FIRST"}"#.to_string(),
+    };
 
     let mut discounts: Vec<serde_json::Value> = Vec::new();
 

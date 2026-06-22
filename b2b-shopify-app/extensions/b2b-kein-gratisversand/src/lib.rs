@@ -9,20 +9,14 @@ pub extern "C" fn run() {
     io::stdout().write_all(output.as_bytes()).unwrap_or_default();
 }
 
-fn check_b2b(input: &serde_json::Value) -> bool {
-    let c = &input["cart"]["buyerIdentity"]["customer"];
-    c["b2b1"].as_bool().unwrap_or(false)
-        || c["b2b2"].as_bool().unwrap_or(false)
-        || c["b2b3"].as_bool().unwrap_or(false)
-}
-
 fn process(input_str: &str) -> String {
     let input: serde_json::Value = match serde_json::from_str(input_str) {
         Ok(v) => v,
         Err(_) => return r#"{"operations":[]}"#.to_string(),
     };
 
-    if !check_b2b(&input) {
+    let b2b_level = input["cart"]["attribute"]["value"].as_str().unwrap_or("");
+    if b2b_level.is_empty() {
         return r#"{"operations":[]}"#.to_string();
     }
 
@@ -45,7 +39,7 @@ fn process(input_str: &str) -> String {
                     if amount == 0.0 {
                         let handle = opt["handle"].as_str().unwrap_or("");
                         ops.push(serde_json::json!({
-                            "deliveryOptionHide": { "deliveryOptionHandle": handle }
+                            "hide": { "deliveryOptionHandle": handle }
                         }));
                     }
                 }
