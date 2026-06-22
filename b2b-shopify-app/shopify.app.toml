@@ -5,7 +5,7 @@ application_url = "https://shopify.dev/apps/tools/cli"
 embedded = false
 
 [access_scopes]
-scopes = "write_discounts,read_products,write_payment_customizations,write_delivery_customizations"
+scopes = "read_customers,write_discounts,read_products,write_payment_customizations,write_delivery_customizations"
 
 [auth]
 redirect_urls = ["https://redirect.shopifyapps.com"]
