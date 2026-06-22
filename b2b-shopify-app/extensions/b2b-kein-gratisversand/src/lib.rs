@@ -1,5 +1,9 @@
 use std::io::{self, Read, Write};
 
+// Name der Versandoption, die ausschliesslich B2B-Kunden sehen sollen.
+// Muss exakt dem Namen der Versandmethode in der Lieferzone entsprechen.
+const B2B_RATE_TITLE: &str = "B2B Versand";
+
 #[no_mangle]
 pub extern "C" fn run() {
     let mut input_str = String::new();
@@ -36,17 +40,25 @@ fn process(input_str: &str) -> String {
             for opt in options {
                 let amount = option_amount(opt);
                 let handle = opt["handle"].as_str().unwrap_or("");
+                let title = opt["title"].as_str().unwrap_or("");
                 if handle.is_empty() {
                     continue;
                 }
 
-                // B2B: kein Gratisversand -> Gratis-Optionen verstecken.
-                // Regulär: wenn Gratis verfügbar, die bezahlten Optionen verstecken,
-                //          damit der Gratisversand greift (ab 69 €).
+                let is_b2b_rate = title == B2B_RATE_TITLE;
+
                 let hide = if is_b2b {
-                    amount == 0.0
+                    // B2B-Kunden sehen ausschliesslich die B2B-Versandoption.
+                    !is_b2b_rate
                 } else {
-                    has_free && amount > 0.0
+                    // Regulaere Kunden sehen die B2B-Option nie.
+                    if is_b2b_rate {
+                        true
+                    } else {
+                        // Wenn Gratisversand verfuegbar ist (ab 69 EUR), die
+                        // bezahlten Optionen verstecken, damit Gratis greift.
+                        has_free && amount > 0.0
+                    }
                 };
 
                 if hide {
