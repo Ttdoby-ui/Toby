@@ -1,0 +1,16 @@
+{
+  "name": "uvp-tool",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Schöler&Micke-Katalog UVP -> Shopify compareAtPrice (2-Stufen: match -> review-CSV -> apply)",
+  "scripts": {
+    "match": "node uvp-tool.mjs match",
+    "apply": "node uvp-tool.mjs apply"
+  },
+  "dependencies": {
+    "csv-parse": "^5",
+    "csv-stringify": "^6",
+    "pdfjs-dist": "^4"
+  }
+}
