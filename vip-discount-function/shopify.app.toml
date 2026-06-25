@@ -4,7 +4,7 @@ application_url = "https://example.com"
 embedded = true
 
 [access_scopes]
-scopes = "read_discounts,write_discounts"
+scopes = "read_customers,read_discounts,write_discounts"
 
 [auth]
 redirect_urls = [

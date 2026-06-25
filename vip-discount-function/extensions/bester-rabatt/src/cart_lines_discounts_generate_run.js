@@ -4,22 +4,24 @@ import {
 } from '../generated/api';
 
 /**
- * Bester Rabatt — VIP + Aktion, höchster gewinnt (kein Stapeln)
+ * Bester Rabatt — kundenindividuelle + stufenbasierte VIP-Rabatte.
  *
- * Per cart line we compute two possible discounts and apply only the higher
- * one (as a fixed money amount), so a line never receives two discounts:
+ * Ersetzt die nativen VIP1/2/3-Rabatte durch EINE Discount-Function.
+ * Regel: höchster gewinnt, nie auf ein bestehendes Angebot stapeln.
  *
- *   1. VIP: percentage based on the customer's tag (VIP3=30 > VIP2=25 >
- *      VIP1=15), applied to products in the VIP collection.
- *   2. Aktion (campaign): applied to products in the "Aktions-Beläge"
- *      collection. The campaign is configured per discount via the settings
- *      UI extension, stored in the app metafield `function-configuration`:
- *        { "aktiv": true, "modus": "bxgy",    "kaufe": 4, "zahle": 3 }
- *        { "aktiv": true, "modus": "prozent", "prozent": 25 }
- *        { "aktiv": false }
- *      BXGY ("kaufe X, zahle Y") frees the cheapest (X-Y) units of every full
- *      group of X participating units. Below X units there is no campaign
- *      discount.
+ * Pro Cart-Zeile:
+ *   1. override%  = sonderrabatte[handle]  (Kunden-Metafeld futurespin.sonderrabatte)
+ *   2. sonst stufe% aus VIP-Tag (VIP3 > VIP2 > VIP1)
+ *   3. base%      = override ?? stufe ?? 0
+ *   4. UVP        = max(Preis, compareAt)
+ *   5. sale%      = (UVP - Preis) / UVP * 100   (bereits laufendes Angebot)
+ *   6. best%      = max(base%, sale%)
+ *   7. Zielpreis  = UVP * (1 - best%/100); Rabatt = Preis - Zielpreis, nur wenn > 0.
+ *      Ist sale% >= base%, ist der Rabatt 0 -> kein Stapeln auf das Angebot.
+ *
+ * Die Stufen-% liegen im App-Metafeld `function-configuration` (JSON
+ * { "VIP1": 15, "VIP2": 25, "VIP3": 30 }) und sind ohne Redeploy änderbar.
+ * Fehlt/leer -> Fallback 15/25/30.
  *
  * @typedef {import("../generated/api").CartInput} RunInput
  * @typedef {import("../generated/api").CartLinesDiscountsGenerateRunResult} CartLinesDiscountsGenerateRunResult
@@ -28,111 +30,113 @@ import {
  * @returns {CartLinesDiscountsGenerateRunResult}
  */
 
-const VIP_BY_TAG = {VIP3: 30, VIP2: 25, VIP1: 15};
+const DEFAULT_TIERS = {VIP1: 15, VIP2: 25, VIP3: 30};
+// Höchste Stufe gewinnt.
+const TIER_PRIORITY = ['VIP3', 'VIP2', 'VIP1'];
+
+const EMPTY = {operations: []};
 
 export function cartLinesDiscountsGenerateRun(input) {
   if (!input.discount.discountClasses.includes(DiscountClass.Product)) {
-    return {operations: []};
+    return EMPTY;
   }
 
-  // --- VIP percentage from customer tags (highest tier wins) ---
+  const customer = input.cart.buyerIdentity?.customer;
+
+  // --- Stufen-% aus App-Metafeld (Fallback 15/25/30) ---
+  const tiers = {...DEFAULT_TIERS};
+  const cfg = input.discount.metafield?.jsonValue;
+  if (cfg && typeof cfg === 'object') {
+    for (const tag of TIER_PRIORITY) {
+      const v = Number(cfg[tag]);
+      if (Number.isFinite(v) && v >= 0) {
+        tiers[tag] = v;
+      }
+    }
+  }
+
+  // --- Stufen-% des Kunden (höchste gehaltene Stufe) ---
   const heldTags = new Set(
-    (input.cart.buyerIdentity?.customer?.hasTags ?? [])
-      .filter((t) => t.hasTag)
-      .map((t) => t.tag),
+    (customer?.hasTags ?? []).filter((t) => t.hasTag).map((t) => t.tag),
   );
-  let vipPct = 0;
-  for (const [tag, pct] of Object.entries(VIP_BY_TAG)) {
+  let tierPct = 0;
+  for (const tag of TIER_PRIORITY) {
     if (heldTags.has(tag)) {
-      vipPct = pct;
+      tierPct = tiers[tag] ?? 0;
       break;
     }
   }
 
-  // --- Campaign configuration (per-discount JSON metafield) ---
-  let campaign = {aktiv: false};
-  const rawCampaign = input.discount.metafield?.value;
-  if (rawCampaign) {
-    try {
-      campaign = JSON.parse(rawCampaign);
-    } catch (e) {
-      campaign = {aktiv: false};
-    }
-  }
-
-  // --- Per-line facts ---
-  const lineInfo = input.cart.lines.map((line) => {
-    const product = line.merchandise?.product;
-    return {
-      line,
-      inVip: product?.inVip?.[0]?.isMember === true,
-      inAktion: product?.inAktion?.[0]?.isMember === true,
-      unit: parseFloat(line.cost.amountPerQuantity.amount),
-    };
-  });
-
-  // --- Campaign (Aktion) discount amount per line ---
-  const aktionAmount = new Map();
-  if (campaign.aktiv) {
-    if (campaign.modus === 'prozent') {
-      const pct = parseFloat(campaign.prozent) || 0;
-      if (pct > 0) {
-        for (const li of lineInfo) {
-          if (li.inAktion) {
-            aktionAmount.set(li.line.id, li.unit * li.line.quantity * (pct / 100));
-          }
-        }
-      }
-    } else if (campaign.modus === 'bxgy') {
-      const buy = parseInt(campaign.kaufe, 10) || 0;
-      const pay = parseInt(campaign.zahle, 10) || 0;
-      const freePerGroup = buy - pay;
-      if (buy > 0 && freePerGroup > 0) {
-        // Flatten participating units (one entry per unit, with its price).
-        const units = [];
-        for (const li of lineInfo) {
-          if (li.inAktion) {
-            for (let i = 0; i < li.line.quantity; i++) {
-              units.push({lineId: li.line.id, price: li.unit});
-            }
-          }
-        }
-        const freeCount = Math.floor(units.length / buy) * freePerGroup;
-        if (freeCount > 0) {
-          // The cheapest units become free.
-          units.sort((a, b) => a.price - b.price);
-          for (let i = 0; i < freeCount; i++) {
-            const u = units[i];
-            aktionAmount.set(u.lineId, (aktionAmount.get(u.lineId) || 0) + u.price);
-          }
-        }
+  // --- Kundenindividuelle Sonderrabatte pro Produkt-Handle ---
+  /** @type {Record<string, number>} */
+  const overrides = {};
+  const rawOverrides = customer?.sonderrabatte?.jsonValue;
+  if (rawOverrides && typeof rawOverrides === 'object') {
+    for (const [handle, pct] of Object.entries(rawOverrides)) {
+      const v = Number(pct);
+      if (Number.isFinite(v) && v >= 0) {
+        overrides[handle] = v;
       }
     }
   }
 
-  // --- Per line: keep the higher of VIP vs Aktion ---
   const candidates = [];
-  for (const li of lineInfo) {
-    const lineSubtotal = li.unit * li.line.quantity;
-    const vipAmount = li.inVip && vipPct > 0 ? lineSubtotal * (vipPct / 100) : 0;
-    const actAmount = aktionAmount.get(li.line.id) || 0;
-    const best = Math.max(vipAmount, actAmount);
-    if (best <= 0) {
+  for (const line of input.cart.lines) {
+    const variant = line.merchandise;
+    if (variant?.__typename !== 'ProductVariant') {
       continue;
     }
+
+    const price = parseFloat(line.cost.amountPerQuantity.amount);
+    if (!Number.isFinite(price) || price <= 0) {
+      continue;
+    }
+
+    const compareAt = parseFloat(line.cost.compareAtAmountPerQuantity?.amount);
+    const uvp = Math.max(price, Number.isFinite(compareAt) ? compareAt : 0);
+
+    // base% = override ?? stufe ?? 0  (override gewinnt, wenn gesetzt)
+    const handle = variant.product?.handle;
+    const override = handle != null ? overrides[handle] : undefined;
+    const basePct = override ?? tierPct ?? 0;
+
+    // sale% aus bereits laufendem Angebot (UVP vs. aktueller Preis)
+    const salePct = uvp > 0 ? ((uvp - price) / uvp) * 100 : 0;
+
+    const bestPct = Math.max(basePct, salePct);
+    if (bestPct <= 0) {
+      continue;
+    }
+
+    // Zielpreis aus UVP; Rabatt nur, soweit besser als das laufende Angebot.
+    const targetUnit = uvp * (1 - bestPct / 100);
+    const discountPerUnit = price - targetUnit;
+    if (discountPerUnit <= 0) {
+      continue; // sale% >= base% -> kein Stapeln
+    }
+
+    const amount = (discountPerUnit * line.quantity).toFixed(2);
+    if (parseFloat(amount) <= 0) {
+      continue; // gegen Rundung auf 0.00 absichern
+    }
+
+    const message =
+      override !== undefined ? `Sonderpreis ${basePct}%` : `VIP ${basePct}%`;
+
     candidates.push({
-      message: vipAmount >= actAmount ? `VIP ${vipPct}%` : 'Aktion',
-      targets: [{cartLine: {id: li.line.id}}],
+      message,
+      targets: [{cartLine: {id: line.id}}],
       value: {
         fixedAmount: {
-          amount: best.toFixed(2),
+          // amount gilt als Gesamtabzug für das Target (appliesToEachItem=false)
+          amount,
         },
       },
     });
   }
 
   if (candidates.length === 0) {
-    return {operations: []};
+    return EMPTY;
   }
 
   return {

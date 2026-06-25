@@ -6,6 +6,9 @@ query CartInput {
           tag
           hasTag
         }
+        sonderrabatte: metafield(namespace: "futurespin", key: "sonderrabatte") {
+          jsonValue
+        }
       }
     }
     lines {
@@ -15,17 +18,17 @@ query CartInput {
         amountPerQuantity {
           amount
         }
+        compareAtAmountPerQuantity {
+          amount
+        }
       }
       merchandise {
         __typename
         ... on ProductVariant {
+          id
+          sku
           product {
-            inVip: inCollections(ids: ["gid://shopify/Collection/664158142812"]) {
-              isMember
-            }
-            inAktion: inCollections(ids: ["gid://shopify/Collection/691790971228"]) {
-              isMember
-            }
+            handle
           }
         }
       }
@@ -34,7 +37,7 @@ query CartInput {
   discount {
     discountClasses
     metafield(key: "function-configuration") {
-      value
+      jsonValue
     }
   }
 }
