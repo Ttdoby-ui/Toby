@@ -32,8 +32,21 @@ Die `id` der Function mit Titel *„Kollektionsrabatt (Mengenstaffel)"* notieren
 
 ## 2. Rabatt anlegen — das „Formular"
 
-Pro Kollektionsrabatt wird ein automatischer Rabatt angelegt und mit dem
-Konfigurations-Metafeld bestückt. **Nur die markierten Werte anpassen:**
+**Einfachster Weg (empfohlen): GitHub-Actions-Formular.**
+GitHub → **Actions** → **„Kollektionsrabatt anlegen"** → **Run workflow**.
+Dort Titel, Kollektion, Function-ID und die Staffeln eintragen, fertig – der
+Workflow holt den Token und legt den Rabatt an
+(`.github/workflows/create-kollektionsrabatt.yml` →
+`scripts/create-kollektionsrabatt.mjs`).
+
+Benötigte Secrets: `VIP_DISCOUNT_SHOPIFY_API_KEY`,
+`VIP_DISCOUNT_SHOPIFY_API_SECRET` und optional `SHOPIFY_STORE_DOMAIN`.
+
+---
+
+Alternativ **manuell per Mutation** – pro Kollektionsrabatt wird ein
+automatischer Rabatt angelegt und mit dem Konfigurations-Metafeld bestückt.
+**Nur die markierten Werte anpassen:**
 
 ```graphql
 mutation {
