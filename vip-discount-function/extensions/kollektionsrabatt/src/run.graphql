@@ -1,0 +1,29 @@
+query Input($collectionIds: [ID!], $vipTags: [String!]) {
+  cart {
+    buyerIdentity {
+      customer {
+        hasTags(tags: $vipTags) {
+          tag
+          hasTag
+        }
+      }
+    }
+    lines {
+      id
+      quantity
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            inAnyCollection(ids: $collectionIds)
+          }
+        }
+      }
+    }
+  }
+  discountNode {
+    metafield(namespace: "kollektionsrabatt", key: "config") {
+      value
+    }
+  }
+}

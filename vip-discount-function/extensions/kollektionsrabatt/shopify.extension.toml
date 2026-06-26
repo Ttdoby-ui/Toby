@@ -1,0 +1,18 @@
+api_version = "2025-01"
+
+[[extensions]]
+name = "Kollektionsrabatt (Mengenstaffel)"
+handle = "kollektionsrabatt"
+type = "product_discounts"
+
+[extensions.build]
+command = "npm run build"
+path = "dist/function.wasm"
+watch = ["src/**/*.{js,ts}"]
+
+# Bindet das Konfigurations-Metafeld an die Input-Query.
+# Die JSON-Felder `collectionIds` und `vipTags` werden so zu den
+# Query-Variablen $collectionIds und $vipTags.
+[extensions.input.variables]
+namespace = "kollektionsrabatt"
+key = "config"

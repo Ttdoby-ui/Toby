@@ -1,0 +1,12 @@
+{
+  "name": "kollektionsrabatt",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "npx --yes @shopify/shopify-function-build",
+    "test": "node --test src/run.test.js"
+  },
+  "devDependencies": {
+    "@shopify/shopify_function": "^0.3.0"
+  }
+}
