@@ -1,0 +1,27 @@
+name: Topseller Refresh
+
+# Berechnet je Collection die Top-6 BEST_SELLING-Produkte neu und schreibt sie
+# ins Metafeld custom.topseller_products (Quelle der "Topseller dieser Kategorie"-
+# Leiste im Theme). Bestseller verschieben sich -> woechentliche Aktualisierung.
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'   # jeden Montag 03:00 UTC
+  workflow_dispatch:        # manueller Start ueber den GitHub-Actions-Tab
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'   # global fetch verfuegbar, keine Dependencies noetig
+
+      - name: Topseller-Metafelder setzen
+        env:
+          SHOP: e7ee88-2.myshopify.com
+          CLIENT_ID: ${{ secrets.TOPSELLER_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.TOPSELLER_CLIENT_SECRET }}
+        run: node scripts/set-topseller.mjs
