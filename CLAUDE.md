@@ -49,15 +49,19 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   „Could not find the Shopify Functions JavaScript library".
 - `shopify.extension.toml` im **neuen Format**:
   ```toml
+  api_version = "2025-10"                      # AKTUELLE Version nötig (alte werden abgelehnt!)
   type = "function"
   [[extensions.targeting]]
-  target = "purchase.product-discount.run"   # Produktrabatt (Legacy-Return: {discounts, discountApplicationStrategy})
+  target = "cart.lines.discounts.generate.run" # neue Discounts-API
   input_query = "src/run.graphql"
   export = "run"
   [extensions.build]
-  path = "dist/function.wasm"                 # KEIN command → CLI baut JS nativ (esbuild + javy)
-  typegen_command = "node --version"          # no-op: verhindert graphql-codegen-Fehler bei reinem JS
+  path = "dist/function.wasm"                  # KEIN command → CLI baut JS nativ (esbuild + javy)
+  typegen_command = "node --version"           # no-op: verhindert graphql-codegen-Fehler bei reinem JS
   ```
+- **Neue Discounts-API** (`cart.lines.discounts.generate.run`):
+  - Input: `discount { discountClasses metafield(...) { jsonValue } }`, `cart.lines`, `cart.buyerIdentity.customer.hasTags`.
+  - Output: `{ operations: [{ productDiscountsAdd: { candidates: [{ message, targets:[{cartLine:{id}}], value:{percentage:{value}} }], selectionStrategy: "FIRST" } }] }`.
 - **javy** wird beim ersten Build von der CLI heruntergeladen (Internet nötig).
 - Konfigurierbares Metafeld → `[extensions.input.variables]` mit `namespace`/`key`.
   Die JSON-Felder des Metafelds werden zu Query-Variablen (z. B. `$collectionIds`,
@@ -88,6 +92,12 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   und scheitert mangels Konfig. `typegen_command = "node --version"` als no-op setzen.
 - ❌ Extension ohne `npm install` deployen → „Could not find the Shopify Functions
   JavaScript library". Vorher im Extension-Ordner `npm install` ausführen.
+- ❌ Veraltete `api_version` (z. B. `2025-01`) → Release scheitert mit „Your API
+  version for Functions Product Discounts is no longer supported". Auf aktuelle
+  Version heben (und Legacy-Target `purchase.product-discount.run` ist dort weg →
+  `cart.lines.discounts.generate.run` + `operations`-Output nutzen).
+- ⚠️ Beim erneuten `git pull` blockiert die CLI-`uid`-Zeile in der Toml den Merge →
+  `git stash` davor, dann `git pull` (Stash nicht zurückholen, nur CLI-uids).
 - ❌ `application_url`/`redirect_urls` mit Platzhalter `https://{{ HOST }}` → CLI-Validierung
   „Invalid URL". Gültige URL eintragen (z. B. `https://futurespin.de`).
 - ❌ Deploy über GitHub Actions mit `prtapi_`-Partner-Token → „custom token invalid"

@@ -1,4 +1,4 @@
-api_version = "2025-01"
+api_version = "2025-10"
 
 [[extensions]]
 name = "Kollektionsrabatt (Mengenstaffel)"
@@ -6,7 +6,7 @@ handle = "kollektionsrabatt"
 type = "function"
 
 [[extensions.targeting]]
-target = "purchase.product-discount.run"
+target = "cart.lines.discounts.generate.run"
 input_query = "src/run.graphql"
 export = "run"
 

@@ -21,9 +21,10 @@ query Input($collectionIds: [ID!], $vipTags: [String!]) {
       }
     }
   }
-  discountNode {
+  discount {
+    discountClasses
     metafield(namespace: "kollektionsrabatt", key: "config") {
-      value
+      jsonValue
     }
   }
 }

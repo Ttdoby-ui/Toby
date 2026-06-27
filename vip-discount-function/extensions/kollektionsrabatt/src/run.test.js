@@ -18,8 +18,9 @@ const DEFAULT_CONFIG = {
 };
 
 const makeInput = ({ config = DEFAULT_CONFIG, lines = [], vipTags = [] } = {}) => ({
-  discountNode: {
-    metafield: { value: config == null ? null : JSON.stringify(config) },
+  discount: {
+    discountClasses: ["PRODUCT"],
+    metafield: config == null ? null : { jsonValue: config },
   },
   cart: {
     buyerIdentity: {
@@ -33,6 +34,14 @@ const makeInput = ({ config = DEFAULT_CONFIG, lines = [], vipTags = [] } = {}) =
     lines,
   },
 });
+
+/** Erste Discount-Candidate aus dem Ergebnis. */
+function candidate(result) {
+  return result.operations?.[0]?.productDiscountsAdd?.candidates?.[0];
+}
+function opsCount(result) {
+  return result.operations?.length ?? 0;
+}
 
 /** n Artikel der Kollektion (je Menge 1). */
 function collectionLines(count) {
@@ -60,34 +69,34 @@ function otherLine(id = "other-1", quantity = 1) {
 describe("Kollektionsrabatt (Mengenstaffel)", () => {
   it("kein Rabatt ohne Konfiguration", () => {
     const result = run(makeInput({ config: null, lines: collectionLines(5) }));
-    assert.equal(result.discounts.length, 0);
+    assert.equal(opsCount(result), 0);
   });
 
   it("kein Rabatt unterhalb der ersten Staffel", () => {
     const result = run(makeInput({ lines: collectionLines(1) }));
-    assert.equal(result.discounts.length, 0);
+    assert.equal(opsCount(result), 0);
   });
 
   it("ab 2 Stück → 20 %", () => {
     const result = run(makeInput({ lines: collectionLines(2) }));
-    assert.equal(result.discounts.length, 1);
-    assert.equal(result.discounts[0].value.percentage.value, "20");
-    assert.equal(result.discounts[0].targets.length, 2);
+    assert.equal(opsCount(result), 1);
+    assert.equal(candidate(result).value.percentage.value, "20");
+    assert.equal(candidate(result).targets.length, 2);
   });
 
   it("ab 5 Stück → 25 %", () => {
     const result = run(makeInput({ lines: collectionLines(5) }));
-    assert.equal(result.discounts[0].value.percentage.value, "25");
+    assert.equal(candidate(result).value.percentage.value, "25");
   });
 
   it("ab 10 Stück → 30 %", () => {
     const result = run(makeInput({ lines: collectionLines(10) }));
-    assert.equal(result.discounts[0].value.percentage.value, "30");
+    assert.equal(candidate(result).value.percentage.value, "30");
   });
 
   it("7 Stück → höchste erfüllte Staffel (25 %), nicht mehr", () => {
     const result = run(makeInput({ lines: collectionLines(7) }));
-    assert.equal(result.discounts[0].value.percentage.value, "25");
+    assert.equal(candidate(result).value.percentage.value, "25");
   });
 
   it("Mengen über mehrere Zeilen werden summiert", () => {
@@ -97,35 +106,35 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
     ];
     const result = run(makeInput({ lines }));
     // 3 + 2 = 5 → 25 %
-    assert.equal(result.discounts[0].value.percentage.value, "25");
+    assert.equal(candidate(result).value.percentage.value, "25");
   });
 
   it("Artikel außerhalb der Kollektion zählen nicht und werden nicht rabattiert", () => {
     const lines = [...collectionLines(2), otherLine("holz")];
     const result = run(makeInput({ lines }));
-    assert.equal(result.discounts.length, 1);
-    assert.equal(result.discounts[0].targets.length, 2);
-    const ids = result.discounts[0].targets.map((t) => t.cartLine.id);
+    assert.equal(opsCount(result), 1);
+    assert.equal(candidate(result).targets.length, 2);
+    const ids = candidate(result).targets.map((t) => t.cartLine.id);
     assert.ok(!ids.includes("gid://shopify/CartLine/holz"));
   });
 
   it("VIP gewinnt: VIP3 (30 %) schlägt Mengenrabatt 20 % bei 2 Stück", () => {
     const result = run(makeInput({ lines: collectionLines(2), vipTags: ["VIP3"] }));
-    assert.equal(result.discounts[0].value.percentage.value, "30");
-    assert.ok(result.discounts[0].message.startsWith("VIP"));
+    assert.equal(candidate(result).value.percentage.value, "30");
+    assert.ok(candidate(result).message.startsWith("VIP"));
   });
 
   it("Mengenrabatt gewinnt: 25 % bei 5 Stück schlägt VIP1 (15 %)", () => {
     const result = run(makeInput({ lines: collectionLines(5), vipTags: ["VIP1"] }));
-    assert.equal(result.discounts[0].value.percentage.value, "25");
-    assert.ok(result.discounts[0].message.startsWith("Mengenrabatt"));
+    assert.equal(candidate(result).value.percentage.value, "25");
+    assert.ok(candidate(result).message.startsWith("Mengenrabatt"));
   });
 
   it("Gleichstand: Mengenrabatt-Label, gleicher Prozentsatz", () => {
     // 5 Stück → 25 %, VIP2 → 25 %
     const result = run(makeInput({ lines: collectionLines(5), vipTags: ["VIP2"] }));
-    assert.equal(result.discounts[0].value.percentage.value, "25");
-    assert.ok(result.discounts[0].message.startsWith("Mengenrabatt"));
+    assert.equal(candidate(result).value.percentage.value, "25");
+    assert.ok(candidate(result).message.startsWith("Mengenrabatt"));
   });
 
   it("ohne vipTiers: reiner Mengenrabatt, VIP-Tags ignoriert", () => {
@@ -134,6 +143,13 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
       tiers: DEFAULT_CONFIG.tiers,
     };
     const result = run(makeInput({ config, lines: collectionLines(2), vipTags: ["VIP3"] }));
-    assert.equal(result.discounts[0].value.percentage.value, "20");
+    assert.equal(candidate(result).value.percentage.value, "20");
+  });
+
+  it("kein Produktrabatt-Class → keine Operation", () => {
+    const input = makeInput({ lines: collectionLines(5) });
+    input.discount.discountClasses = ["ORDER"];
+    const result = run(input);
+    assert.equal(opsCount(result), 0);
   });
 });

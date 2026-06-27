@@ -10,6 +10,8 @@
  *   - Gegenüber VIP greift pro Artikel der höhere Wert aus
  *     Mengenrabatt vs. VIP-Prozentsatz (kein Stapeln).
  *
+ * Ziel/API: cart.lines.discounts.generate.run (neue Discounts-API).
+ *
  * Konfiguration über das Metafeld (namespace "kollektionsrabatt", key "config"),
  * JSON-Wert, z. B.:
  * {
@@ -31,22 +33,29 @@
  * Mengenrabatt ohne VIP-Vergleich.
  */
 
-export function run(input) {
-  const { cart, discountNode } = input;
+const NO_DISCOUNT = { operations: [] };
 
-  const config = parseConfig(discountNode?.metafield?.value);
-  if (!config) {
-    return noDiscount();
+export function run(input) {
+  const config = input?.discount?.metafield?.jsonValue;
+  if (!config || !Array.isArray(config.tiers)) {
+    return NO_DISCOUNT;
+  }
+
+  // Nur reagieren, wenn der Rabatt überhaupt ein Produktrabatt ist.
+  const discountClasses = input?.discount?.discountClasses ?? [];
+  if (discountClasses.length > 0 && !discountClasses.includes("PRODUCT")) {
+    return NO_DISCOUNT;
   }
 
   const tiers = normalizeTiers(config.tiers);
+  const cart = input?.cart ?? { lines: [] };
 
   // Nur Artikel der konfigurierten Kollektion(en) zählen und rabattieren.
   const collectionLines = cart.lines.filter(
     (line) => line.merchandise?.product?.inAnyCollection === true
   );
   if (collectionLines.length === 0) {
-    return noDiscount();
+    return NO_DISCOUNT;
   }
 
   const totalQuantity = collectionLines.reduce(
@@ -60,34 +69,31 @@ export function run(input) {
   // Höchster Rabatt gewinnt – kein Stapeln.
   const percent = Math.max(volumePercent, vipPercent);
   if (percent <= 0) {
-    return noDiscount();
+    return NO_DISCOUNT;
   }
 
   const vipWins = vipPercent > volumePercent;
 
   return {
-    discounts: [
+    operations: [
       {
-        targets: collectionLines.map((line) => ({ cartLine: { id: line.id } })),
-        value: {
-          percentage: { value: String(percent) },
+        productDiscountsAdd: {
+          candidates: [
+            {
+              message: vipWins ? `VIP ${percent}%` : `Mengenrabatt ${percent}%`,
+              targets: collectionLines.map((line) => ({
+                cartLine: { id: line.id },
+              })),
+              value: {
+                percentage: { value: String(percent) },
+              },
+            },
+          ],
+          selectionStrategy: "FIRST",
         },
-        message: vipWins ? `VIP ${percent}%` : `Mengenrabatt ${percent}%`,
       },
     ],
-    discountApplicationStrategy: "FIRST",
   };
-}
-
-function parseConfig(raw) {
-  if (!raw) return null;
-  try {
-    const config = typeof raw === "string" ? JSON.parse(raw) : raw;
-    if (!config || !Array.isArray(config.tiers)) return null;
-    return config;
-  } catch {
-    return null;
-  }
 }
 
 /** Staffeln säubern und absteigend nach Menge sortieren. */
@@ -138,8 +144,4 @@ function highestVipPercent(cart, vipTiers) {
     }
   }
   return best;
-}
-
-function noDiscount() {
-  return { discounts: [], discountApplicationStrategy: "FIRST" };
 }
