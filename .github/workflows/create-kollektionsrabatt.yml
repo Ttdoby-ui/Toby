@@ -18,8 +18,9 @@ on:
         description: "Kollektion (GID oder numerische ID)"
         required: true
       function_id:
-        description: "Function-ID (aus shopifyFunctions nach dem Deploy)"
-        required: true
+        description: "Function-ID (leer = automatisch ermitteln)"
+        required: false
+        default: ""
       tier1_qty:
         description: "Staffel 1 – ab Menge"
         required: true

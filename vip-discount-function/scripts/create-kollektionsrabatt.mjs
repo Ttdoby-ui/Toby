@@ -100,6 +100,57 @@ async function getAccessToken(clientId, clientSecret) {
   return token;
 }
 
+async function adminGraphql(storeDomain, token, query, variables) {
+  const res = await fetch(
+    `https://${storeDomain}/admin/api/${API_VERSION}/graphql.json`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": token,
+      },
+      body: JSON.stringify({ query, variables }),
+    }
+  );
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`Admin-API-Fehler (${res.status}): ${text}`);
+  }
+  const body = JSON.parse(text);
+  if (body.errors) {
+    throw new Error(`GraphQL-Fehler: ${JSON.stringify(body.errors, null, 2)}`);
+  }
+  return body.data;
+}
+
+/** Findet die Function-ID anhand des Titels (Fallback: erster Produktrabatt). */
+async function findFunctionId(storeDomain, token) {
+  const data = await adminGraphql(
+    storeDomain,
+    token,
+    `{ shopifyFunctions(first: 50) { nodes { id title apiType } } }`
+  );
+  const nodes = data?.shopifyFunctions?.nodes ?? [];
+  if (nodes.length === 0) {
+    throw new Error(
+      "Keine Functions gefunden. Ist die App auf dem Store installiert? " +
+        "Sonst FUNCTION_ID manuell setzen."
+    );
+  }
+  const byTitle = nodes.find((n) => /kollektionsrabatt/i.test(n.title ?? ""));
+  const byType = nodes.find((n) => /product_discount/i.test(n.apiType ?? ""));
+  const chosen = byTitle ?? byType;
+  if (!chosen) {
+    throw new Error(
+      `Function nicht eindeutig. Verfügbar: ${nodes
+        .map((n) => `${n.title} (${n.id})`)
+        .join(", ")}. FUNCTION_ID manuell setzen.`
+    );
+  }
+  console.log(`Function gefunden: ${chosen.title} → ${chosen.id}`);
+  return chosen.id;
+}
+
 async function createDiscount({ storeDomain, token, title, functionId, config, startsAt }) {
   const mutation = `
     mutation CreateKollektionsrabatt($discount: DiscountAutomaticAppInput!) {
@@ -165,7 +216,6 @@ async function main() {
   const clientId = required("CLIENT_ID");
   const clientSecret = required("CLIENT_SECRET");
   const title = required("TITLE");
-  const functionId = required("FUNCTION_ID");
   const config = buildConfig();
 
   console.log("Konfiguration:");
@@ -173,6 +223,12 @@ async function main() {
 
   const token = await getAccessToken(clientId, clientSecret);
   console.log("Access-Token erhalten.");
+
+  // Function-ID: aus Eingabe oder automatisch ermitteln.
+  let functionId = process.env.FUNCTION_ID?.trim();
+  if (!functionId) {
+    functionId = await findFunctionId(storeDomain, token);
+  }
 
   const discount = await createDiscount({
     storeDomain,
