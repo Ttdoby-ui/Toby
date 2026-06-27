@@ -12,6 +12,9 @@ export = "run"
 
 [extensions.build]
 path = "dist/function.wasm"
+# Reines JS ohne generierte Typen → typegen no-op (sonst läuft graphql-codegen
+# und scheitert mangels Codegen-Konfig). Der Build bündelt + javy danach normal.
+typegen_command = "node --version"
 
 # Bindet das Konfigurations-Metafeld an die Input-Query.
 # Die JSON-Felder `collectionIds` und `vipTags` werden so zu den

@@ -31,7 +31,7 @@
  * Mengenrabatt ohne VIP-Vergleich.
  */
 
-export default function run(input) {
+export function run(input) {
   const { cart, discountNode } = input;
 
   const config = parseConfig(discountNode?.metafield?.value);

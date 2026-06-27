@@ -40,9 +40,13 @@
 
 So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 
-- Entry-Datei MUSS **`src/index.js`** heißen und **`export default function(input)`** sein
-  (die `@shopify/shopify_function`-Runtime ruft den *default*-Export auf).
-- `@shopify/shopify_function` gehört in **`dependencies`** (nicht devDependencies).
+- Entry-Datei MUSS **`src/index.js`** heißen.
+- Der Export muss **benannt** sein und zum `export`-Wert im Toml passen:
+  bei `export = "run"` also **`export function run(input)`** — NICHT `export default`
+  (sonst Build-Fehler „No matching export in src/index.js for import run").
+- `@shopify/shopify_function` gehört in **`dependencies`** (nicht devDependencies) und
+  muss vor dem Deploy **installiert** sein (`npm install` im Extension-Ordner), sonst
+  „Could not find the Shopify Functions JavaScript library".
 - `shopify.extension.toml` im **neuen Format**:
   ```toml
   type = "function"
@@ -52,7 +56,9 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   export = "run"
   [extensions.build]
   path = "dist/function.wasm"                 # KEIN command → CLI baut JS nativ (esbuild + javy)
+  typegen_command = "node --version"          # no-op: verhindert graphql-codegen-Fehler bei reinem JS
   ```
+- **javy** wird beim ersten Build von der CLI heruntergeladen (Internet nötig).
 - Konfigurierbares Metafeld → `[extensions.input.variables]` mit `namespace`/`key`.
   Die JSON-Felder des Metafelds werden zu Query-Variablen (z. B. `$collectionIds`,
   `$vipTags`) für `inAnyCollection(ids: $collectionIds)` / `hasTags(tags: $vipTags)`.
@@ -76,6 +82,12 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 - ❌ Toml `type = "product_discounts"` (Shorthand) + eigenes Build-Command → der native
   JS-Build der CLI greift dann NICHT (CLI verlangt ein Build-Command, das es nicht gibt).
 - ❌ Entry-Datei `src/run.js` → CLI findet den Entry-Point nicht („must be in src/index.js").
+- ❌ `export default function run` → CLI verlangt den **benannten** Export `run`
+  („No matching export in src/index.js for import run"). `export function run` nutzen.
+- ❌ Kein `typegen_command` bei reinem JS → der native Build ruft `graphql-codegen`
+  und scheitert mangels Konfig. `typegen_command = "node --version"` als no-op setzen.
+- ❌ Extension ohne `npm install` deployen → „Could not find the Shopify Functions
+  JavaScript library". Vorher im Extension-Ordner `npm install` ausführen.
 - ❌ `application_url`/`redirect_urls` mit Platzhalter `https://{{ HOST }}` → CLI-Validierung
   „Invalid URL". Gültige URL eintragen (z. B. `https://futurespin.de`).
 - ❌ Deploy über GitHub Actions mit `prtapi_`-Partner-Token → „custom token invalid"
