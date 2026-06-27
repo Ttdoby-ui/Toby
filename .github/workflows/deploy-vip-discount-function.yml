@@ -1,4 +1,8 @@
-name: Deploy VIP Discount Function
+name: Test Discount Function
+
+# Führt die Unit-Tests der Kollektionsrabatt-Function aus.
+# Das eigentliche Deployment läuft per `shopify app deploy` vom Rechner
+# (Browser-Login), nicht über CI — der CI-Token funktioniert dafür nicht.
 
 on:
   push:
@@ -8,10 +12,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
-    name: Deploy to Shopify
+  test:
+    name: Unit tests
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,17 +24,6 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install Shopify CLI 3.x
-        run: npm install -g @shopify/cli@3.58.2 @shopify/app@3.58.2
-
-      - name: Install extension dependencies
-        working-directory: vip-discount-function/extensions/vip-belage
-        run: npm install
-
-      - name: Run tests
-        working-directory: vip-discount-function/extensions/vip-belage
-        run: npm test
-
       - name: Install Kollektionsrabatt dependencies
         working-directory: vip-discount-function/extensions/kollektionsrabatt
         run: npm install
@@ -39,10 +31,3 @@ jobs:
       - name: Run Kollektionsrabatt tests
         working-directory: vip-discount-function/extensions/kollektionsrabatt
         run: npm test
-
-      - name: Deploy function to Shopify
-        working-directory: vip-discount-function
-        env:
-          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_PARTNERS_TOKEN }}
-          SHOPIFY_FLAG_CLIENT_ID: ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}
-        run: shopify app deploy --client-id ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }} --force

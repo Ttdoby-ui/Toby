@@ -3,12 +3,15 @@ api_version = "2025-01"
 [[extensions]]
 name = "Kollektionsrabatt (Mengenstaffel)"
 handle = "kollektionsrabatt"
-type = "product_discounts"
+type = "function"
+
+[[extensions.targeting]]
+target = "purchase.product-discount.run"
+input_query = "src/run.graphql"
+export = "run"
 
 [extensions.build]
-command = "npm run build"
 path = "dist/function.wasm"
-watch = ["src/**/*.{js,ts}"]
 
 # Bindet das Konfigurations-Metafeld an die Input-Query.
 # Die JSON-Felder `collectionIds` und `vipTags` werden so zu den

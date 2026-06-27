@@ -29,8 +29,8 @@ VIP-Kollektion genommen. VIP bleibt für alle anderen Produkte unverändert.
 ## Ablauf
 
 ### 1. Function deployen
-`shopify app deploy` (vom Windows-PC). Beide Functions der App gehen mit
-(`vip-belage` und `kollektionsrabatt`). → aktuell der einzige Blocker.
+`shopify app deploy` (vom Windows-PC). Die Function `kollektionsrabatt`
+wird damit veröffentlicht. VIP bleibt als native Automatik-Rabatte bestehen.
 
 ### 2. Function-ID holen
 ```graphql
