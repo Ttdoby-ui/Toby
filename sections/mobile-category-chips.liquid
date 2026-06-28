@@ -4,7 +4,9 @@
   Textlinks nebeneinander, jeweils mit senkrechtem Trennstrich; aktuelle Kategorie
   in Markenblau hervorgehoben. Speist sich aus einem wählbaren Menü (Default: Hauptmenü).
   Ein Menüpunkt, dessen Titel in %…% gesetzt ist (z. B. %SALE%), wird rot dargestellt
-  und ohne die %-Marker ausgegeben. Rechts ein dezenter Verlauf als Scroll-Hinweis.
+  und ohne die %-Marker ausgegeben.
+  Darunter ein eigener, von Anfang an sichtbarer blauer Scroll-Indikator (zeigt auch
+  die Scroll-Position) — native Scrollbars sind mobil nicht zuverlässig dauerhaft sichtbar.
   Ziel: schneller Sprung in Beläge/Hölzer/Marken ohne den Hamburger zu öffnen.
   Auf Desktop ausgeblendet (dort gibt es die Hauptnav).
 {%- endcomment -%}
@@ -43,7 +45,41 @@
       </li>
     {%- endfor -%}
   </ul>
+  <div class="fs-chips__scroll" aria-hidden="true">
+    <span class="fs-chips__scroll-thumb"></span>
+  </div>
 </nav>
+
+<script>
+  (function () {
+    var root = document.getElementById('shopify-section-{{ section.id }}');
+    if (!root) return;
+    var track = root.querySelector('.fs-chips__track');
+    var bar = root.querySelector('.fs-chips__scroll');
+    var thumb = root.querySelector('.fs-chips__scroll-thumb');
+    if (!track || !bar || !thumb) return;
+
+    function update() {
+      var sw = track.scrollWidth;
+      var cw = track.clientWidth;
+      if (sw <= cw + 1) {
+        bar.style.display = 'none';
+        return;
+      }
+      bar.style.display = 'block';
+      var widthPct = Math.max((cw / sw) * 100, 12);
+      thumb.style.width = widthPct + '%';
+      var maxScroll = sw - cw;
+      var pos = maxScroll > 0 ? track.scrollLeft / maxScroll : 0;
+      thumb.style.left = pos * (100 - widthPct) + '%';
+    }
+
+    track.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    window.addEventListener('load', update);
+    update();
+  })();
+</script>
 {%- endif -%}
 
 {% stylesheet %}
@@ -61,40 +97,20 @@
     }
   }
 
-  .fs-chips {
-    position: relative;
-  }
-
-  /* Dezenter Verlauf rechts als Hinweis, dass die Leiste scrollbar ist. */
-  .fs-chips::after {
-    content: "";
-    position: absolute;
-    inset-block: 0;
-    inset-inline-end: 0;
-    width: 2.25rem;
-    pointer-events: none;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0), var(--color-background, #fff));
-  }
-
   .fs-chips__track {
     display: flex;
     gap: 0;
     margin: 0;
-    padding: 0.5rem var(--page-margin, 16px);
+    padding: 0.5rem var(--page-margin, 16px) 0.4rem;
     list-style: none;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    scrollbar-width: none;
     scroll-snap-type: x proximity;
   }
 
   .fs-chips__track::-webkit-scrollbar {
-    height: 3px;
-  }
-
-  .fs-chips__track::-webkit-scrollbar-thumb {
-    background: var(--color-border, #c9c9c9);
-    border-radius: 999px;
+    display: none;
   }
 
   .fs-chips__item {
@@ -132,6 +148,24 @@
     color: var(--fs-chip-sale, #e02020);
     font-weight: 700;
   }
+
+  /* Eigener, von Anfang an sichtbarer Scroll-Indikator in Futurespin-Blau. */
+  .fs-chips__scroll {
+    position: relative;
+    height: 3px;
+    margin: 0 var(--page-margin, 16px) 0.5rem;
+    background: var(--color-border, #e3e3e3);
+    border-radius: 999px;
+  }
+
+  .fs-chips__scroll-thumb {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 30%;
+    background: var(--fs-chip-active, #1d3686);
+    border-radius: 999px;
+  }
 {% endstylesheet %}
 
 {% schema %}
@@ -141,7 +175,7 @@
   "settings": [
     {
       "type": "paragraph",
-      "content": "Horizontal scrollbare Kategorie-Leiste unter dem Header — nur auf Smartphones. Textlinks mit Trennstrich, schneller Sprung in die Hauptkategorien ohne Hamburger-Menü. Ein Menüpunkt in %…% (z. B. %SALE%) wird rot angezeigt. Am besten direkt unter dem Header (bzw. unter der mobilen Suchleiste) platzieren."
+      "content": "Horizontal scrollbare Kategorie-Leiste unter dem Header — nur auf Smartphones. Textlinks mit Trennstrich und blauem Scroll-Indikator, schneller Sprung in die Hauptkategorien ohne Hamburger-Menü. Ein Menüpunkt in %…% (z. B. %SALE%) wird rot angezeigt. Am besten direkt unter dem Header (bzw. unter der mobilen Suchleiste) platzieren."
     },
     {
       "type": "link_list",
