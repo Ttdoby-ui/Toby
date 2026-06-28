@@ -1,0 +1,17 @@
+{
+  "sections": {
+    "collection_topseller": {
+      "type": "collection-topseller",
+      "settings": { "heading": "Topseller dieser Kategorie", "product_count": 6 }
+    },
+    "filter_panel": {
+      "type": "filter-panel",
+      "settings": { "accent_color": "#2e54c8" }
+    },
+    "produkt_vergleich_cards": {
+      "type": "produkt-vergleich-cards",
+      "settings": {}
+    }
+  },
+  "order": ["collection_topseller", "filter_panel", "produkt_vergleich_cards"]
+}
