@@ -1,41 +1,89 @@
 {%- comment -%}
   Announcement-Ticker (Futurespin)
-  Rotierendes Ankündigungsbanner über dem Header: mehrere Kurzbotschaften (Blöcke),
-  jeweils mit optionalem CTA-Button. Wechselt automatisch durch, pausiert bei Hover/Fokus,
-  respektiert "reduzierte Bewegung". Ersetzt den langen Login-Link durch klare Botschaften.
-  Botschaften sind als Blöcke im Theme-Editor pflegbar (Text + Button-Beschriftung + Link).
+  Rotierendes Ankündigungsbanner über dem Header: mehrere Kurzbotschaften, jeweils mit
+  optionalem CTA-Button. Wechselt automatisch durch, pausiert bei Hover/Fokus, respektiert
+  "reduzierte Bewegung".
+
+  Datenquelle (Priorität):
+  1. Shop-Metafeld custom.announcement_banner (JSON) — wird vom "Content Creator" bzw.
+     direkt in Shopify gepflegt. Schema:
+       { "autoplay": true, "interval": 4, "bg_color": "#1d3686", "text_color": "#ffffff",
+         "messages": [ { "text": "...", "cta_label": "...", "cta_link": "..." } ] }
+  2. Fallback: die Botschaft-Blöcke dieser Section (Theme-Editor).
 {%- endcomment -%}
 
 {%- liquid
-  assign bg = section.settings.bg_color
-  assign fg = section.settings.text_color
+  assign cfg = shop.metafields.custom.announcement_banner.value
+  assign use_cfg = false
+  if cfg != blank and cfg.messages != blank and cfg.messages.size > 0
+    assign use_cfg = true
+  endif
+
+  assign tk_bg = section.settings.bg_color
+  assign tk_fg = section.settings.text_color
+  assign tk_interval = section.settings.interval
+  assign tk_autoplay = section.settings.autoplay
+  if use_cfg
+    if cfg.bg_color != blank
+      assign tk_bg = cfg.bg_color
+    endif
+    if cfg.text_color != blank
+      assign tk_fg = cfg.text_color
+    endif
+    if cfg.interval != blank
+      assign tk_interval = cfg.interval
+    endif
+    if cfg.autoplay == false
+      assign tk_autoplay = false
+    else
+      assign tk_autoplay = true
+    endif
+  endif
+
+  assign has_slides = false
+  if use_cfg or section.blocks.size > 0
+    assign has_slides = true
+  endif
 -%}
-{%- if section.blocks.size > 0 -%}
+{%- if has_slides -%}
 <div
   class="fs-ticker"
   data-fs-ticker
-  data-interval="{{ section.settings.interval | times: 1000 }}"
-  data-autoplay="{% if section.settings.autoplay %}1{% else %}0{% endif %}"
-  style="--ticker-bg: {{ bg }}; --ticker-fg: {{ fg }};"
+  data-interval="{{ tk_interval | times: 1000 }}"
+  data-autoplay="{% if tk_autoplay %}1{% else %}0{% endif %}"
+  style="--ticker-bg: {{ tk_bg }}; --ticker-fg: {{ tk_fg }};"
   role="region"
   aria-label="Ankündigungen"
 >
   <div class="fs-ticker__viewport">
-    {%- for block in section.blocks -%}
-      <div
-        class="fs-ticker__slide"
-        data-fs-slide
-        {% unless forloop.first %}hidden{% endunless %}
-        {{ block.shopify_attributes }}
-      >
-        {%- if block.settings.text != blank -%}
-          <span class="fs-ticker__text">{{ block.settings.text }}</span>
-        {%- endif -%}
-        {%- if block.settings.cta_label != blank and block.settings.cta_link != blank -%}
-          <a class="fs-ticker__cta" href="{{ block.settings.cta_link }}">{{ block.settings.cta_label | escape }}</a>
-        {%- endif -%}
-      </div>
-    {%- endfor -%}
+    {%- if use_cfg -%}
+      {%- for m in cfg.messages -%}
+        <div class="fs-ticker__slide" data-fs-slide {% unless forloop.first %}hidden{% endunless %}>
+          {%- if m.text != blank -%}
+            <span class="fs-ticker__text">{{ m.text }}</span>
+          {%- endif -%}
+          {%- if m.cta_label != blank and m.cta_link != blank -%}
+            <a class="fs-ticker__cta" href="{{ m.cta_link }}">{{ m.cta_label | escape }}</a>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+    {%- else -%}
+      {%- for block in section.blocks -%}
+        <div
+          class="fs-ticker__slide"
+          data-fs-slide
+          {% unless forloop.first %}hidden{% endunless %}
+          {{ block.shopify_attributes }}
+        >
+          {%- if block.settings.text != blank -%}
+            <span class="fs-ticker__text">{{ block.settings.text }}</span>
+          {%- endif -%}
+          {%- if block.settings.cta_label != blank and block.settings.cta_link != blank -%}
+            <a class="fs-ticker__cta" href="{{ block.settings.cta_link }}">{{ block.settings.cta_label | escape }}</a>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+    {%- endif -%}
   </div>
 </div>
 
@@ -149,7 +197,7 @@
   "settings": [
     {
       "type": "paragraph",
-      "content": "Rotierendes Ankündigungsbanner mit CTA-Button. Botschaften unten als Blöcke hinzufügen. Am besten ganz oben über dem Header platzieren."
+      "content": "Rotierendes Ankündigungsbanner mit CTA-Button. Inhalte kommen bevorzugt aus dem Shop-Metafeld custom.announcement_banner (Content Creator / Shopify). Sind dort keine Botschaften hinterlegt, werden die Blöcke unten verwendet."
     },
     {
       "type": "checkbox",
@@ -183,7 +231,7 @@
   "blocks": [
     {
       "type": "message",
-      "name": "Botschaft",
+      "name": "Botschaft (Fallback)",
       "settings": [
         {
           "type": "inline_richtext",

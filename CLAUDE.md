@@ -211,12 +211,20 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 - [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
 - [ ] 🟢 **WhatsApp/Chat-Widget** (Beratung, Vereins-/Elternkäufe) — gering/mittel
 - [x] **Announcement-Banner** als Ticker mit CTA-Button statt langem Auth-Link — ERLEDIGT:
-      neue Section `sections/announcement-ticker.liquid` (rotierende Botschaften als Blöcke,
-      je optional CTA-Button, Autoplay/Intervall + Farben einstellbar, pausiert bei Hover/Fokus,
-      respektiert reduzierte Bewegung). In `header-group.json` als `fs_announce_ticker` ganz oben
-      eingehängt; das alte `header-announcements`-Banner (langer Login-Link) ersetzt. Seed-Botschaften:
-      VIP-Anmeldung (Original-Login-URL als CTA), Fachhandel/Versand, Schläger-Konfigurator.
-      Default Markenblau `#1d3686`, Button weiß. Entwurf-Theme.
+      neue Section `sections/announcement-ticker.liquid` (rotierende Botschaften, je optional
+      CTA-Button, Autoplay/Intervall + Farben, pausiert bei Hover/Fokus, respektiert reduzierte
+      Bewegung). In `header-group.json` als `fs_announce_ticker` ganz oben eingehängt; das alte
+      `header-announcements`-Banner (langer Login-Link) ersetzt. Default Markenblau `#1d3686`,
+      Button weiß.
+      - **Datenquelle = Shop-Metafeld `custom.announcement_banner` (JSON)** — Vorrang vor den
+        Section-Blöcken (die nur Fallback sind). So pflegbar über den **Content Creator** (separates
+        Cowork-Projekt, NICHT in diesem Repo) ODER direkt in Shopify → Einstellungen → Custom Data → Shop.
+        Definition-ID `gid://shopify/MetafieldDefinition/444121907548`, storefront-lesbar (PUBLIC_READ).
+        JSON-Schema: `{ autoplay:bool, interval:int(Sek.), bg_color, text_color, messages:[{text, cta_label, cta_link}] }`.
+        Setzen via `metafieldsSet` (ownerId = Shop-GID `gid://shopify/Shop/78096073052`).
+      - **Content-Creator-Anbindung (offen):** Der Content Creator soll genau dieses Metafeld
+        lesen/schreiben. Sein Code liegt außerhalb dieser Repo-Scope → Anbindung dort in seiner
+        eigenen Cowork-Session umsetzen (gleiches JSON-Schema verwenden).
 - [~] **Cross-Sell direkt nach dem Kaufen-Button** (Belag→Holz/Kleber) — TEILWEISE (Konfigurator-CTA vorhanden)
 - [ ] **Produktkarten-Grid mobil größer** / Varianten-Dots auf der Kachel
 
