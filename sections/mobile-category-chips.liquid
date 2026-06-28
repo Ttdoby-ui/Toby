@@ -101,6 +101,10 @@
   html { overflow-x: hidden; }
   @supports (overflow: clip) { html { overflow-x: clip; } }
 
+  /* "Vergleichen"-App (cots) darf die Seite nicht breiter als den Bildschirm machen
+     (sitzt als fixierte Leiste -> wird von html-overflow nicht erfasst). */
+  [class*="cots"] { max-width: 100vw !important; box-sizing: border-box; }
+
   /* Chip-Leiste hart auf Bildschirmbreite begrenzen -> scrollt intern statt die Seite zu dehnen. */
   .fs-chips {
     max-width: 100vw;
