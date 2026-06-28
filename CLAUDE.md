@@ -192,7 +192,9 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       und ein dediziertes Mobil-Bild (375–1100). Das `width=3840` ist nur der Fallback-`src`, NICHT der
       geladene. → Hero ist kein echter Killer; reale Engpässe nur per **Messung** (PageSpeed/Lighthouse mobil) finden.
 - [ ] 🟡 **Bewertungs-App** (Judge.me/Loox) + Sterne auf PDP & Kacheln — gering/hoch
-- [ ] 🟡 **Suchleiste prominenter** (statt verstecktem Lupen-Icon) — gering/mittel
+- [x] 🟡 **Suchleiste prominenter** — ERLEDIGT: neue Section `sections/mobile-search-bar.liquid`
+      (nur < 750px, öffnet die bestehende Predictive-Search-Modal `#search-modal`), via `header-group.json`
+      unter dem Header global eingehängt. Entwurf-Theme.
 - [ ] 🟡 **Navigation vereinfachen** / Icons / horizontale Kategorie-Chips — mittel/mittel
       (Scroll-/Font-Fix war mal gemacht, aber auf dem alten Entwurf-Theme das es nicht mehr gibt → neu prüfen)
 - [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
