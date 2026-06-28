@@ -19,6 +19,22 @@
   Aktuelle Live-ID daher bei Bedarf via `themes`-Query holen (MAIN-Rolle = aktuell live).
 - Niemals direkt ins aktive/live Theme schreiben ohne ausdrückliche Anweisung
 
+## Kollektions-/Such-Grid: Rapid-Search-Filter-App (WICHTIG)
+
+- Kollektions- und Suchergebnis-Seiten rendern die Produktkacheln **NICHT** über die
+  Theme-Kachel/`price.liquid`, sondern über die **Rapid-Search-Filter-App**
+  (`snippets/rapid-search-results-template-v2.liquid`, `assets/results-list.js`,
+  Shop-Metafeld `rapid-search`). Die Section `sections/main-collection.liquid` startet
+  mit `{% render 'rapid-search-results-template-v2' %}`.
+- Die App **blendet das native Theme-Grid per CSS aus** (`display:none !important`) und
+  rendert ihre **eigenen** Karten (Snapshot des Theme-Cards oder Custom-Design, je nach
+  App-Einstellung `product_card_design`).
+- **Konsequenz:** Kachel-Änderungen im Theme (z. B. Belag-Staffelpreise in `price.liquid`)
+  erscheinen auf **Kollektions-/Suchseiten NICHT** automatisch. Sie müssen im
+  **Rapid-Search-Karten-Design** ergänzt bzw. neu gesnapshottet werden (App-Admin).
+- `price.liquid` greift weiterhin auf der **Produktdetailseite** und überall, wo Rapid
+  Search das Grid nicht ersetzt.
+
 ## Shopify App-Entwicklung (Dev Dashboard)
 
 - Apps werden ausschließlich über das **Dev Dashboard** (`dev.shopify.com/dashboard`) erstellt — nicht mehr direkt im Shopify Admin
