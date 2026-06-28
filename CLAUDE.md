@@ -187,7 +187,10 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 
 - [x] 🔴 **Sticky Add-to-Cart-Leiste** (Produktseite) — ERLEDIGT
 - [x] 🔴 **Trust-Badges** unter dem Kaufen-Button — ERLEDIGT
-- [ ] 🔴 **Bildgrößen mobil / Performance** — Hero lädt mit `width=3840` aufs Handy! `srcset`, mobil ~800px (LCP) — mittel/sehr hoch
+- [~] 🔴 **Bildgrößen mobil / Performance** — GEPRÜFT (2026-06-28): Slideshow (`blocks/_slide.liquid`)
+      und Hero (`sections/hero.liquid`) liefern bereits responsives `srcset` (832–3840) + `sizes:100vw`
+      und ein dediziertes Mobil-Bild (375–1100). Das `width=3840` ist nur der Fallback-`src`, NICHT der
+      geladene. → Hero ist kein echter Killer; reale Engpässe nur per **Messung** (PageSpeed/Lighthouse mobil) finden.
 - [ ] 🟡 **Bewertungs-App** (Judge.me/Loox) + Sterne auf PDP & Kacheln — gering/hoch
 - [ ] 🟡 **Suchleiste prominenter** (statt verstecktem Lupen-Icon) — gering/mittel
 - [ ] 🟡 **Navigation vereinfachen** / Icons / horizontale Kategorie-Chips — mittel/mittel
