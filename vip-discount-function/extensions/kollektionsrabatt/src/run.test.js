@@ -42,8 +42,8 @@ function opsCount(result) {
   return result.operations?.length ?? 0;
 }
 
-/** n Artikel der Kollektion (je Menge 1). Optional mit Vergleichspreis (Angebot). */
-function collectionLines(count, price = 33.9, compareAt = null) {
+/** n Artikel der Kollektion (je Menge 1). Optional Angebot + VIP-Fähigkeit. */
+function collectionLines(count, price = 33.9, compareAt = null, forVip = true) {
   return Array.from({ length: count }, (_, i) => ({
     id: `gid://shopify/CartLine/coll-${i}`,
     quantity: 1,
@@ -53,7 +53,7 @@ function collectionLines(count, price = 33.9, compareAt = null) {
     },
     merchandise: {
       __typename: "ProductVariant",
-      product: { inAnyCollection: true },
+      product: { inAnyCollection: true, hasAnyTag: forVip },
     },
   }));
 }
@@ -65,7 +65,7 @@ function otherLine(id = "other-1", quantity = 1) {
     cost: { amountPerQuantity: { amount: 50 }, compareAtAmountPerQuantity: null },
     merchandise: {
       __typename: "ProductVariant",
-      product: { inAnyCollection: false },
+      product: { inAnyCollection: false, hasAnyTag: false },
     },
   };
 }
@@ -107,7 +107,7 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
       id: `gid://shopify/CartLine/${id}`,
       quantity: qty,
       cost: { amountPerQuantity: { amount: 33.9 }, compareAtAmountPerQuantity: null },
-      merchandise: { __typename: "ProductVariant", product: { inAnyCollection: true } },
+      merchandise: { __typename: "ProductVariant", product: { inAnyCollection: true, hasAnyTag: true } },
     });
     const result = run(makeInput({ lines: [mk("a", 3), mk("b", 2)] }));
     // 3 + 2 = 5 → 20 %
@@ -132,6 +132,18 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
     const result = run(makeInput({ lines: collectionLines(5), vipTags: ["VIP1"] }));
     assert.equal(candidates(result)[0].value.percentage.value, "20");
     assert.ok(candidates(result)[0].message.startsWith("Mengenrabatt"));
+  });
+
+  it("VIP zählt nur für for_vip-Produkte: nicht-for_vip-Belag bekommt kein VIP", () => {
+    // VIP3 (30 %) würde greifen, aber Produkt ist nicht for_vip → nur Menge 15 %
+    const result = run(makeInput({ lines: collectionLines(2, 33.9, null, false), vipTags: ["VIP3"] }));
+    assert.equal(candidates(result)[0].value.percentage.value, "15");
+    assert.ok(candidates(result)[0].message.startsWith("Mengenrabatt"));
+  });
+
+  it("nicht-for_vip-Belag unter Mindestmenge: gar kein Rabatt", () => {
+    const result = run(makeInput({ lines: collectionLines(1, 33.9, null, false), vipTags: ["VIP3"] }));
+    assert.equal(opsCount(result), 0);
   });
 
   it("ohne vipTiers: reiner Mengenrabatt, VIP-Tags ignoriert", () => {

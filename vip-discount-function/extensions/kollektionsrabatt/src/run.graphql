@@ -24,6 +24,7 @@ query Input($collectionIds: [ID!], $vipTags: [String!]) {
         ... on ProductVariant {
           product {
             inAnyCollection(ids: $collectionIds)
+            hasAnyTag(tags: ["for_vip"])
           }
         }
       }

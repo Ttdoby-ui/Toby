@@ -144,6 +144,9 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
     nur **eine** reversible Änderung. VIP-Kollektion dadurch 1164 → 858.
   - Die Function ist VIP-aware: bei < Mindestmenge bekommt ein VIP-Kunde trotzdem seinen
     VIP-% (`max(0, VIP)`), verliert also nichts.
+  - **VIP gilt nur für VIP-fähige Beläge** (Produkt-Tag `for_vip`): die Function prüft
+    pro Position `product.hasAnyTag(tags: ["for_vip"])`. Nicht-`for_vip`-Beläge bekommen
+    nur den Mengenrabatt – passend zur Kachel-Anzeige (`price.liquid` prüft denselben Tag).
 - Erstellung eines Rabatts: GitHub-Workflow „Kollektionsrabatt anlegen"
   (`.github/workflows/create-kollektionsrabatt.yml`) ODER die Mutation in
   `vip-discount-function/extensions/kollektionsrabatt/README.md`.
