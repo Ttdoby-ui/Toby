@@ -6,8 +6,10 @@
 
 ## Shopify Theme-Regeln
 
-- **Alle Änderungen zuerst im Entwurf-Horizon Theme** (ID: `gid://shopify/OnlineStoreTheme/199959052636`, UNPUBLISHED)
-- Erst nach Abnahme durch den User ins Live-Theme ("Updated copy of Horizon", ID: `gid://shopify/OnlineStoreTheme/184788123996`, MAIN) übernehmen
+- **Alle Änderungen zuerst im Entwurf-Horizon Theme** (ID: `gid://shopify/OnlineStoreTheme/200401420636`, UNPUBLISHED)
+  - ⚠️ Theme-IDs ändern sich (Neu-Anlage/Kopie)! Bei „Theme existiert nicht" mit
+    `themes(first: 20) { nodes { id name role } }` die aktuelle ID holen.
+- Erst nach Abnahme durch den User ins Live-Theme ("futurespin live", ID: `gid://shopify/OnlineStoreTheme/200424259932`, MAIN) übernehmen
 - Niemals direkt ins aktive/live Theme schreiben ohne ausdrückliche Anweisung
 
 ## Shopify App-Entwicklung (Dev Dashboard)

@@ -21,7 +21,7 @@
     assign price_badge = 'sale'
   endif
 
-  if product_resource.tags contains 'for_vip'
+  if product_resource.tags contains 'for_vip' and product_resource.type != 'mws_apo_generated'
     assign vip_pct = 0
     if customer.tags contains 'VIP1'
       assign vip_pct = settings.vip1_discount | times: 1.0
@@ -55,6 +55,41 @@
     assign price = 1999
   endif
 
+  comment
+    B2B-Netto-Anzeige für Händler mit Preisstufen-Tags B2B1 / B2B2 / B2B3:
+    - Je nach Stufe wird das passende Produkt-Metafeld
+      custom.preis_b2b1 / _b2b2 / _b2b3 (Netto) angezeigt.
+    - Ist für die Stufe kein Preis gesetzt: Fallback Brutto -> Netto
+      (settings.b2b_vat_rate, Standard 19).
+  endcomment
+  assign show_b2b_net = false
+  assign b2b_price_field = blank
+  if customer.tags contains 'B2B1'
+    assign show_b2b_net = true
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b1
+  elsif customer.tags contains 'B2B2'
+    assign show_b2b_net = true
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b2
+  elsif customer.tags contains 'B2B3'
+    assign show_b2b_net = true
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b3
+  endif
+  if show_b2b_net
+    assign b2b_vat_rate = settings.b2b_vat_rate | default: 19
+    assign b2b_vat_divisor = 100 | plus: b2b_vat_rate
+    if b2b_price_field != blank and b2b_price_field.value != blank
+      assign price = b2b_price_field.value | times: 100 | round
+      assign compare_at_price = 0
+      assign show_compare_price = false
+      assign price_badge = ''
+    else
+      assign price = price | times: 100 | divided_by: b2b_vat_divisor
+      if compare_at_price > 0
+        assign compare_at_price = compare_at_price | times: 100 | divided_by: b2b_vat_divisor
+      endif
+    endif
+  endif
+
   if product.handle == closest.product.handle and settings.currency_code_enabled_product_pages
     assign price = price | money_with_currency
     assign compare_at_price = compare_at_price | money_with_currency
@@ -70,7 +105,16 @@
   assign custom_badge_color = product_resource.metafields.custom.price_badge_color | default: '#dc2626'
 -%}
 
-<div class="{% if show_compare_price %}compare-at-price-container{% endif %}" ref="priceContainer">
+{%- liquid
+  assign fs_vip_eligible = false
+  if product_resource.tags contains 'for_vip' and product_resource.type != 'mws_apo_generated'
+    assign fs_vip_eligible = true
+  endif
+  if show_b2b_net
+    assign fs_vip_eligible = false
+  endif
+-%}
+<div class="{% if show_compare_price %}compare-at-price-container{% endif %}" ref="priceContainer"{% if fs_vip_eligible %} data-fs-vip="1" data-fs-price="{{ selected_variant.price }}" data-fs-compare="{{ selected_variant.compare_at_price | default: 0 }}" data-fs-applied="{% if price_badge == 'vip' %}1{% else %}0{% endif %}"{% endif %}>
   {%- if price_badge == 'sale' or custom_badge_text != blank -%}
     {%- assign badge_label = custom_badge_text | default: 'Angebot' -%}
     <span style="display:inline-block;background:{{ custom_badge_color }};color:#fff;font-size:0.7em;font-weight:700;padding:0.12em 0.4em;border-radius:3px;margin-right:0.35em;vertical-align:middle;line-height:1.4;">{{ badge_label }}</span>
@@ -110,4 +154,77 @@
     -%}
     {% render 'unit-price', price: unit_price, measurement: selected_variant.unit_price_measurement %}
   {%- endif -%}
+  {%- if show_b2b_net -%}
+    <span class="b2b-net-note">zzgl. MwSt.</span>
+  {%- endif -%}
+
+  {%- comment -%}
+    Staffelpreise für Beläge (Mengenrabatt) – Preis je Stück nach Paketgröße.
+    WICHTIG: Mengen/Prozente synchron zum Rabatt „Belaege Mengenrabatt" halten
+    (aktuell: ab 2 → 15 %, ab 5 → 20 %, ab 10 → 25 %).
+  {%- endcomment -%}
+  {%- if product_resource.tags contains 'Belag' and show_b2b_net == false and product_resource != blank -%}
+    {%- liquid
+      assign belag_base = selected_variant.price
+      assign belag_p2 = belag_base | times: 85 | divided_by: 100 | money
+      assign belag_p5 = belag_base | times: 80 | divided_by: 100 | money
+      assign belag_p10 = belag_base | times: 75 | divided_by: 100 | money
+    -%}
+    <div class="belag-tiers">
+      <div class="belag-tier">
+        <span class="belag-tier__label">im 2er-Paket</span>
+        <span class="belag-tier__price">{{ belag_p2 }}</span>
+      </div>
+      <div class="belag-tier">
+        <span class="belag-tier__label">im 5er-Paket</span>
+        <span class="belag-tier__price">{{ belag_p5 }}</span>
+      </div>
+      <div class="belag-tier">
+        <span class="belag-tier__label">im 10er-Paket</span>
+        <span class="belag-tier__price">{{ belag_p10 }}</span>
+      </div>
+    </div>
+  {%- endif -%}
 </div>
+
+{% stylesheet %}
+  .b2b-net-note {
+    display: inline-block;
+    font-size: 0.7em;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-inline-start: 0.35em;
+    white-space: nowrap;
+  }
+
+  .belag-tiers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3em;
+    margin-top: 0.5em;
+  }
+
+  .belag-tier {
+    flex: 1 1 4.2em;
+    min-width: 4em;
+    text-align: center;
+    border: 1px solid var(--color-border, #e5e5e5);
+    border-radius: 4px;
+    padding: 0.22em 0.3em;
+    line-height: 1.2;
+  }
+
+  .belag-tier__label {
+    display: block;
+    font-size: 0.66em;
+    color: #777;
+    white-space: nowrap;
+  }
+
+  .belag-tier__price {
+    display: block;
+    font-size: 0.86em;
+    font-weight: 700;
+    color: #e02020;
+  }
+{% endstylesheet %}
