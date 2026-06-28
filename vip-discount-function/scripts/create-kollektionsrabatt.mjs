@@ -167,6 +167,8 @@ async function createDiscount({ storeDomain, token, title, functionId, config, s
     discount: {
       title,
       functionId,
+      // Functions der neuen Discounts-API verlangen die Discount-Klasse.
+      discountClasses: ["PRODUCT"],
       startsAt: startsAt || new Date().toISOString(),
       combinesWith: {
         orderDiscounts: true,
