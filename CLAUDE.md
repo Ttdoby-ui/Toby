@@ -9,9 +9,14 @@
 - **Alle Änderungen zuerst im Entwurf-Horizon Theme** (ID: `gid://shopify/OnlineStoreTheme/200401420636`, UNPUBLISHED)
   - ⚠️ Theme-IDs ändern sich (Neu-Anlage/Kopie)! Bei „Theme existiert nicht" mit
     `themes(first: 20) { nodes { id name role } }` die aktuelle ID holen.
-- Erst nach Abnahme durch den User ins Live-Theme ("futurespin live", ID: `gid://shopify/OnlineStoreTheme/200505131356`, MAIN) übernehmen
+- Erst nach Abnahme durch den User ins Live-Theme ("futurespin live", MAIN) übernehmen
   - ⚠️ Schreibzugriff aufs **MAIN/Live-Theme ist via MCP gesperrt** – nur in Entwurf-Themes
     pushen; der User veröffentlicht. Live-IDs wechseln oft (User legt Kopien an).
+- **Go-Live-Ablauf des Users** (so wird live geschaltet): Wenn **Entwurf-Horizon** passt,
+  kopiert der User es, **veröffentlicht die Kopie** und nennt sie **„futurespin live"**.
+  Das alte „futurespin live" wird zu **„futurespin backup"**, das alte „futurespin backup"
+  wird gelöscht. → Ich arbeite IMMER in **Entwurf-Horizon**; live entsteht durch diese Rotation.
+  Aktuelle Live-ID daher bei Bedarf via `themes`-Query holen (MAIN-Rolle = aktuell live).
 - Niemals direkt ins aktive/live Theme schreiben ohne ausdrückliche Anweisung
 
 ## Shopify App-Entwicklung (Dev Dashboard)
