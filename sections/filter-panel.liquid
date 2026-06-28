@@ -1,0 +1,193 @@
+{%- comment -%}
+  Section: Filter-Panel (Futurespin)
+  Eigenstaendiges Filtersystem fuer Kollektionen.
+  Drei Modi (automatisch erkannt):
+   - belag: Belaege (+ Unterkategorien) -> Tempo/Kontrolle/Effet, Belagart, Spielsystem, Farbe, Schwammstaerke, Schwammhaerte
+   - holz:  Hoelzer (+ Unterkategorien) -> Tempo/Kontrolle/Steifigkeit/Gewicht, Bauart, Griffform
+   - generic: alle uebrigen Katalog-Kategorien -> Marke, Groesse, Farbe (Basis-Filter Stufe 1)
+  Desktop: linkes Filter-Panel (Akkordeon, Checkboxen + Range-Slider), rechts das Grid.
+  Mobil: Panel als aufklappbarer Bereich ueber dem Grid.
+  Live-Filterung per JS, ohne Neuladen. Bei >250 Produkten laedt das JS weitere Seiten per ?page=N nach.
+{%- endcomment -%}
+
+{%- liquid
+  assign holz_count = 0
+  assign belag_count = 0
+  assign other_count = 0
+  for product in collection.products limit: 50
+    assign ptype = product.type | downcase
+    if ptype contains 'holz' or ptype contains 'carbon' or ptype contains 'kunstfaser' or ptype contains 'schicht'
+      assign holz_count = holz_count | plus: 1
+    elsif ptype contains 'noppe' or ptype contains 'anti' or product.metafields.custom.tempo != blank or product.metafields.custom.effet != blank
+      assign belag_count = belag_count | plus: 1
+    else
+      assign other_count = other_count | plus: 1
+    endif
+  endfor
+  assign fp_mode = 'generic'
+  if holz_count > 0 and holz_count >= belag_count and holz_count >= other_count
+    assign fp_mode = 'holz'
+  elsif belag_count > 0 and belag_count >= other_count
+    assign fp_mode = 'belag'
+  endif
+  assign is_holz_collection = false
+  if fp_mode == 'holz'
+    assign is_holz_collection = true
+  endif
+  assign fs_vip_pct = 0
+  if customer.tags contains 'VIP1'
+    assign fs_vip_pct = settings.vip1_discount | times: 1.0
+  elsif customer.tags contains 'VIP2'
+    assign fs_vip_pct = settings.vip2_discount | times: 1.0
+  elsif customer.tags contains 'VIP3'
+    assign fs_vip_pct = settings.vip3_discount | times: 1.0
+  endif
+-%}
+
+<script id="fp-catalog-data" type="application/json">
+{
+  "handle": {{ collection.handle | json }},
+  "title": {{ collection.title | json }},
+  "vipPct": {{ fs_vip_pct | default: 0 }},
+  "total": {{ collection.all_products_count | default: 0 }},
+  "products": [
+    {%- paginate collection.products by 250 -%}
+      {%- for product in collection.products -%}
+        {%- assign mf = product.metafields.custom -%}
+        {%- assign ptype = product.type | downcase -%}
+        {%- assign is_holz = false -%}
+        {%- if ptype contains 'holz' or ptype contains 'carbon' or ptype contains 'kunstfaser' or ptype contains 'schicht' -%}
+          {%- assign is_holz = true -%}
+        {%- endif -%}
+        {%- assign is_for_vip = false -%}
+        {%- if product.tags contains 'for_vip' and product.type != 'mws_apo_generated' -%}
+          {%- assign is_for_vip = true -%}
+        {%- endif -%}
+        {%- assign fp_var = product.selected_or_first_available_variant -%}
+        {%- assign opt_farbe = product.options_by_name['Farbe'] -%}
+        {%- assign opt_staerke = product.options_by_name['Schwammstärke'] -%}
+        {%- assign opt_griff = product.options_by_name['Griffform'] -%}
+        {%- assign opt_groesse = product.options_by_name['Größe'] -%}
+        {
+          "id": {{ product.id | json }},
+          "title": {{ product.title | json }},
+          "url": {{ product.url | json }},
+          "type": {{ product.type | json }},
+          "vendor": {{ product.vendor | json }},
+          "isHolz": {{ is_holz }},
+          "forVip": {{ is_for_vip }},
+          "isBelag": {% if product.tags contains 'Belag' %}true{% else %}false{% endif %},
+          "noVolume": {% if product.tags contains 'kein_mengenrabatt' %}true{% else %}false{% endif %},
+          "available": {{ product.available }},
+          "created": {{ product.created_at | date: '%s' }},
+          "price": {{ product.price | divided_by: 100.0 | json }},
+          "priceFormatted": {{ product.price | money | json }},
+          "compareAt": {{ fp_var.compare_at_price | default: 0 | divided_by: 100.0 | json }},
+          {%- if product.featured_image -%}
+          "img": {{ product.featured_image | image_url: width: 360 | prepend: 'https:' | json }},
+          {%- else -%}
+          "img": "",
+          {%- endif -%}
+          "tempo": {{ mf.tempo.value | default: '' | json }},
+          "kontrolle": {{ mf.kontrolle.value | default: '' | json }},
+          "effet": {{ mf.effet.value | default: '' | json }},
+          "haerte": {{ mf.haerte.value | default: '' | json }},
+          "schwammhaerte": {{ mf.schwammhaerte.value | default: '' | json }},
+          "farben": {%- if opt_farbe -%}{{ opt_farbe.values | json }}{%- else -%}[]{%- endif -%},
+          "staerken": {%- if opt_staerke -%}{{ opt_staerke.values | json }}{%- else -%}[]{%- endif -%},
+          "griffform": {%- if opt_griff -%}{{ opt_griff.values | json }}{%- else -%}[]{%- endif -%},
+          "groessen": {%- if opt_groesse -%}{{ opt_groesse.values | json }}{%- else -%}[]{%- endif -%},
+          "holzgewicht": {{ mf.holzgewicht.value | default: '' | json }}
+        }{%- unless forloop.last -%},{%- endunless -%}
+      {%- endfor -%}
+    {%- endpaginate -%}
+  ]
+}
+</script>
+
+<div
+  class="fp-wrap"
+  data-fp-root
+  data-fp-mode="{{ fp_mode }}"
+  data-is-holz="{% if is_holz_collection %}1{% else %}0{% endif %}"
+  data-fp-open-groups="{% if section.settings.groups_open %}1{% else %}0{% endif %}"
+  data-fp-new-days="{{ section.settings.new_days | default: 90 }}"
+  style="--fp-accent: {{ section.settings.accent_color | default: '#c0392b' }};"
+>
+  <button type="button" class="fp-mobile-toggle" data-fp-mobile-toggle aria-expanded="false">
+    <span>Filter &amp; Sortierung</span>
+    <span class="fp-mobile-toggle__icon">+</span>
+  </button>
+
+  <aside class="fp-panel" data-fp-panel aria-label="Produktfilter">
+    <div class="fp-panel__head">
+      <span class="fp-panel__title">Filter</span>
+      <button type="button" class="fp-reset" data-fp-reset>Zur&uuml;cksetzen</button>
+    </div>
+    <div class="fp-panel__body" data-fp-filters>
+      {%- comment -%} Filter werden per JS eingefuegt {%- endcomment -%}
+    </div>
+  </aside>
+
+  <div class="fp-main">
+    <div class="fp-toolbar">
+      <span class="fp-count" data-fp-count></span>
+      <label class="fp-sort">
+        <span class="fp-sort__label">Sortieren</span>
+        <select data-fp-sort>
+          <option value="relevance">Relevanz</option>
+          <option value="price-asc">Preis aufsteigend</option>
+          <option value="price-desc">Preis absteigend</option>
+          <option value="tempo-desc">Tempo (hoch &rarr; niedrig)</option>
+          <option value="kontrolle-desc">Kontrolle (hoch &rarr; niedrig)</option>
+          <option value="effet-desc">Effet (hoch &rarr; niedrig)</option>
+        </select>
+      </label>
+    </div>
+    <ul class="fp-grid" data-fp-grid></ul>
+    <p class="fp-empty" data-fp-empty hidden>Keine Produkte entsprechen den gew&auml;hlten Filtern.</p>
+  </div>
+</div>
+
+{{ 'filter-panel.css' | asset_url | stylesheet_tag }}
+{% style %}
+  .fp-card__price{color:#1d3686;}
+  .fp-card .belag-tiers{display:flex;flex-wrap:wrap;margin-top:.35em;}
+  .fp-card .belag-tier{padding:0 .55em;line-height:1.25;}
+  .fp-card .belag-tier:first-child{padding-inline-start:0;}
+  .fp-card .belag-tier+.belag-tier{border-inline-start:1px solid #ddd;}
+  .fp-card .belag-tier__label{display:block;font-size:.62em;color:#777;white-space:nowrap;}
+  .fp-card .belag-tier__price{display:block;font-size:.8em;font-weight:700;color:#e02020;white-space:nowrap;}
+  .fp-card__vip-badge{display:inline-block;background:#111;color:#fff;font-size:.7em;font-weight:700;padding:.12em .4em;border-radius:3px;margin-right:.35em;vertical-align:middle;line-height:1.4;}
+  .fp-card__sale-badge{display:inline-block;background:#dc2626;color:#fff;font-size:.7em;font-weight:700;padding:.12em .4em;border-radius:3px;margin-right:.35em;vertical-align:middle;line-height:1.4;}
+  .fp-card__price-was{color:#9aa0a6;text-decoration:line-through;opacity:1;font-weight:400;margin-right:.4em;}
+  .fp-card__price--vip{color:#1d3686;font-weight:700;}
+  .fp-card__price--sale{color:#1d3686;font-weight:700;}
+  .fp-acc__head{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;padding:.55rem 0;margin:0;font:inherit;font-weight:700;text-transform:uppercase;font-size:.92rem;letter-spacing:.03em;color:inherit;cursor:pointer;}
+  .fp-acc__title{pointer-events:none;}
+  .fp-acc__chev{flex:0 0 auto;width:.55rem;height:.55rem;margin-left:.6rem;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease;opacity:.55;}
+  .fp-acc__head[aria-expanded="true"] .fp-acc__chev{transform:rotate(45deg);}
+  .fp-acc__body{padding:.35rem 0 .15rem;}
+  .fp-acc__body[hidden]{display:none;}
+  .fp-acc__body--scroll{max-height:190px;overflow-y:auto;overscroll-behavior:contain;padding-right:.35rem;}
+  .fp-checks{display:flex;flex-direction:column;gap:.5rem;}
+  .fp-check{display:flex;align-items:center;gap:.55rem;font-size:.9rem;line-height:1.2;cursor:pointer;}
+  .fp-check input{flex:0 0 auto;width:1.05rem;height:1.05rem;margin:0;accent-color:var(--fp-accent);cursor:pointer;}
+  .fp-swatch{flex:0 0 auto;width:1rem;height:1rem;border-radius:3px;border:1px solid rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);}
+  @media screen and (min-width:750px){ .fp-panel{ max-height:calc(100vh - 110px); overflow-y:auto; overscroll-behavior:contain; } }
+{% endstyle %}
+<script src="{{ 'filter-panel-helpers.js' | asset_url }}" defer></script>
+<script src="{{ 'filter-panel-main.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Filter-Panel",
+  "settings": [
+    { "type": "paragraph", "content": "Eigenes Filtersystem mit aufklappbaren Gruppen (Akkordeon). Modus wird automatisch erkannt: Belaege (Tempo/Kontrolle/Effet, Belagart, Spielsystem, Farbe, Schwammstaerke/-haerte), Hoelzer (Steifigkeit/Gewicht, Bauart, Griffform) oder generische Kategorien (Marke, Groesse, Farbe). Plus Status (Verfuegbarkeit, Angebote, Neuheiten). Bei mehr als 250 Produkten werden weitere Seiten automatisch nachgeladen." },
+    { "type": "checkbox", "id": "groups_open", "label": "Filtergruppen standardmäßig aufgeklappt", "default": false },
+    { "type": "number", "id": "new_days", "label": "Neuheiten: max. Alter in Tagen", "default": 90 },
+    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Slider/Checkbox)", "default": "#c0392b" }
+  ],
+  "presets": [ { "name": "Filter-Panel" } ]
+}
+{% endschema %}
