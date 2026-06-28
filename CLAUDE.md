@@ -19,21 +19,21 @@
   Aktuelle Live-ID daher bei Bedarf via `themes`-Query holen (MAIN-Rolle = aktuell live).
 - Niemals direkt ins aktive/live Theme schreiben ohne ausdrückliche Anweisung
 
-## Kollektions-/Such-Grid: Rapid-Search-Filter-App (WICHTIG)
+## Kollektions-Grid: eigenes „Filter-Panel" (WICHTIG)
 
-- Kollektions- und Suchergebnis-Seiten rendern die Produktkacheln **NICHT** über die
-  Theme-Kachel/`price.liquid`, sondern über die **Rapid-Search-Filter-App**
-  (`snippets/rapid-search-results-template-v2.liquid`, `assets/results-list.js`,
-  Shop-Metafeld `rapid-search`). Die Section `sections/main-collection.liquid` startet
-  mit `{% render 'rapid-search-results-template-v2' %}`.
-- Die App **blendet das native Theme-Grid per CSS aus** (`display:none !important`) und
-  rendert ihre **eigenen** Karten (Snapshot des Theme-Cards oder Custom-Design, je nach
-  App-Einstellung `product_card_design`).
-- **Konsequenz:** Kachel-Änderungen im Theme (z. B. Belag-Staffelpreise in `price.liquid`)
-  erscheinen auf **Kollektions-/Suchseiten NICHT** automatisch. Sie müssen im
-  **Rapid-Search-Karten-Design** ergänzt bzw. neu gesnapshottet werden (App-Admin).
-- `price.liquid` greift weiterhin auf der **Produktdetailseite** und überall, wo Rapid
-  Search das Grid nicht ersetzt.
+- Kollektionsseiten rendern die Produktkacheln **NICHT** über die Theme-Kachel/`price.liquid`,
+  sondern über ein **selbstgebautes Filtersystem „Filter-Panel (Futurespin)"**:
+  - `sections/filter-panel.liquid` – liefert die Produktdaten als JSON
+    (`<script id="fp-catalog-data">`: `price`, `compareAt`, `forVip`, `vipPct`,
+    `isBelag`, `noVolume`, Tempo/Kontrolle/… ) und das Gerüst (`.fp-wrap`, `.fp-grid`).
+  - `assets/filter-panel-main.js` – baut die Kacheln client-seitig (`.fp-card`,
+    `.fp-card__price`); repliziert dort selbst VIP-/Angebots-Preise **und** die
+    Belag-Staffelpreise (gleiche „höchster gewinnt"-Logik wie `price.liquid`).
+  - `assets/filter-panel-helpers.js`, `assets/filter-panel.css` – Helfer/Style.
+- **Konsequenz:** Kachel-Änderungen müssen **dort** rein, nicht (nur) in `price.liquid`.
+  `price.liquid` greift weiter auf der **Produktdetailseite**.
+- Diese Theme-Dateien lagen ursprünglich NICHT im Repo – Änderungen daran ins Repo
+  spiegeln. (Rapid-Search-App ist installiert, aber auf Kollektionsseiten deaktiviert.)
 
 ## Shopify App-Entwicklung (Dev Dashboard)
 
