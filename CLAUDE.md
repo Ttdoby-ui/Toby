@@ -147,6 +147,10 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   - **VIP gilt nur für VIP-fähige Beläge** (Produkt-Tag `for_vip`): die Function prüft
     pro Position `product.hasAnyTag(tags: ["for_vip"])`. Nicht-`for_vip`-Beläge bekommen
     nur den Mengenrabatt – passend zur Kachel-Anzeige (`price.liquid` prüft denselben Tag).
+  - **Ausschluss vom Mengenrabatt**: Produkt-Tag `kein_mengenrabatt`. So getaggte Beläge
+    zählen nicht zur Staffel-Stückzahl und bekommen keinen Mengenrabatt (VIP bleibt, wenn
+    `for_vip`). Function-Query nutzt Aliase `isVip`/`noVolume` (`hasAnyTag`); `price.liquid`
+    blendet die Staffel-Boxen für diese Produkte aus.
 - Erstellung eines Rabatts: GitHub-Workflow „Kollektionsrabatt anlegen"
   (`.github/workflows/create-kollektionsrabatt.yml`) ODER die Mutation in
   `vip-discount-function/extensions/kollektionsrabatt/README.md`.
