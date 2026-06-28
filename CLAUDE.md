@@ -137,8 +137,11 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 - **Gewählte Lösung ① (Beläge):** Die Function `kollektionsrabatt` steuert Beläge **allein**
   und rechnet pro Artikel `max(Mengenstaffel %, VIP %)`. VIP bleibt für alle anderen
   Produkte als native Automatik-Rabatte bestehen.
-  - Beim **Go-Live**: `for_vip`-Tag von den Beläge-Produkten entfernen (Beläge raus aus
-    VIP-Kollektion), **erst NACH** dem Function-Deploy. Details: `vip-discount-function/GO-LIVE-belaege-mengenrabatt.md`.
+  - **Umgesetzt (2026-06-28):** Beläge aus den VIP-Rabatten genommen über eine
+    **Kollektions-Regel** statt Tag-Entfernung – VIP-Smart-Kollektion
+    (`664158142812`) um `TAG NOT_EQUALS Belag` ergänzt (alle Beläge haben Tag
+    `Belag`). Vorteil: `for_vip` bleibt → VIP-Preisanzeige auf den Kacheln intakt,
+    nur **eine** reversible Änderung. VIP-Kollektion dadurch 1164 → 858.
   - Die Function ist VIP-aware: bei < Mindestmenge bekommt ein VIP-Kunde trotzdem seinen
     VIP-% (`max(0, VIP)`), verliert also nichts.
 - Erstellung eines Rabatts: GitHub-Workflow „Kollektionsrabatt anlegen"
