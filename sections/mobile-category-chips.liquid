@@ -1,10 +1,12 @@
 {%- comment -%}
-  Mobile Kategorie-Chips (Futurespin)
-  Horizontal scrollbare Kategorie-Chips unter dem Header — NUR auf Smartphones (< 750px).
-  Speist sich aus einem wählbaren Menü (Default: Hauptmenü). Zeigt die obersten
-  Menüpunkte als Pills; die aktuell besuchte Kategorie wird hervorgehoben.
-  Ziel: schneller Sprung in Beläge/Hölzer/Marken ohne den Hamburger zu öffnen
-  (wie bei Decathlon / About You). Auf Desktop ausgeblendet (dort gibt es die Hauptnav).
+  Mobile Kategorie-Navigation (Futurespin)
+  Horizontal scrollbare Kategorie-Leiste unter dem Header — NUR auf Smartphones (< 750px).
+  Textlinks nebeneinander, jeweils mit senkrechtem Trennstrich; aktuelle Kategorie
+  in Markenblau hervorgehoben. Speist sich aus einem wählbaren Menü (Default: Hauptmenü).
+  Ein Menüpunkt, dessen Titel in %…% gesetzt ist (z. B. %SALE%), wird rot dargestellt
+  und ohne die %-Marker ausgegeben. Rechts ein dezenter Verlauf als Scroll-Hinweis.
+  Ziel: schneller Sprung in Beläge/Hölzer/Marken ohne den Hamburger zu öffnen.
+  Auf Desktop ausgeblendet (dort gibt es die Hauptnav).
 {%- endcomment -%}
 
 {%- assign chips_menu = section.settings.menu -%}
@@ -22,13 +24,21 @@
       </li>
     {%- endif -%}
     {%- for link in linklists[chips_menu].links -%}
+      {%- liquid
+        assign chip_label = link.title
+        assign chip_sale = false
+        if link.title contains '%'
+          assign chip_sale = true
+          assign chip_label = link.title | remove: '%' | strip
+        endif
+      -%}
       <li class="fs-chips__item">
         <a
           href="{{ link.url }}"
-          class="fs-chip{% if link.active or link.child_active %} fs-chip--active{% endif %}"
+          class="fs-chip{% if chip_sale %} fs-chip--sale{% endif %}{% if link.active or link.child_active %} fs-chip--active{% endif %}"
           {% if link.active %}aria-current="page"{% endif %}
         >
-          {{ link.title | escape }}
+          {{ chip_label | escape }}
         </a>
       </li>
     {%- endfor -%}
@@ -51,6 +61,21 @@
     }
   }
 
+  .fs-chips {
+    position: relative;
+  }
+
+  /* Dezenter Verlauf rechts als Hinweis, dass die Leiste scrollbar ist. */
+  .fs-chips::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    width: 2.25rem;
+    pointer-events: none;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), var(--color-background, #fff));
+  }
+
   .fs-chips__track {
     display: flex;
     gap: 0;
@@ -59,12 +84,17 @@
     list-style: none;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    scrollbar-width: thin;
     scroll-snap-type: x proximity;
   }
 
   .fs-chips__track::-webkit-scrollbar {
-    display: none;
+    height: 3px;
+  }
+
+  .fs-chips__track::-webkit-scrollbar-thumb {
+    background: var(--color-border, #c9c9c9);
+    border-radius: 999px;
   }
 
   .fs-chips__item {
@@ -96,34 +126,40 @@
     text-underline-offset: 3px;
     text-decoration-thickness: 2px;
   }
+
+  /* SALE bleibt rot — auch wenn es die aktive Kategorie ist (steht nach --active). */
+  .fs-chip--sale {
+    color: var(--fs-chip-sale, #e02020);
+    font-weight: 700;
+  }
 {% endstylesheet %}
 
 {% schema %}
 {
-  "name": "Mobile Kategorie-Chips",
+  "name": "Mobile Kategorien",
   "tag": "section",
   "settings": [
     {
       "type": "paragraph",
-      "content": "Horizontal scrollbare Kategorie-Chips unter dem Header — nur auf Smartphones. Schneller Sprung in die Hauptkategorien ohne Hamburger-Menü. Am besten direkt unter dem Header (bzw. unter der mobilen Suchleiste) platzieren."
+      "content": "Horizontal scrollbare Kategorie-Leiste unter dem Header — nur auf Smartphones. Textlinks mit Trennstrich, schneller Sprung in die Hauptkategorien ohne Hamburger-Menü. Ein Menüpunkt in %…% (z. B. %SALE%) wird rot angezeigt. Am besten direkt unter dem Header (bzw. unter der mobilen Suchleiste) platzieren."
     },
     {
       "type": "link_list",
       "id": "menu",
       "label": "Menü",
       "default": "main-menu",
-      "info": "Die obersten Menüpunkte werden als Chips angezeigt. Für eine kürzere, kuratierte Liste ein eigenes Menü anlegen und hier wählen."
+      "info": "Die obersten Menüpunkte werden als Kategorien angezeigt. Für eine kürzere, kuratierte Liste ein eigenes Menü anlegen und hier wählen."
     },
     {
       "type": "checkbox",
       "id": "show_home",
-      "label": "„Start\"-Chip voranstellen",
+      "label": "„Start\"-Eintrag voranstellen",
       "default": false
     },
     {
       "type": "text",
       "id": "home_label",
-      "label": "Beschriftung Start-Chip",
+      "label": "Beschriftung Start-Eintrag",
       "default": "Start"
     },
     {
@@ -140,7 +176,7 @@
     }
   ],
   "presets": [
-    { "name": "Mobile Kategorie-Chips" }
+    { "name": "Mobile Kategorien" }
   ]
 }
 {% endschema %}
