@@ -252,7 +252,15 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       - **Content-Creator-Anbindung (offen):** Der Content Creator soll genau dieses Metafeld
         lesen/schreiben. Sein Code liegt außerhalb dieser Repo-Scope → Anbindung dort in seiner
         eigenen Cowork-Session umsetzen (gleiches JSON-Schema verwenden).
-- [~] **Cross-Sell direkt nach dem Kaufen-Button** (Belag→Holz/Kleber) — TEILWEISE (Konfigurator-CTA vorhanden)
+- [x] **Cross-Sell direkt nach dem Kaufen-Button** (Belag→Holz/Kleber) — ERLEDIGT: neues
+      Snippet `snippets/cross-sell.liquid`, eingehängt in `blocks/buy-buttons.liquid` nach dem
+      Konfigurator-CTA (`{% render 'cross-sell', product: product, block: block %}`). Kategorie-
+      basiert ohne Pflegeaufwand: **Belag → Kleber/Montage + Hölzer**, **Holz → Beläge + Kleber**,
+      sonst nichts. Quellen über Block-Settings überschreibbar (Defaults `collections['montage']`/
+      `['holzer']`/`['belage']`), Anzahl/Überschrift/An-Aus ebenso (Defaults greifen auch ohne
+      Settings). Horizontale „Passend dazu"-Mini-Kacheln (`.fxs*`), Preis via `price.liquid`;
+      **Overflow-sicher** gebaut (`.fxs__price` position:relative+overflow:hidden, visually-hidden
+      auf 1px geklippt – Topseller-Lehre), Staffelpreise in der Mini-Kachel ausgeblendet.
 - [x] **Produktkarten-Grid mobil größer** / Varianten-Dots auf der Kachel — ERLEDIGT:
       im Filter-Panel pro Kachel **Farb-Dots** aus den `farben`-Optionswerten (`fpDots()` in
       `filter-panel-main.js`, mapt Farbnamen via `FPH.colorOf`, max. 5 + „+N", weiß mit Rand),

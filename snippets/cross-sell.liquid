@@ -1,0 +1,184 @@
+{%- comment -%}
+  Cross-Sell „Passend dazu" – unter dem Kaufen-/Konfigurator-Button (Futurespin).
+  Kategorie-basiert, ohne Pflegeaufwand:
+    - Belag  -> Empfehlungen aus Kleber/Montage + Hölzer
+    - Holz   -> Beläge + Kleber/Montage
+    - sonst  -> nichts
+  Quell-Kollektionen + Überschrift/Anzahl/An-Aus kommen aus den Buy-Buttons-Block-Settings
+  (Defaults: montage / holzer / belage). Render aus blocks/buy-buttons.liquid:
+    {% raw %}{% render 'cross-sell', product: product, block: block %}{% endraw %}
+  Overflow-sicher: .fxs__price ist Bezugsrahmen (position:relative; overflow:hidden),
+  visually-hidden korrekt geklippt (siehe Topseller-Lehre).
+{%- endcomment -%}
+
+{%- liquid
+  assign cs_product = product
+  assign cs_enabled = true
+  if block.settings.show_cross_sell == false
+    assign cs_enabled = false
+  endif
+-%}
+
+{%- if cs_product != blank and cs_enabled -%}
+  {%- liquid
+    assign cs_ptype = cs_product.type | downcase
+    assign cs_is_belag = false
+    if cs_product.tags contains 'Belag'
+      assign cs_is_belag = true
+    endif
+    assign cs_is_holz = false
+    if cs_ptype contains 'holz' or cs_ptype contains 'carbon' or cs_ptype contains 'kunstfaser' or cs_ptype contains 'schicht'
+      assign cs_is_holz = true
+    endif
+
+    assign cs_col_kleber = block.settings.cs_collection_kleber | default: collections['montage']
+    assign cs_col_holz = block.settings.cs_collection_holz | default: collections['holzer']
+    assign cs_col_belag = block.settings.cs_collection_belag | default: collections['belage']
+
+    assign cs_src1 = blank
+    assign cs_src2 = blank
+    if cs_is_belag
+      assign cs_src1 = cs_col_kleber
+      assign cs_src2 = cs_col_holz
+    elsif cs_is_holz
+      assign cs_src1 = cs_col_belag
+      assign cs_src2 = cs_col_kleber
+    endif
+
+    assign cs_count = block.settings.cross_sell_count | default: 6
+    assign cs_lim1 = cs_count | plus: 1 | divided_by: 2
+    assign cs_heading = block.settings.cross_sell_heading | default: 'Passend dazu'
+    assign cs_seen = ',' | append: cs_product.id | append: ','
+    assign cs_shown = 0
+  -%}
+
+  {%- if cs_src1 != blank or cs_src2 != blank -%}
+    {%- capture cs_cards -%}
+      {%- for c in cs_src1.products -%}
+        {%- if cs_shown >= cs_lim1 -%}{%- break -%}{%- endif -%}
+        {%- assign cs_cid = ',' | append: c.id | append: ',' -%}
+        {%- if c.available -%}{%- unless cs_seen contains cs_cid -%}
+          <li class="fxs__item">
+            <a href="{{ c.url }}" class="fxs__link">
+              <div class="fxs__imgwrap">{%- if c.featured_image -%}<img class="fxs__img" src="{{ c.featured_image | image_url: width: 200 }}" alt="{{ c.title | escape }}" loading="lazy" width="200" height="200">{%- else -%}<div class="fxs__img-ph"></div>{%- endif -%}</div>
+              <div class="fxs__title">{{ c.title }}</div>
+              <div class="fxs__price">{% render 'price', product_resource: c %}</div>
+            </a>
+          </li>
+          {%- assign cs_seen = cs_seen | append: c.id | append: ',' -%}
+          {%- assign cs_shown = cs_shown | plus: 1 -%}
+        {%- endunless -%}{%- endif -%}
+      {%- endfor -%}
+      {%- for c in cs_src2.products -%}
+        {%- if cs_shown >= cs_count -%}{%- break -%}{%- endif -%}
+        {%- assign cs_cid = ',' | append: c.id | append: ',' -%}
+        {%- if c.available -%}{%- unless cs_seen contains cs_cid -%}
+          <li class="fxs__item">
+            <a href="{{ c.url }}" class="fxs__link">
+              <div class="fxs__imgwrap">{%- if c.featured_image -%}<img class="fxs__img" src="{{ c.featured_image | image_url: width: 200 }}" alt="{{ c.title | escape }}" loading="lazy" width="200" height="200">{%- else -%}<div class="fxs__img-ph"></div>{%- endif -%}</div>
+              <div class="fxs__title">{{ c.title }}</div>
+              <div class="fxs__price">{% render 'price', product_resource: c %}</div>
+            </a>
+          </li>
+          {%- assign cs_seen = cs_seen | append: c.id | append: ',' -%}
+          {%- assign cs_shown = cs_shown | plus: 1 -%}
+        {%- endunless -%}{%- endif -%}
+      {%- endfor -%}
+    {%- endcapture -%}
+
+    {%- if cs_cards contains 'fxs__item' -%}
+      <div class="fxs">
+        <div class="fxs__head">{{ cs_heading }}</div>
+        <ul class="fxs__grid" role="list">{{ cs_cards }}</ul>
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+
+{% stylesheet %}
+  .fxs {
+    width: 100%;
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--color-border, #e5e5e5);
+  }
+  .fxs__head {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-foreground, #111);
+    margin-bottom: 0.55rem;
+  }
+  .fxs__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0.3rem;
+    display: flex;
+    gap: 0.6rem;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .fxs__item {
+    flex: 0 0 116px;
+    min-width: 0;
+  }
+  .fxs__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+  .fxs__imgwrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    background: #f4f4f4;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.35rem;
+  }
+  .fxs__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .fxs__img-ph {
+    width: 100%;
+    height: 100%;
+    background: #e8e8e8;
+  }
+  .fxs__title {
+    font-size: 0.74rem;
+    line-height: 1.25;
+    font-weight: 600;
+    color: var(--color-foreground, #111);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 0.2rem;
+  }
+  /* Overflow-sicher: Bezugsrahmen + visually-hidden klippen (Topseller-Lehre). */
+  .fxs__price {
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.76rem;
+    line-height: 1.3;
+  }
+  .fxs__price .price { font-weight: 700; color: #1d3686; }
+  .fxs__price .compare-at-price { color: #9aa0a6; }
+  .fxs__price .compare-at-price-container { flex-wrap: wrap; max-width: 100%; min-width: 0; }
+  .fxs__price .visually-hidden {
+    position: absolute !important;
+    width: 1px !important; height: 1px !important;
+    margin: -1px !important; padding: 0 !important; border: 0 !important;
+    overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important;
+  }
+  /* In der kompakten Mini-Karte keine Staffel-/Badge-Zeile. */
+  .fxs__price .belag-tiers { display: none; }
+{% endstylesheet %}
