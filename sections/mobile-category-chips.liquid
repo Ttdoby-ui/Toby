@@ -1,0 +1,142 @@
+{%- comment -%}
+  Mobile Kategorie-Chips (Futurespin)
+  Horizontal scrollbare Kategorie-Chips unter dem Header — NUR auf Smartphones (< 750px).
+  Speist sich aus einem wählbaren Menü (Default: Hauptmenü). Zeigt die obersten
+  Menüpunkte als Pills; die aktuell besuchte Kategorie wird hervorgehoben.
+  Ziel: schneller Sprung in Beläge/Hölzer/Marken ohne den Hamburger zu öffnen
+  (wie bei Decathlon / About You). Auf Desktop ausgeblendet (dort gibt es die Hauptnav).
+{%- endcomment -%}
+
+{%- assign chips_menu = section.settings.menu -%}
+{%- if linklists[chips_menu] != blank and linklists[chips_menu].links.size > 0 -%}
+<nav
+  class="fs-chips color-{{ section.settings.color_scheme }}{% if section.settings.show_on_desktop %} fs-chips--all{% endif %}"
+  aria-label="Kategorien"
+>
+  <ul class="fs-chips__track" role="list">
+    {%- if section.settings.show_home -%}
+      <li class="fs-chips__item">
+        <a href="{{ routes.root_url }}" class="fs-chip{% if request.path == routes.root_url %} fs-chip--active{% endif %}">
+          {{ section.settings.home_label | default: 'Start' }}
+        </a>
+      </li>
+    {%- endif -%}
+    {%- for link in linklists[chips_menu].links -%}
+      <li class="fs-chips__item">
+        <a
+          href="{{ link.url }}"
+          class="fs-chip{% if link.active or link.child_active %} fs-chip--active{% endif %}"
+          {% if link.active %}aria-current="page"{% endif %}
+        >
+          {{ link.title | escape }}
+        </a>
+      </li>
+    {%- endfor -%}
+  </ul>
+</nav>
+{%- endif -%}
+
+{% stylesheet %}
+  .fs-chips {
+    display: none;
+  }
+
+  .fs-chips--all {
+    display: block;
+  }
+
+  @media screen and (max-width: 749px) {
+    .fs-chips {
+      display: block;
+    }
+  }
+
+  .fs-chips__track {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.5rem var(--page-margin, 16px);
+    list-style: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .fs-chips__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fs-chips__item {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .fs-chip {
+    display: inline-block;
+    padding: 0.45rem 0.85rem;
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: 999px;
+    background: var(--color-background, #fff);
+    color: var(--color-foreground, #333);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.1;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .fs-chip--active {
+    background: var(--fs-chip-active, #1d3686);
+    border-color: var(--fs-chip-active, #1d3686);
+    color: #fff;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Mobile Kategorie-Chips",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Horizontal scrollbare Kategorie-Chips unter dem Header — nur auf Smartphones. Schneller Sprung in die Hauptkategorien ohne Hamburger-Menü. Am besten direkt unter dem Header (bzw. unter der mobilen Suchleiste) platzieren."
+    },
+    {
+      "type": "link_list",
+      "id": "menu",
+      "label": "Menü",
+      "default": "main-menu",
+      "info": "Die obersten Menüpunkte werden als Chips angezeigt. Für eine kürzere, kuratierte Liste ein eigenes Menü anlegen und hier wählen."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_home",
+      "label": "„Start\"-Chip voranstellen",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "home_label",
+      "label": "Beschriftung Start-Chip",
+      "default": "Start"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_on_desktop",
+      "label": "Auch auf Desktop anzeigen",
+      "default": false
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Farbschema",
+      "default": "scheme-1"
+    }
+  ],
+  "presets": [
+    { "name": "Mobile Kategorie-Chips" }
+  ]
+}
+{% endschema %}

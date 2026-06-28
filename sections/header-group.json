@@ -124,11 +124,22 @@
         "placeholder": "Belag, Holz, Marke …",
         "color_scheme": "scheme-1"
       }
+    },
+    "fs_mobile_chips": {
+      "type": "mobile-category-chips",
+      "settings": {
+        "menu": "main-menu",
+        "show_home": false,
+        "home_label": "Start",
+        "show_on_desktop": false,
+        "color_scheme": "scheme-1"
+      }
     }
   },
   "order": [
     "header_announcements_h8JM6j",
     "header_section",
-    "fs_mobile_search"
+    "fs_mobile_search",
+    "fs_mobile_chips"
   ]
 }
