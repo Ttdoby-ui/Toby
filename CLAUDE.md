@@ -180,6 +180,24 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 - **Funktionen sind nicht Theme-gebunden:** ein angelegter Rabatt ist sofort live, es gibt
   kein Entwurf/Live wie beim Theme. Zum Testen `starts_at` in die Zukunft oder Test-Kollektion.
 
+## Mobile-UX-Verbesserungen (Checkliste)
+
+> Quelle: User-Analyse (Vergleich mit About You, Decathlon, Bergfreunde, Tischtennis-Profi).
+> Theme-Änderungen → **Entwurf-Horizon**. Status pflegen, wenn ein Punkt erledigt ist.
+
+- [ ] 🔴 **Sticky Add-to-Cart-Leiste** (Produktseite, blendet beim Scrollen ein: Name + Preis + Button) — gering/sehr hoch
+- [ ] 🔴 **Trust-Badges** unter dem Kaufen-Button (Lieferzeit, Gratisversand ab 69 €, 30 Tage Rückgabe) — gering/hoch
+- [ ] 🔴 **Bildgrößen mobil / Performance** — Hero lädt mit `width=3840` aufs Handy! `srcset`, mobil ~800px (LCP) — mittel/sehr hoch
+- [ ] 🟡 **Bewertungs-App** (Judge.me/Loox) + Sterne auf PDP & Kacheln — gering/hoch
+- [ ] 🟡 **Suchleiste prominenter** (statt verstecktem Lupen-Icon) — gering/mittel
+- [ ] 🟡 **Navigation vereinfachen** / Icons / horizontale Kategorie-Chips — mittel/mittel
+      (Scroll-/Font-Fix war mal gemacht, aber auf dem alten Entwurf-Theme das es nicht mehr gibt → neu prüfen)
+- [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
+- [ ] 🟢 **WhatsApp/Chat-Widget** (Beratung, Vereins-/Elternkäufe) — gering/mittel
+- [ ] **Announcement-Banner** als Ticker mit CTA-Button statt langem Auth-Link (rotierende Botschaften) — vorhanden, verbesserbar
+- [~] **Cross-Sell direkt nach dem Kaufen-Button** (Belag→Holz/Kleber) — TEILWEISE (Konfigurator-CTA vorhanden)
+- [ ] **Produktkarten-Grid mobil größer** / Varianten-Dots auf der Kachel
+
 ## Git
 
 - Feature-Branch: `claude/shopify-adhesive-service-vkfNR`
