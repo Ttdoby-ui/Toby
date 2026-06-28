@@ -1,8 +1,32 @@
 # Horizon-Update / Migration – Plan & Checkliste
 
-> **Status:** geplant (noch nicht gestartet). Aktuelle Theme-Version **2.0.3**, Ziel: aktuelles Horizon (~4.1.x).
+> **Status:** ⏳ **Reconciliation in 4.1.1-Kopie ABGESCHLOSSEN – wartet auf Test/Abnahme durch User.**
+> Von **2.0.3** auf **4.1.1**. Der User hat die geupdatete Kopie **„Aktualisierte Kopie von Kopie von
+> Entwurf-Horizon"** (`gid://shopify/OnlineStoreTheme/200523612508`) angelegt; alle unsere Anpassungen
+> wurden dort wieder eingespielt (siehe „Durchgeführt" unten). Nach erfolgreichem Test wird dieses Theme
+> das neue **Entwurf-Horizon**.
 > **Goldene Regel:** **Niemals** „Aktualisieren" auf dem Arbeits-/Live-Theme klicken – das überschreibt
 > unseren Code. Migration immer in einer **frischen Kopie** des neuen Horizon, Stück für Stück.
+
+## Durchgeführt (Reconciliation 2.0.3 → 4.1.1, Theme `200523612508`)
+
+Beim Horizon-Update blieben alle **Custom-Dateien (Kategorie A) 1:1 erhalten** (verifiziert: gleiche
+Dateigröße wie im Repo – `filter-panel-main.js` 13080 inkl. Lazy-Grid `fpEnsureSentinel`/`fpMore`,
+`filter-panel.liquid` 11863, `cross-sell.liquid` 6582, `collection-topseller.liquid` 5786 inkl.
+`visually-hidden`-Overflow-Fix, alle in Markenblau `#486A8F`, **kein** altes `#1d3686` mehr). Ebenso
+erhalten: `header-group.json` (Ticker/Suche/Chips), App-Embeds (Inbox/Judge.me) in `settings_data.json`.
+
+**Überschriebene Kern-Dateien (Kategorie B) neu abgeglichen:**
+- `snippets/price.liquid` – unsere Version (9846 B, VIP/B2B/Belag-Staffel) **gepusht** (Horizons native
+  Volume-Pricing-Version überschrieben).
+- `blocks/buy-buttons.liquid` – Horizons **neue 4.1.1-Basis** behalten und nur unsere **2 Render-Zeilen**
+  (`schlaeger-konfigurieren-btn` + `cross-sell`) nach `</product-form-component>` wieder eingesetzt
+  (20911 B). Diese 4.1.1-Version liegt jetzt auch im Repo.
+- `config/settings_data.json` – VIP-Werte (`vip1/2/3_discount` = 15/25/30) wieder ergänzt
+  (color_palette-Struktur + App-Embeds erhalten).
+
+**Offen / vom User:** 4.1.1-Theme durchtesten (Checkliste unten), dann per Go-Live-Rotation als neues
+Entwurf-Horizon übernehmen. Optional: VIP-Settings in `settings_schema.json` wieder als Editor-Felder.
 
 ## Warum überhaupt updaten?
 Neuere Horizon-Versionen bringen Performance- und Feature-Verbesserungen, die teils mit unseren
