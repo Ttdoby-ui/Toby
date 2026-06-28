@@ -17,7 +17,7 @@
  *   STARTS_AT        optional ISO-Zeitpunkt, Default: jetzt
  */
 
-const API_VERSION = "2025-01";
+const API_VERSION = "2025-10";
 
 // Bekannte VIP-Staffeln des Stores (Tag → Prozent).
 const VIP_TAGS = ["VIP1", "VIP2", "VIP3"];
@@ -76,8 +76,11 @@ function buildConfig() {
   return config;
 }
 
-async function getAccessToken(clientId, clientSecret) {
-  const res = await fetch("https://api.shopify.com/auth/access_token", {
+async function getAccessToken(storeDomain, clientId, clientSecret) {
+  // Store-Admin-Token via Client-Credentials-Grant am OAuth-Endpunkt DES STORES
+  // (nicht api.shopify.com – das liefert nur einen App-Management-Token, den die
+  // Admin-API mit 401 ablehnt).
+  const res = await fetch(`https://${storeDomain}/admin/oauth/access_token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -221,7 +224,7 @@ async function main() {
   console.log("Konfiguration:");
   console.log(JSON.stringify(config, null, 2));
 
-  const token = await getAccessToken(clientId, clientSecret);
+  const token = await getAccessToken(storeDomain, clientId, clientSecret);
   console.log("Access-Token erhalten.");
 
   // Function-ID: aus Eingabe oder automatisch ermitteln.
