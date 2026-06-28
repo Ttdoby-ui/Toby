@@ -208,6 +208,12 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       via `link.active/child_active` in Markenblau `#1d3686` + Unterstreichung (vorher als blaue
       Pills, dann auf Trennstrich-Optik umgestellt). In `header-group.json` als `fs_mobile_chips`
       direkt unter der mobilen Suchleiste eingehängt. Entwurf-Theme.
+      - ⚠️ **Overflow-Falle:** Eine `overflow-x:auto`-Flex-Leiste (Chips) dehnt die ganze
+        Seite, wenn sie nicht hart begrenzt ist → `max-width:100vw` (+ `box-sizing:border-box`)
+        auf `.fs-chips`/`.fs-chips__track`. Zusätzlich global `html{overflow-x:hidden}`
+        (+`@supports clip`) als Netz (fängt auch die Compare-App `.cots`). Diagnose:
+        per JS `getBoundingClientRect().right > innerWidth` die Verursacher finden.
+        `body{overflow-x:clip}` half NICHT (iOS scrollt `html`, `clip` erst iOS16+).
 - [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
 - [ ] 🟢 **WhatsApp/Chat-Widget** (Beratung, Vereins-/Elternkäufe) — gering/mittel
 - [x] **Announcement-Banner** als Ticker mit CTA-Button statt langem Auth-Link — ERLEDIGT:
