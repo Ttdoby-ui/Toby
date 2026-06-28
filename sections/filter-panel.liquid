@@ -200,27 +200,24 @@
 <script src="{{ 'filter-panel-main.js' | asset_url }}" defer></script>
 
 <script>
-  /* Diagnose 2: zeigt automatisch die ECHTEN Seiten-Dehner (ohne Fehlalarm durch
-     intern scrollende Bereiche), inkl. ihrer Positionierung. */
+  /* Diagnose 3: zeigt IMMER eine Leiste (auch wenn nichts gefunden), damit klar ist,
+     dass sie lief. Listet alle zu breiten Elemente inkl. Positionierung. */
   (function () {
-    function clipsX(el) { var s = getComputedStyle(el); return ['hidden', 'auto', 'scroll', 'clip'].indexOf(s.overflowX) > -1; }
-    function desc(el) { var c = (el.className && el.className.toString) ? el.className.toString().trim().replace(/\s+/g, '.') : ''; return el.tagName.toLowerCase() + (c ? '.' + c.slice(0, 38) : '') + (el.id ? '#' + el.id : ''); }
+    function desc(el) { var c = (el.className && el.className.toString) ? el.className.toString().trim().replace(/\s+/g, '.') : ''; return el.tagName.toLowerCase() + (c ? '.' + c.slice(0, 34) : '') + (el.id ? '#' + el.id : ''); }
     function run() {
-      var de = document.documentElement, vw = de.clientWidth, real = [];
+      var de = document.documentElement, vw = de.clientWidth, list = [];
       document.querySelectorAll('*').forEach(function (el) {
         var r = el.getBoundingClientRect();
         if (r.width > 0 && r.right > vw + 2) {
-          var clipped = false, p = el.parentElement;
-          while (p && p !== de) { if (clipsX(p)) { clipped = true; break; } p = p.parentElement; }
-          if (!clipped) real.push({ r: Math.round(r.right), pos: getComputedStyle(el).position, t: desc(el) });
+          list.push({ r: Math.round(r.right), pos: getComputedStyle(el).position, t: desc(el) });
         }
       });
-      if (!real.length) return;
-      real.sort(function (a, b) { return b.r - a.r; });
-      var html = '<b>Overflow-Diagnose 2</b> &middot; VP ' + vw + ' &middot; Seite ' + de.scrollWidth + ' &middot; (tippen schliesst)<br>';
-      real.slice(0, 7).forEach(function (o) { html += '&bull; ' + o.r + 'px [' + o.pos + '] ' + o.t + '<br>'; });
+      list.sort(function (a, b) { return b.r - a.r; });
+      var html = '<b>Diagnose 3</b> &middot; VP ' + vw + ' &middot; Seite ' + de.scrollWidth + ' &middot; (tippen schliesst)<br>';
+      if (!list.length) { html += 'KEINE zu breiten Elemente gefunden.'; }
+      else { list.slice(0, 9).forEach(function (o) { html += '&bull; ' + o.r + 'px [' + o.pos + '] ' + o.t + '<br>'; }); }
       var bar = document.createElement('div');
-      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#0a7d2c;color:#fff;font:12px/1.45 monospace;padding:8px 10px;max-height:60vh;overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.45);word-break:break-all;';
+      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#0a7d2c;color:#fff;font:12px/1.45 monospace;padding:8px 10px;max-height:65vh;overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.45);word-break:break-all;';
       bar.innerHTML = html;
       bar.addEventListener('click', function () { bar.remove(); });
       document.body.appendChild(bar);
