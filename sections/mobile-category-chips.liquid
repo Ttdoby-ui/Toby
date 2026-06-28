@@ -97,12 +97,24 @@
     }
   }
 
+  /* Seite gegen horizontales Wegscrollen schützen (Chips/Compare-App etc.). */
+  html { overflow-x: hidden; }
+  @supports (overflow: clip) { html { overflow-x: clip; } }
+
+  /* Chip-Leiste hart auf Bildschirmbreite begrenzen -> scrollt intern statt die Seite zu dehnen. */
+  .fs-chips {
+    max-width: 100vw;
+    overflow: hidden;
+  }
+
   .fs-chips__track {
     display: flex;
     gap: 0;
     margin: 0;
     padding: 0.5rem var(--page-margin, 16px) 0.4rem;
     list-style: none;
+    max-width: 100vw;
+    box-sizing: border-box;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;

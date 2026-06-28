@@ -199,24 +199,6 @@
 <script src="{{ 'filter-panel-helpers.js' | asset_url }}" defer></script>
 <script src="{{ 'filter-panel-main.js' | asset_url }}" defer></script>
 
-<script>
-  /* Diagnose: Kollektion mit ?fpdebug=1 oeffnen -> zeigt die zu breiten Elemente. */
-  if (location.search.indexOf('fpdebug') > -1) {
-    setTimeout(function () {
-      var vw = document.documentElement.clientWidth, list = [];
-      document.querySelectorAll('*').forEach(function (el) {
-        var r = el.getBoundingClientRect();
-        if (r.width > 0 && r.right > vw + 2) {
-          var cls = (el.className && el.className.toString) ? el.className.toString().trim().replace(/\s+/g, '.') : '';
-          list.push(Math.round(r.right) + 'px  ' + el.tagName.toLowerCase() + (cls ? '.' + cls.slice(0, 45) : '') + (el.id ? '#' + el.id : ''));
-        }
-      });
-      list.sort(function (a, b) { return parseInt(b) - parseInt(a); });
-      alert('Viewport=' + vw + 'px\ndocScrollWidth=' + document.documentElement.scrollWidth + '\n\nZu breite Elemente:\n' + (list.slice(0, 10).join('\n') || 'keine gefunden'));
-    }, 1800);
-  }
-</script>
-
 {% schema %}
 {
   "name": "Filter-Panel",
