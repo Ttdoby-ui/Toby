@@ -236,7 +236,16 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
            Scroll-Rand** (`right ≈ documentElement.scrollWidth`) mit **Eltern-Kette** zeigen
            (nicht die breitesten – die sind oft geklippt und damit unschuldig).
 - [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
-- [ ] 🟢 **WhatsApp/Chat-Widget** (Beratung, Vereins-/Elternkäufe) — gering/mittel
+- [x] 🟢 **Chat-Widget** (Beratung) — ERLEDIGT via **Shopify Inbox** (kein WhatsApp gewünscht).
+      App-Embed im Entwurf-Theme aktiviert (`config/settings_data.json` → `current.blocks`),
+      Chat-Button in Markenblau `#1d3686`, Position bottom-right/lowest.
+      - ⚠️ **App-Embeds in `settings_data.json`** (sonst gehen sie bei der Go-Live-Rotation
+        Entwurf→Live verloren!). Block-Referenzen (aus Live übernommen):
+        - Inbox-Chat: `shopify://apps/inbox/blocks/chat/841fc607-4181-4ad1-842d-e24d7f8bad6b`
+        - Judge.me: `shopify://apps/judge-me-reviews/blocks/judgeme_core/61ccd3b1-a9f2-4160-9fe9-4fec8413e5d8`
+        - urgency-low-stock-counter: vorhanden, `disabled:true`.
+        Diese Datei NICHT von Hand tippen (Farbschemata!) – per Skript bauen + `JSON.parse`
+        validieren, dann `themeFilesUpsert`. `themeFilesCopy` kann NICHT cross-theme kopieren.
 - [x] **Announcement-Banner** als Ticker mit CTA-Button statt langem Auth-Link — ERLEDIGT:
       neue Section `sections/announcement-ticker.liquid` (rotierende Botschaften, je optional
       CTA-Button, Autoplay/Intervall + Farben, pausiert bei Hover/Fokus, respektiert reduzierte
