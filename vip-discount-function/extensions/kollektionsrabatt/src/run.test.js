@@ -42,8 +42,8 @@ function opsCount(result) {
   return result.operations?.length ?? 0;
 }
 
-/** n Artikel der Kollektion (je Menge 1). Optional Angebot + VIP-Fähigkeit. */
-function collectionLines(count, price = 33.9, compareAt = null, forVip = true) {
+/** n Artikel der Kollektion (je Menge 1). Optional Angebot, VIP-Fähigkeit, Ausschluss. */
+function collectionLines(count, price = 33.9, compareAt = null, forVip = true, noVolume = false) {
   return Array.from({ length: count }, (_, i) => ({
     id: `gid://shopify/CartLine/coll-${i}`,
     quantity: 1,
@@ -53,7 +53,7 @@ function collectionLines(count, price = 33.9, compareAt = null, forVip = true) {
     },
     merchandise: {
       __typename: "ProductVariant",
-      product: { inAnyCollection: true, hasAnyTag: forVip },
+      product: { inAnyCollection: true, isVip: forVip, noVolume: noVolume },
     },
   }));
 }
@@ -65,7 +65,7 @@ function otherLine(id = "other-1", quantity = 1) {
     cost: { amountPerQuantity: { amount: 50 }, compareAtAmountPerQuantity: null },
     merchandise: {
       __typename: "ProductVariant",
-      product: { inAnyCollection: false, hasAnyTag: false },
+      product: { inAnyCollection: false, isVip: false, noVolume: false },
     },
   };
 }
@@ -107,7 +107,7 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
       id: `gid://shopify/CartLine/${id}`,
       quantity: qty,
       cost: { amountPerQuantity: { amount: 33.9 }, compareAtAmountPerQuantity: null },
-      merchandise: { __typename: "ProductVariant", product: { inAnyCollection: true, hasAnyTag: true } },
+      merchandise: { __typename: "ProductVariant", product: { inAnyCollection: true, isVip: true, noVolume: false } },
     });
     const result = run(makeInput({ lines: [mk("a", 3), mk("b", 2)] }));
     // 3 + 2 = 5 → 20 %
@@ -144,6 +144,34 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
   it("nicht-for_vip-Belag unter Mindestmenge: gar kein Rabatt", () => {
     const result = run(makeInput({ lines: collectionLines(1, 33.9, null, false), vipTags: ["VIP3"] }));
     assert.equal(opsCount(result), 0);
+  });
+
+  it("Tag kein_mengenrabatt: kein Mengenrabatt (ohne VIP)", () => {
+    // 2 ausgeschlossene Beläge, kein VIP → kein Rabatt
+    const result = run(makeInput({ lines: collectionLines(2, 33.9, null, false, true) }));
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("Tag kein_mengenrabatt aber for_vip + VIP-Kunde: VIP greift weiter", () => {
+    // ausgeschlossen vom Mengenrabatt, aber for_vip → VIP3 30 %
+    const result = run(makeInput({ lines: collectionLines(1, 33.9, null, true, true), vipTags: ["VIP3"] }));
+    assert.equal(candidates(result)[0].value.percentage.value, "30");
+    assert.ok(candidates(result)[0].message.startsWith("VIP"));
+  });
+
+  it("Ausgeschlossener Belag zählt nicht zur Mengenstaffel", () => {
+    const normal = collectionLines(4); // 4 zählende Beläge (kein VIP-Tag im Cart)
+    const excluded = collectionLines(1, 33.9, null, false, true).map((l) => ({
+      ...l,
+      id: "gid://shopify/CartLine/excl",
+    }));
+    const result = run(makeInput({ lines: [...normal, ...excluded] }));
+    const cands = candidates(result);
+    // zählende Menge = 4 → 15 % (nicht 5 → 20 %); ausgeschlossener ohne Kandidat
+    assert.equal(cands.length, 4);
+    assert.equal(cands[0].value.percentage.value, "15");
+    const ids = cands.map((c) => c.targets[0].cartLine.id);
+    assert.ok(!ids.includes("gid://shopify/CartLine/excl"));
   });
 
   it("ohne vipTiers: reiner Mengenrabatt, VIP-Tags ignoriert", () => {

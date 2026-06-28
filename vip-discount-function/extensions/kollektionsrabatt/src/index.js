@@ -9,6 +9,8 @@
  *   - Unter den Staffeln greift automatisch die höchste erfüllte Stufe.
  *   - Gegenüber VIP greift pro Artikel der höhere Wert aus Mengenrabatt vs. VIP %.
  *     VIP zählt dabei nur für VIP-fähige Produkte (Produkt-Tag `for_vip`).
+ *   - Beläge mit Tag `kein_mengenrabatt` sind vom Mengenrabatt ausgenommen
+ *     (zählen nicht zur Staffel, bekommen keinen Mengenrabatt); VIP bleibt möglich.
  *   - Gegenüber einem **Angebot** (Vergleichspreis/UVP > aktueller Preis) wird
  *     der Nachlass am UVP gemessen: Ist das Angebot bereits tiefer als der
  *     Mengen-/VIP-Rabatt, greift KEIN zusätzlicher Rabatt. Andernfalls wird nur
@@ -62,12 +64,17 @@ export function run(input) {
     return NO_DISCOUNT;
   }
 
-  const totalQuantity = collectionLines.reduce(
-    (sum, line) => sum + (line.quantity ?? 0),
+  // Vom Mengenrabatt ausgeschlossene Beläge (Tag `kein_mengenrabatt`) zählen NICHT
+  // zur Staffel-Stückzahl und bekommen keinen Mengenrabatt (VIP bleibt unberührt).
+  const volumeQuantity = collectionLines.reduce(
+    (sum, line) =>
+      line.merchandise?.product?.noVolume === true
+        ? sum
+        : sum + (line.quantity ?? 0),
     0
   );
 
-  const volumePercent = highestVolumePercent(tiers, totalQuantity);
+  const volumePercent = highestVolumePercent(tiers, volumeQuantity);
   const customerVipPercent = highestVipPercent(cart, config.vipTiers);
 
   const candidates = [];
@@ -77,17 +84,20 @@ export function run(input) {
       continue;
     }
 
-    // VIP gilt nur für VIP-fähige Produkte (Tag `for_vip`) – sonst nur Mengenrabatt.
-    const vipEligible = line.merchandise?.product?.hasAnyTag === true;
-    const lineVipPercent = vipEligible ? customerVipPercent : 0;
+    const product = line.merchandise?.product ?? {};
 
-    // Höchster Prozentsatz aus Mengenstaffel vs. (ggf.) VIP – kein Stapeln.
-    const percent = Math.max(volumePercent, lineVipPercent);
+    // Mengenrabatt nur, wenn der Belag nicht ausgeschlossen ist.
+    const lineVolumePercent = product.noVolume === true ? 0 : volumePercent;
+    // VIP nur für VIP-fähige Produkte (Tag `for_vip`).
+    const lineVipPercent = product.isVip === true ? customerVipPercent : 0;
+
+    // Höchster Prozentsatz – kein Stapeln.
+    const percent = Math.max(lineVolumePercent, lineVipPercent);
     if (percent <= 0) {
       continue;
     }
 
-    const vipWins = lineVipPercent > volumePercent;
+    const vipWins = lineVipPercent > lineVolumePercent;
     const message = vipWins ? `VIP ${percent}%` : `Mengenrabatt ${percent}%`;
 
     const compareAt = Number(line.cost?.compareAtAmountPerQuantity?.amount);

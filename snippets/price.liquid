@@ -163,7 +163,13 @@
     WICHTIG: Mengen/Prozente synchron zum Rabatt „Belaege Mengenrabatt" halten
     (aktuell: ab 2 → 15 %, ab 5 → 20 %, ab 10 → 25 %).
   {%- endcomment -%}
-  {%- if product_resource.tags contains 'Belag' and show_b2b_net == false and product_resource != blank -%}
+  {%- liquid
+    assign belag_excluded = false
+    if product_resource.tags contains 'kein_mengenrabatt'
+      assign belag_excluded = true
+    endif
+  -%}
+  {%- if product_resource.tags contains 'Belag' and show_b2b_net == false and product_resource != blank and belag_excluded == false -%}
     {%- liquid
       comment
         Staffelpreis am UVP/Vergleichspreis gemessen, "höchster Rabatt gewinnt":
