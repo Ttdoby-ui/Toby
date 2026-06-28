@@ -168,6 +168,12 @@
   .fp-card__dots{display:flex;align-items:center;gap:.3em;flex-wrap:wrap;margin:.1em 0 .4em;}
   .fp-card__dot{width:.85em;height:.85em;border-radius:50%;display:inline-block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2);}
   .fp-card__dot-more{font-size:.72em;color:#777;line-height:1;}
+  /* Schutz gegen horizontales Wegscrollen der Seite (Grid-Item-Blowout) */
+  body{overflow-x:clip;}
+  .fp-main,.fp-grid{min-width:0;}
+  .fp-card,.fp-card a{min-width:0;max-width:100%;}
+  .fp-card__title{overflow-wrap:anywhere;}
+  .fp-card__price,.fp-card__dots,.belag-tiers{max-width:100%;}
   /* Mobil: Kacheln größer/lesbarer */
   @media screen and (max-width:749px){
     .fp-grid{gap:14px;}
