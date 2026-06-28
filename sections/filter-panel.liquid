@@ -200,34 +200,6 @@
 <script src="{{ 'filter-panel-helpers.js' | asset_url }}" defer></script>
 <script src="{{ 'filter-panel-main.js' | asset_url }}" defer></script>
 
-<script>
-  /* Diagnose 4: zeigt die Elemente AM Scroll-Rand (right ~= Seitenbreite) -> der echte
-     Verursacher, inkl. Eltern-Kette. Geklippte (right > Seitenbreite) werden ignoriert. */
-  (function () {
-    function desc(el) { var c = (el.className && el.className.toString) ? el.className.toString().trim().replace(/\s+/g, '.') : ''; return el.tagName.toLowerCase() + (c ? '.' + c.slice(0, 28) : '') + (el.id ? '#' + el.id : ''); }
-    function chain(el) { var a = [], p = el, i = 0; while (p && p.tagName && i < 5) { a.push(desc(p)); p = p.parentElement; i++; } return a.join(' < '); }
-    function run() {
-      var de = document.documentElement, vw = de.clientWidth, sw = Math.max(de.scrollWidth, document.body ? document.body.scrollWidth : 0), edge = [];
-      document.querySelectorAll('*').forEach(function (el) {
-        var r = el.getBoundingClientRect();
-        if (r.width > 0 && r.right > vw + 2 && r.right <= sw + 3) {
-          edge.push({ r: Math.round(r.right), pos: getComputedStyle(el).position, t: chain(el) });
-        }
-      });
-      edge.sort(function (a, b) { return b.r - a.r; });
-      var html = '<b>Diagnose 4</b> VP=' + vw + ' Seite=' + sw + ' (tippen schliesst)<br><u>Am Scroll-Rand = Ursache:</u><br>';
-      if (!edge.length) { html += '(nichts am Rand gefunden)<br>'; }
-      else { edge.slice(0, 6).forEach(function (o) { html += '&bull; ' + o.r + 'px [' + o.pos + ']<br>&nbsp;&nbsp;' + o.t + '<br>'; }); }
-      var bar = document.createElement('div');
-      bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#7a0a7d;color:#fff;font:11px/1.4 monospace;padding:8px 10px;max-height:70vh;overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.45);word-break:break-all;';
-      bar.innerHTML = html;
-      bar.addEventListener('click', function () { bar.remove(); });
-      document.body.appendChild(bar);
-    }
-    setTimeout(run, 1900);
-  })();
-</script>
-
 {% schema %}
 {
   "name": "Filter-Panel",
