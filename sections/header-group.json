@@ -11,34 +11,45 @@
   "type": "header",
   "name": "Header",
   "sections": {
-    "header_announcements_h8JM6j": {
-      "type": "header-announcements",
+    "fs_announce_ticker": {
+      "type": "announcement-ticker",
       "blocks": {
-        "announcement_rjiLrF": {
-          "type": "_announcement",
+        "msg_vip": {
+          "type": "message",
           "settings": {
-            "text": "<a href=\"https://shopify.com/authentication/78096073052/login?client_id=cca10ad2-1e59-46ca-94ee-de869cd7c3f3&locale=de&redirect_uri=https%3A%2F%2Fshopify.com%2Fauthentication%2F78096073052%2Foauth%2Fauthorize%3Fclient_id%3Dcca10ad2-1e59-46ca-94ee-de869cd7c3f3%26consent_id%3D%26locale%3Dde%26nonce%3D9a28c418-a8ee-43f4-9a5d-1ffde949dc1c%26redirect_uri%3Dhttps%253A%252F%252Fe7ee88-2.myshopify.com%252Fcustomer_authentication%252Fcallback%253Fsource%253Dcore%26response_type%3Dcode%26scope%3Dopenid%2Bemail%2Bcustomer-account-api%253Afull%26state%3D01K1BWH4B856E5ZC9VARMG3FA3\"><strong>Jetzt anmelden und 15% VIP-Rabatt sichern. </strong></a>",
-            "link": "",
-            "font": "var(--font-body--family)",
-            "font_size": "0.75rem",
-            "weight": "",
-            "letter_spacing": "normal",
-            "case": "none"
-          },
-          "blocks": {}
+            "text": "Jetzt kostenlos anmelden und 15 % VIP-Rabatt sichern",
+            "cta_label": "Anmelden",
+            "cta_link": "https://shopify.com/authentication/78096073052/login?client_id=cca10ad2-1e59-46ca-94ee-de869cd7c3f3&locale=de&redirect_uri=https%3A%2F%2Fshopify.com%2Fauthentication%2F78096073052%2Foauth%2Fauthorize%3Fclient_id%3Dcca10ad2-1e59-46ca-94ee-de869cd7c3f3%26consent_id%3D%26locale%3Dde%26nonce%3D9a28c418-a8ee-43f4-9a5d-1ffde949dc1c%26redirect_uri%3Dhttps%253A%252F%252Fe7ee88-2.myshopify.com%252Fcustomer_authentication%252Fcallback%253Fsource%253Dcore%26response_type%3Dcode%26scope%3Dopenid%2Bemail%2Bcustomer-account-api%253Afull%26state%3D01K1BWH4B856E5ZC9VARMG3FA3"
+          }
+        },
+        "msg_service": {
+          "type": "message",
+          "settings": {
+            "text": "Tischtennis-Fachhandel – Beratung & schneller Versand",
+            "cta_label": "",
+            "cta_link": ""
+          }
+        },
+        "msg_config": {
+          "type": "message",
+          "settings": {
+            "text": "Stelle dir deinen Wunschschläger zusammen",
+            "cta_label": "Konfigurator",
+            "cta_link": "/collections/konfigurierte-schlager"
+          }
         }
       },
       "block_order": [
-        "announcement_rjiLrF"
+        "msg_vip",
+        "msg_service",
+        "msg_config"
       ],
-      "name": "t:names.announcement_bar",
+      "name": "Announcement-Ticker",
       "settings": {
-        "speed": 5,
-        "section_width": "page-width",
-        "color_scheme": "scheme-5",
-        "divider_width": 0,
-        "padding-block-start": 8,
-        "padding-block-end": 8
+        "autoplay": true,
+        "interval": 4,
+        "bg_color": "#1d3686",
+        "text_color": "#ffffff"
       }
     },
     "header_section": {
@@ -137,7 +148,7 @@
     }
   },
   "order": [
-    "header_announcements_h8JM6j",
+    "fs_announce_ticker",
     "header_section",
     "fs_mobile_search",
     "fs_mobile_chips"

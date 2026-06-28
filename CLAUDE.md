@@ -210,7 +210,13 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       direkt unter der mobilen Suchleiste eingehängt. Entwurf-Theme.
 - [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
 - [ ] 🟢 **WhatsApp/Chat-Widget** (Beratung, Vereins-/Elternkäufe) — gering/mittel
-- [ ] **Announcement-Banner** als Ticker mit CTA-Button statt langem Auth-Link (rotierende Botschaften) — vorhanden, verbesserbar
+- [x] **Announcement-Banner** als Ticker mit CTA-Button statt langem Auth-Link — ERLEDIGT:
+      neue Section `sections/announcement-ticker.liquid` (rotierende Botschaften als Blöcke,
+      je optional CTA-Button, Autoplay/Intervall + Farben einstellbar, pausiert bei Hover/Fokus,
+      respektiert reduzierte Bewegung). In `header-group.json` als `fs_announce_ticker` ganz oben
+      eingehängt; das alte `header-announcements`-Banner (langer Login-Link) ersetzt. Seed-Botschaften:
+      VIP-Anmeldung (Original-Login-URL als CTA), Fachhandel/Versand, Schläger-Konfigurator.
+      Default Markenblau `#1d3686`, Button weiß. Entwurf-Theme.
 - [~] **Cross-Sell direkt nach dem Kaufen-Button** (Belag→Holz/Kleber) — TEILWEISE (Konfigurator-CTA vorhanden)
 - [ ] **Produktkarten-Grid mobil größer** / Varianten-Dots auf der Kachel
 

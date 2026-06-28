@@ -1,0 +1,218 @@
+{%- comment -%}
+  Announcement-Ticker (Futurespin)
+  Rotierendes Ankündigungsbanner über dem Header: mehrere Kurzbotschaften (Blöcke),
+  jeweils mit optionalem CTA-Button. Wechselt automatisch durch, pausiert bei Hover/Fokus,
+  respektiert "reduzierte Bewegung". Ersetzt den langen Login-Link durch klare Botschaften.
+  Botschaften sind als Blöcke im Theme-Editor pflegbar (Text + Button-Beschriftung + Link).
+{%- endcomment -%}
+
+{%- liquid
+  assign bg = section.settings.bg_color
+  assign fg = section.settings.text_color
+-%}
+{%- if section.blocks.size > 0 -%}
+<div
+  class="fs-ticker"
+  data-fs-ticker
+  data-interval="{{ section.settings.interval | times: 1000 }}"
+  data-autoplay="{% if section.settings.autoplay %}1{% else %}0{% endif %}"
+  style="--ticker-bg: {{ bg }}; --ticker-fg: {{ fg }};"
+  role="region"
+  aria-label="Ankündigungen"
+>
+  <div class="fs-ticker__viewport">
+    {%- for block in section.blocks -%}
+      <div
+        class="fs-ticker__slide"
+        data-fs-slide
+        {% unless forloop.first %}hidden{% endunless %}
+        {{ block.shopify_attributes }}
+      >
+        {%- if block.settings.text != blank -%}
+          <span class="fs-ticker__text">{{ block.settings.text }}</span>
+        {%- endif -%}
+        {%- if block.settings.cta_label != blank and block.settings.cta_link != blank -%}
+          <a class="fs-ticker__cta" href="{{ block.settings.cta_link }}">{{ block.settings.cta_label | escape }}</a>
+        {%- endif -%}
+      </div>
+    {%- endfor -%}
+  </div>
+</div>
+
+<script>
+  (function () {
+    var root = document.getElementById('shopify-section-{{ section.id }}');
+    if (!root) return;
+    var ticker = root.querySelector('[data-fs-ticker]');
+    if (!ticker) return;
+    var slides = Array.prototype.slice.call(ticker.querySelectorAll('[data-fs-slide]'));
+    if (slides.length < 2) return;
+
+    var autoplay = ticker.getAttribute('data-autoplay') === '1';
+    var interval = parseInt(ticker.getAttribute('data-interval'), 10);
+    if (isNaN(interval) || interval < 1500) interval = 4000;
+
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var i = 0;
+    var timer = null;
+
+    function show(n) {
+      slides[i].hidden = true;
+      i = (n + slides.length) % slides.length;
+      slides[i].hidden = false;
+    }
+    function next() { show(i + 1); }
+    function start() {
+      if (!autoplay || reduce || timer) return;
+      timer = setInterval(next, interval);
+    }
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+
+    ticker.addEventListener('mouseenter', stop);
+    ticker.addEventListener('mouseleave', start);
+    ticker.addEventListener('focusin', stop);
+    ticker.addEventListener('focusout', start);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stop(); else start();
+    });
+
+    start();
+  })();
+</script>
+{%- endif -%}
+
+{% stylesheet %}
+  .fs-ticker {
+    background: var(--ticker-bg, #1d3686);
+    color: var(--ticker-fg, #ffffff);
+  }
+
+  .fs-ticker__viewport {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0.4rem var(--page-margin, 16px);
+  }
+
+  .fs-ticker__slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    text-align: center;
+  }
+
+  .fs-ticker__slide[hidden] {
+    display: none;
+  }
+
+  .fs-ticker__text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--ticker-fg, #ffffff);
+  }
+
+  .fs-ticker__text a {
+    color: inherit;
+    text-decoration: underline;
+  }
+
+  .fs-ticker__cta {
+    display: inline-block;
+    padding: 0.28rem 0.8rem;
+    border-radius: 999px;
+    background: var(--ticker-fg, #ffffff);
+    color: var(--ticker-bg, #1d3686);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+  }
+
+  .fs-ticker__cta:hover {
+    opacity: 0.88;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Announcement-Ticker",
+  "tag": "section",
+  "class": "fs-ticker-section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Rotierendes Ankündigungsbanner mit CTA-Button. Botschaften unten als Blöcke hinzufügen. Am besten ganz oben über dem Header platzieren."
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Automatisch durchwechseln",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "interval",
+      "min": 2,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "label": "Wechsel-Intervall",
+      "default": 4
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Hintergrund",
+      "default": "#1d3686"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text & Button",
+      "default": "#ffffff"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "message",
+      "name": "Botschaft",
+      "settings": [
+        {
+          "type": "inline_richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "Jetzt kostenlos anmelden und 15 % VIP-Rabatt sichern"
+        },
+        {
+          "type": "text",
+          "id": "cta_label",
+          "label": "Button-Beschriftung",
+          "info": "Leer lassen, um keinen Button zu zeigen."
+        },
+        {
+          "type": "url",
+          "id": "cta_link",
+          "label": "Button-Link"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [
+    {
+      "name": "Announcement-Ticker",
+      "blocks": [
+        { "type": "message" }
+      ]
+    }
+  ]
+}
+{% endschema %}
