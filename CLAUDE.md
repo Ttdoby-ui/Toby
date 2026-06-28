@@ -223,6 +223,18 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
           `html{overflow-x:hidden}` allein reicht iOS oft auch nicht → `html,body{overflow-x:hidden}`.
         - **Beläge/Hölzer nutzen die Vorlage `collection.filter`** (Sections:
           `collection-topseller`, `filter-panel`, `produkt-vergleich-cards`).
+        3. **ECHTE Wurzel (war's am Ende):** In den Topseller-Kacheln rendert `price.liquid`
+           ein **absolut positioniertes `span.visually-hidden`** (a11y-Text). In der schmalen
+           Kachel hatte es **keinen positionierten Vorfahren** → bezog sich auf den Body,
+           **brach aus dem `overflow:auto`-Scroller aus** und dehnte die Seite (877px). Kein
+           `overflow`-Trick greift, weil absolute Elemente die overflow-Begrenzung
+           nicht-positionierter Vorfahren ignorieren. **Fix:** `.cots__price`
+           `position:relative`+`overflow:hidden` (Bezugsrahmen) und `.cots__price
+           .visually-hidden` korrekt auf 1px klippen. → **Lehre:** absolut positionierte
+           a11y-Spans (visually-hidden) in engen Kacheln immer in einem `position:relative`-
+           Container mit `overflow:hidden` kapseln. Diagnose, die das fand: Elemente **am
+           Scroll-Rand** (`right ≈ documentElement.scrollWidth`) mit **Eltern-Kette** zeigen
+           (nicht die breitesten – die sind oft geklippt und damit unschuldig).
 - [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
 - [ ] 🟢 **WhatsApp/Chat-Widget** (Beratung, Vereins-/Elternkäufe) — gering/mittel
 - [x] **Announcement-Banner** als Ticker mit CTA-Button statt langem Auth-Link — ERLEDIGT:
