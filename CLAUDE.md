@@ -201,11 +201,13 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 - [x] 🟡 **Suchleiste prominenter** — ERLEDIGT: neue Section `sections/mobile-search-bar.liquid`
       (nur < 750px, öffnet die bestehende Predictive-Search-Modal `#search-modal`), via `header-group.json`
       unter dem Header global eingehängt. Entwurf-Theme.
-- [x] 🟡 **Navigation vereinfachen** / horizontale Kategorie-Chips — ERLEDIGT: neue Section
-      `sections/mobile-category-chips.liquid` (nur < 750px, horizontal scrollbar, aus wählbarem
-      Menü = Default `main-menu`, oberste Menüpunkte als Pills, aktive Kategorie via
-      `link.active/child_active` hervorgehoben in Markenblau `#1d3686`). In `header-group.json`
-      als `fs_mobile_chips` direkt unter der mobilen Suchleiste eingehängt. Entwurf-Theme.
+- [x] 🟡 **Navigation vereinfachen** / horizontale Kategorie-Leiste — ERLEDIGT: neue Section
+      `sections/mobile-category-chips.liquid` (Typ/Handle bleibt `mobile-category-chips`, nur < 750px,
+      horizontal scrollbar, aus wählbarem Menü = Default `main-menu`, oberste Menüpunkte). Aktuelle
+      Optik (User-Wunsch): **Textlinks mit senkrechtem Trennstrich** dazwischen, aktive Kategorie
+      via `link.active/child_active` in Markenblau `#1d3686` + Unterstreichung (vorher als blaue
+      Pills, dann auf Trennstrich-Optik umgestellt). In `header-group.json` als `fs_mobile_chips`
+      direkt unter der mobilen Suchleiste eingehängt. Entwurf-Theme.
 - [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
 - [ ] 🟢 **WhatsApp/Chat-Widget** (Beratung, Vereins-/Elternkäufe) — gering/mittel
 - [ ] **Announcement-Banner** als Ticker mit CTA-Button statt langem Auth-Link (rotierende Botschaften) — vorhanden, verbesserbar
