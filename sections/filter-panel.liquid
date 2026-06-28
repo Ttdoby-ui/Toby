@@ -169,7 +169,8 @@
   .fp-card__dot{width:.85em;height:.85em;border-radius:50%;display:inline-block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2);}
   .fp-card__dot-more{font-size:.72em;color:#777;line-height:1;}
   /* Schutz gegen horizontales Wegscrollen der Seite (Grid-Item-Blowout) */
-  body{overflow-x:clip;}
+  html{overflow-x:hidden;}
+  @supports (overflow:clip){html{overflow-x:clip;}}
   .fp-main,.fp-grid{min-width:0;}
   .fp-card,.fp-card a{min-width:0;max-width:100%;}
   .fp-card__title{overflow-wrap:anywhere;}
@@ -197,6 +198,24 @@
 {% endstyle %}
 <script src="{{ 'filter-panel-helpers.js' | asset_url }}" defer></script>
 <script src="{{ 'filter-panel-main.js' | asset_url }}" defer></script>
+
+<script>
+  /* Diagnose: Kollektion mit ?fpdebug=1 oeffnen -> zeigt die zu breiten Elemente. */
+  if (location.search.indexOf('fpdebug') > -1) {
+    setTimeout(function () {
+      var vw = document.documentElement.clientWidth, list = [];
+      document.querySelectorAll('*').forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.width > 0 && r.right > vw + 2) {
+          var cls = (el.className && el.className.toString) ? el.className.toString().trim().replace(/\s+/g, '.') : '';
+          list.push(Math.round(r.right) + 'px  ' + el.tagName.toLowerCase() + (cls ? '.' + cls.slice(0, 45) : '') + (el.id ? '#' + el.id : ''));
+        }
+      });
+      list.sort(function (a, b) { return parseInt(b) - parseInt(a); });
+      alert('Viewport=' + vw + 'px\ndocScrollWidth=' + document.documentElement.scrollWidth + '\n\nZu breite Elemente:\n' + (list.slice(0, 10).join('\n') || 'keine gefunden'));
+    }, 1800);
+  }
+</script>
 
 {% schema %}
 {
