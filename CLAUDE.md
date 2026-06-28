@@ -191,7 +191,13 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       und Hero (`sections/hero.liquid`) liefern bereits responsives `srcset` (832–3840) + `sizes:100vw`
       und ein dediziertes Mobil-Bild (375–1100). Das `width=3840` ist nur der Fallback-`src`, NICHT der
       geladene. → Hero ist kein echter Killer; reale Engpässe nur per **Messung** (PageSpeed/Lighthouse mobil) finden.
-- [ ] 🟡 **Bewertungs-App** (Judge.me/Loox) + Sterne auf PDP & Kacheln — gering/hoch
+- [x] 🟡 **Bewertungs-App** (Judge.me) + Sterne auf PDP & Kacheln — ERLEDIGT: Judge.me
+      vom User installiert (App-Embed + PDP-Widget + native Theme-Badges über Judge.mes
+      eigenen Installer). Die **Filter-Panel-Kacheln** laufen NICHT über die Standard-Kachel
+      → dort eigenes `jdgm-preview-badge` (mit `data-id` = Produkt-ID) pro Kachel in
+      `assets/filter-panel-main.js`; nach jedem Render/Filter wird `jdgm.batchRenderBadges()`
+      angestoßen (mit Poll, falls Judge.me noch lädt), sonst bleiben die clientseitig
+      gebauten Kacheln ohne Sterne. Markenfarbe für Judge.me-Widgets: `#1d3686`.
 - [x] 🟡 **Suchleiste prominenter** — ERLEDIGT: neue Section `sections/mobile-search-bar.liquid`
       (nur < 750px, öffnet die bestehende Predictive-Search-Modal `#search-modal`), via `header-group.json`
       unter dem Header global eingehängt. Entwurf-Theme.
