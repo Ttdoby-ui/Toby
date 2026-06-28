@@ -197,7 +197,7 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       → dort eigenes `jdgm-preview-badge` (mit `data-id` = Produkt-ID) pro Kachel in
       `assets/filter-panel-main.js`; nach jedem Render/Filter wird `jdgm.batchRenderBadges()`
       angestoßen (mit Poll, falls Judge.me noch lädt), sonst bleiben die clientseitig
-      gebauten Kacheln ohne Sterne. Markenfarbe für Judge.me-Widgets: `#1d3686`.
+      gebauten Kacheln ohne Sterne. Markenfarbe für Judge.me-Widgets: `#486A8F`.
 - [x] 🟡 **Suchleiste prominenter** — ERLEDIGT: neue Section `sections/mobile-search-bar.liquid`
       (nur < 750px, öffnet die bestehende Predictive-Search-Modal `#search-modal`), via `header-group.json`
       unter dem Header global eingehängt. Entwurf-Theme.
@@ -205,7 +205,7 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       `sections/mobile-category-chips.liquid` (Typ/Handle bleibt `mobile-category-chips`, nur < 750px,
       horizontal scrollbar, aus wählbarem Menü = Default `main-menu`, oberste Menüpunkte). Aktuelle
       Optik (User-Wunsch): **Textlinks mit senkrechtem Trennstrich** dazwischen, aktive Kategorie
-      via `link.active/child_active` in Markenblau `#1d3686` + Unterstreichung (vorher als blaue
+      via `link.active/child_active` in Markenblau `#486A8F` + Unterstreichung (vorher als blaue
       Pills, dann auf Trennstrich-Optik umgestellt). In `header-group.json` als `fs_mobile_chips`
       direkt unter der mobilen Suchleiste eingehängt. Entwurf-Theme.
       - ⚠️ **Overflow-Falle (horizontales Wegscrollen mobil):** Mehrere Quellen können die
@@ -238,7 +238,7 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 - [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
 - [x] 🟢 **Chat-Widget** (Beratung) — ERLEDIGT via **Shopify Inbox** (kein WhatsApp gewünscht).
       App-Embed im Entwurf-Theme aktiviert (`config/settings_data.json` → `current.blocks`),
-      Chat-Button in Markenblau `#1d3686`, Position bottom-right/lowest.
+      Chat-Button in Markenblau `#486A8F`, Position bottom-right/lowest.
       - ⚠️ **App-Embeds in `settings_data.json`** (sonst gehen sie bei der Go-Live-Rotation
         Entwurf→Live verloren!). Block-Referenzen (aus Live übernommen):
         - Inbox-Chat: `shopify://apps/inbox/blocks/chat/841fc607-4181-4ad1-842d-e24d7f8bad6b`
@@ -250,7 +250,7 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       neue Section `sections/announcement-ticker.liquid` (rotierende Botschaften, je optional
       CTA-Button, Autoplay/Intervall + Farben, pausiert bei Hover/Fokus, respektiert reduzierte
       Bewegung). In `header-group.json` als `fs_announce_ticker` ganz oben eingehängt; das alte
-      `header-announcements`-Banner (langer Login-Link) ersetzt. Default Markenblau `#1d3686`,
+      `header-announcements`-Banner (langer Login-Link) ersetzt. Default Markenblau `#486A8F`,
       Button weiß.
       - **Datenquelle = Shop-Metafeld `custom.announcement_banner` (JSON)** — Vorrang vor den
         Section-Blöcken (die nur Fallback sind). So pflegbar über den **Content Creator** (separates
