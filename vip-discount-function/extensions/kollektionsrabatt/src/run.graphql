@@ -11,6 +11,14 @@ query Input($collectionIds: [ID!], $vipTags: [String!]) {
     lines {
       id
       quantity
+      cost {
+        amountPerQuantity {
+          amount
+        }
+        compareAtAmountPerQuantity {
+          amount
+        }
+      }
       merchandise {
         __typename
         ... on ProductVariant {

@@ -165,25 +165,42 @@
   {%- endcomment -%}
   {%- if product_resource.tags contains 'Belag' and show_b2b_net == false and product_resource != blank -%}
     {%- liquid
-      assign belag_base = selected_variant.price
-      assign belag_p2 = belag_base | times: 85 | divided_by: 100 | money
-      assign belag_p5 = belag_base | times: 80 | divided_by: 100 | money
-      assign belag_p10 = belag_base | times: 75 | divided_by: 100 | money
+      comment
+        Staffelpreis am UVP/Vergleichspreis gemessen, "höchster Rabatt gewinnt":
+        Eine Stufe wird nur gezeigt, wenn ihr Preis den aktuellen (ggf. Angebots-)
+        Preis unterbietet. Ist das Angebot tiefer, erscheint keine Box.
+      endcomment
+      assign belag_current = selected_variant.price
+      assign belag_uvp = belag_current
+      if selected_variant.compare_at_price > belag_current
+        assign belag_uvp = selected_variant.compare_at_price
+      endif
+      assign belag_t2 = belag_uvp | times: 85 | divided_by: 100
+      assign belag_t5 = belag_uvp | times: 80 | divided_by: 100
+      assign belag_t10 = belag_uvp | times: 75 | divided_by: 100
     -%}
-    <div class="belag-tiers">
-      <div class="belag-tier">
-        <span class="belag-tier__label">im 2er-Paket</span>
-        <span class="belag-tier__price">{{ belag_p2 }}</span>
+    {%- if belag_t10 < belag_current -%}
+      <div class="belag-tiers">
+        {%- if belag_t2 < belag_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">im 2er-Paket</span>
+            <span class="belag-tier__price">{{ belag_t2 | money }}</span>
+          </div>
+        {%- endif -%}
+        {%- if belag_t5 < belag_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">im 5er-Paket</span>
+            <span class="belag-tier__price">{{ belag_t5 | money }}</span>
+          </div>
+        {%- endif -%}
+        {%- if belag_t10 < belag_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">im 10er-Paket</span>
+            <span class="belag-tier__price">{{ belag_t10 | money }}</span>
+          </div>
+        {%- endif -%}
       </div>
-      <div class="belag-tier">
-        <span class="belag-tier__label">im 5er-Paket</span>
-        <span class="belag-tier__price">{{ belag_p5 }}</span>
-      </div>
-      <div class="belag-tier">
-        <span class="belag-tier__label">im 10er-Paket</span>
-        <span class="belag-tier__price">{{ belag_p10 }}</span>
-      </div>
-    </div>
+    {%- endif -%}
   {%- endif -%}
 </div>
 

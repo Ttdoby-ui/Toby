@@ -3,12 +3,15 @@
  *
  * Wendet einen prozentualen Rabatt auf alle Artikel einer Kollektion an,
  * abhängig von der Gesamtmenge dieser Kollektion im Warenkorb (Mengenstaffel).
- * Beispiel: ab 2 Stück 20 %, ab 5 Stück 25 %, ab 10 Stück 30 %.
+ * Beispiel: ab 2 Stück 15 %, ab 5 Stück 20 %, ab 10 Stück 25 %.
  *
- * "Höchster Rabatt gewinnt":
+ * "Höchster Rabatt gewinnt" – kein Stapeln:
  *   - Unter den Staffeln greift automatisch die höchste erfüllte Stufe.
- *   - Gegenüber VIP greift pro Artikel der höhere Wert aus
- *     Mengenrabatt vs. VIP-Prozentsatz (kein Stapeln).
+ *   - Gegenüber VIP greift pro Artikel der höhere Wert aus Mengenrabatt vs. VIP %.
+ *   - Gegenüber einem **Angebot** (Vergleichspreis/UVP > aktueller Preis) wird
+ *     der Nachlass am UVP gemessen: Ist das Angebot bereits tiefer als der
+ *     Mengen-/VIP-Rabatt, greift KEIN zusätzlicher Rabatt. Andernfalls wird nur
+ *     der Differenzbetrag bis zum Zielpreis (UVP × (1−%)) abgezogen.
  *
  * Ziel/API: cart.lines.discounts.generate.run (neue Discounts-API).
  *
@@ -17,9 +20,9 @@
  * {
  *   "collectionIds": ["gid://shopify/Collection/123456789"],
  *   "tiers": [
- *     { "quantity": 2,  "percentage": 20 },
- *     { "quantity": 5,  "percentage": 25 },
- *     { "quantity": 10, "percentage": 30 }
+ *     { "quantity": 2,  "percentage": 15 },
+ *     { "quantity": 5,  "percentage": 20 },
+ *     { "quantity": 10, "percentage": 25 }
  *   ],
  *   "vipTags": ["VIP1", "VIP2", "VIP3"],
  *   "vipTiers": [
@@ -66,30 +69,63 @@ export function run(input) {
   const volumePercent = highestVolumePercent(tiers, totalQuantity);
   const vipPercent = highestVipPercent(cart, config.vipTiers);
 
-  // Höchster Rabatt gewinnt – kein Stapeln.
+  // Höchster Prozentsatz aus Mengenstaffel vs. VIP.
   const percent = Math.max(volumePercent, vipPercent);
   if (percent <= 0) {
     return NO_DISCOUNT;
   }
 
   const vipWins = vipPercent > volumePercent;
+  const message = vipWins ? `VIP ${percent}%` : `Mengenrabatt ${percent}%`;
+
+  const candidates = [];
+  for (const line of collectionLines) {
+    const current = Number(line.cost?.amountPerQuantity?.amount);
+    if (!Number.isFinite(current) || current <= 0) {
+      continue;
+    }
+
+    const compareAt = Number(line.cost?.compareAtAmountPerQuantity?.amount);
+    const hasMarkdown = Number.isFinite(compareAt) && compareAt > current;
+
+    if (!hasMarkdown) {
+      // Kein Angebot → einfacher Prozent-Rabatt auf den Preis.
+      candidates.push({
+        message,
+        targets: [{ cartLine: { id: line.id } }],
+        value: { percentage: { value: String(percent) } },
+      });
+      continue;
+    }
+
+    // Angebot vorhanden: Nachlass am UVP messen, höchster gewinnt.
+    const target = compareAt * (1 - percent / 100);
+    if (target < current - 0.005) {
+      const deductPerItem = current - target;
+      candidates.push({
+        message,
+        targets: [{ cartLine: { id: line.id } }],
+        value: {
+          fixedAmount: {
+            amount: deductPerItem.toFixed(2),
+            appliesToEachItem: true,
+          },
+        },
+      });
+    }
+    // sonst: Angebot ist bereits tiefer → kein zusätzlicher Rabatt.
+  }
+
+  if (candidates.length === 0) {
+    return NO_DISCOUNT;
+  }
 
   return {
     operations: [
       {
         productDiscountsAdd: {
-          candidates: [
-            {
-              message: vipWins ? `VIP ${percent}%` : `Mengenrabatt ${percent}%`,
-              targets: collectionLines.map((line) => ({
-                cartLine: { id: line.id },
-              })),
-              value: {
-                percentage: { value: String(percent) },
-              },
-            },
-          ],
-          selectionStrategy: "FIRST",
+          candidates,
+          selectionStrategy: "ALL",
         },
       },
     ],

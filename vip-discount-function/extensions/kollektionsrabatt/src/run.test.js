@@ -5,9 +5,9 @@ import { describe, it } from "node:test";
 const DEFAULT_CONFIG = {
   collectionIds: ["gid://shopify/Collection/123"],
   tiers: [
-    { quantity: 2, percentage: 20 },
-    { quantity: 5, percentage: 25 },
-    { quantity: 10, percentage: 30 },
+    { quantity: 2, percentage: 15 },
+    { quantity: 5, percentage: 20 },
+    { quantity: 10, percentage: 25 },
   ],
   vipTags: ["VIP1", "VIP2", "VIP3"],
   vipTiers: [
@@ -35,19 +35,22 @@ const makeInput = ({ config = DEFAULT_CONFIG, lines = [], vipTags = [] } = {}) =
   },
 });
 
-/** Erste Discount-Candidate aus dem Ergebnis. */
-function candidate(result) {
-  return result.operations?.[0]?.productDiscountsAdd?.candidates?.[0];
+function candidates(result) {
+  return result.operations?.[0]?.productDiscountsAdd?.candidates ?? [];
 }
 function opsCount(result) {
   return result.operations?.length ?? 0;
 }
 
-/** n Artikel der Kollektion (je Menge 1). */
-function collectionLines(count) {
+/** n Artikel der Kollektion (je Menge 1). Optional mit Vergleichspreis (Angebot). */
+function collectionLines(count, price = 33.9, compareAt = null) {
   return Array.from({ length: count }, (_, i) => ({
     id: `gid://shopify/CartLine/coll-${i}`,
     quantity: 1,
+    cost: {
+      amountPerQuantity: { amount: price },
+      compareAtAmountPerQuantity: compareAt == null ? null : { amount: compareAt },
+    },
     merchandise: {
       __typename: "ProductVariant",
       product: { inAnyCollection: true },
@@ -59,6 +62,7 @@ function otherLine(id = "other-1", quantity = 1) {
   return {
     id: `gid://shopify/CartLine/${id}`,
     quantity,
+    cost: { amountPerQuantity: { amount: 50 }, compareAtAmountPerQuantity: null },
     merchandise: {
       __typename: "ProductVariant",
       product: { inAnyCollection: false },
@@ -77,64 +81,57 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
     assert.equal(opsCount(result), 0);
   });
 
-  it("ab 2 Stück → 20 %", () => {
+  it("ab 2 Stück → 15 %", () => {
     const result = run(makeInput({ lines: collectionLines(2) }));
-    assert.equal(opsCount(result), 1);
-    assert.equal(candidate(result).value.percentage.value, "20");
-    assert.equal(candidate(result).targets.length, 2);
+    assert.equal(candidates(result).length, 2);
+    assert.equal(candidates(result)[0].value.percentage.value, "15");
   });
 
-  it("ab 5 Stück → 25 %", () => {
+  it("ab 5 Stück → 20 %", () => {
     const result = run(makeInput({ lines: collectionLines(5) }));
-    assert.equal(candidate(result).value.percentage.value, "25");
+    assert.equal(candidates(result)[0].value.percentage.value, "20");
   });
 
-  it("ab 10 Stück → 30 %", () => {
+  it("ab 10 Stück → 25 %", () => {
     const result = run(makeInput({ lines: collectionLines(10) }));
-    assert.equal(candidate(result).value.percentage.value, "30");
+    assert.equal(candidates(result)[0].value.percentage.value, "25");
   });
 
-  it("7 Stück → höchste erfüllte Staffel (25 %), nicht mehr", () => {
+  it("7 Stück → höchste erfüllte Staffel (20 %)", () => {
     const result = run(makeInput({ lines: collectionLines(7) }));
-    assert.equal(candidate(result).value.percentage.value, "25");
+    assert.equal(candidates(result)[0].value.percentage.value, "20");
   });
 
   it("Mengen über mehrere Zeilen werden summiert", () => {
-    const lines = [
-      { id: "gid://shopify/CartLine/a", quantity: 3, merchandise: { __typename: "ProductVariant", product: { inAnyCollection: true } } },
-      { id: "gid://shopify/CartLine/b", quantity: 2, merchandise: { __typename: "ProductVariant", product: { inAnyCollection: true } } },
-    ];
-    const result = run(makeInput({ lines }));
-    // 3 + 2 = 5 → 25 %
-    assert.equal(candidate(result).value.percentage.value, "25");
+    const mk = (id, qty) => ({
+      id: `gid://shopify/CartLine/${id}`,
+      quantity: qty,
+      cost: { amountPerQuantity: { amount: 33.9 }, compareAtAmountPerQuantity: null },
+      merchandise: { __typename: "ProductVariant", product: { inAnyCollection: true } },
+    });
+    const result = run(makeInput({ lines: [mk("a", 3), mk("b", 2)] }));
+    // 3 + 2 = 5 → 20 %
+    assert.equal(candidates(result)[0].value.percentage.value, "20");
   });
 
   it("Artikel außerhalb der Kollektion zählen nicht und werden nicht rabattiert", () => {
     const lines = [...collectionLines(2), otherLine("holz")];
     const result = run(makeInput({ lines }));
-    assert.equal(opsCount(result), 1);
-    assert.equal(candidate(result).targets.length, 2);
-    const ids = candidate(result).targets.map((t) => t.cartLine.id);
+    assert.equal(candidates(result).length, 2);
+    const ids = candidates(result).map((c) => c.targets[0].cartLine.id);
     assert.ok(!ids.includes("gid://shopify/CartLine/holz"));
   });
 
-  it("VIP gewinnt: VIP3 (30 %) schlägt Mengenrabatt 20 % bei 2 Stück", () => {
+  it("VIP gewinnt: VIP3 (30 %) schlägt Mengenrabatt 15 % bei 2 Stück", () => {
     const result = run(makeInput({ lines: collectionLines(2), vipTags: ["VIP3"] }));
-    assert.equal(candidate(result).value.percentage.value, "30");
-    assert.ok(candidate(result).message.startsWith("VIP"));
+    assert.equal(candidates(result)[0].value.percentage.value, "30");
+    assert.ok(candidates(result)[0].message.startsWith("VIP"));
   });
 
-  it("Mengenrabatt gewinnt: 25 % bei 5 Stück schlägt VIP1 (15 %)", () => {
+  it("Mengenrabatt gewinnt: 20 % bei 5 Stück schlägt VIP1 (15 %)", () => {
     const result = run(makeInput({ lines: collectionLines(5), vipTags: ["VIP1"] }));
-    assert.equal(candidate(result).value.percentage.value, "25");
-    assert.ok(candidate(result).message.startsWith("Mengenrabatt"));
-  });
-
-  it("Gleichstand: Mengenrabatt-Label, gleicher Prozentsatz", () => {
-    // 5 Stück → 25 %, VIP2 → 25 %
-    const result = run(makeInput({ lines: collectionLines(5), vipTags: ["VIP2"] }));
-    assert.equal(candidate(result).value.percentage.value, "25");
-    assert.ok(candidate(result).message.startsWith("Mengenrabatt"));
+    assert.equal(candidates(result)[0].value.percentage.value, "20");
+    assert.ok(candidates(result)[0].message.startsWith("Mengenrabatt"));
   });
 
   it("ohne vipTiers: reiner Mengenrabatt, VIP-Tags ignoriert", () => {
@@ -143,7 +140,7 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
       tiers: DEFAULT_CONFIG.tiers,
     };
     const result = run(makeInput({ config, lines: collectionLines(2), vipTags: ["VIP3"] }));
-    assert.equal(candidate(result).value.percentage.value, "20");
+    assert.equal(candidates(result)[0].value.percentage.value, "15");
   });
 
   it("kein Produktrabatt-Class → keine Operation", () => {
@@ -151,5 +148,32 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
     input.discount.discountClasses = ["ORDER"];
     const result = run(input);
     assert.equal(opsCount(result), 0);
+  });
+
+  it("Angebot tiefer als Mengenrabatt → KEIN zusätzlicher Rabatt (höchster gewinnt)", () => {
+    // 2 Stück, Preis 27,90 (Angebot), UVP 39,90 → 30 % Angebot > 15 % Menge
+    const result = run(makeInput({ lines: collectionLines(2, 27.9, 39.9) }));
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("Mengenrabatt höher als Angebot → nur Differenz bis Zielpreis", () => {
+    // 10 Stück (25 %), Preis 35,00, UVP 40,00 → Ziel 30,00, Abzug 5,00/Stk
+    const result = run(makeInput({ lines: collectionLines(10, 35.0, 40.0) }));
+    assert.equal(candidates(result)[0].value.fixedAmount.amount, "5.00");
+    assert.equal(candidates(result)[0].value.fixedAmount.appliesToEachItem, true);
+  });
+
+  it("Mischung: Angebotsartikel ohne Zusatz, Normalartikel mit Prozent", () => {
+    const sale = collectionLines(1, 27.9, 39.9); // Angebot tiefer → kein Zusatz
+    const normal = collectionLines(1, 33.9, null).map((l) => ({
+      ...l,
+      id: "gid://shopify/CartLine/normal",
+    }));
+    // zusammen 2 Stück → 15 %
+    const result = run(makeInput({ lines: [...sale, ...normal] }));
+    const cands = candidates(result);
+    assert.equal(cands.length, 1); // nur der Normalartikel
+    assert.equal(cands[0].targets[0].cartLine.id, "gid://shopify/CartLine/normal");
+    assert.equal(cands[0].value.percentage.value, "15");
   });
 });
