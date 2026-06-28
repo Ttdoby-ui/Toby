@@ -35,6 +35,9 @@
   - jeweils auf die VIP-Kollektion, Kundensegmente nach Tags `VIP1`/`VIP2`/`VIP3`
 - BXGY „Beläge: Kaufe 4, zahle 3" (`2337981858140`) ist aktuell **EXPIRED**
 - App „VIP Beläge Discount" (enthält die Discount-Function): client_id `9fe6aa2d03cc52e54d29fdba8ee8d823`
+  - Store-Function-ID (für `discountAutomaticAppCreate`): `019f08c1-5ddb-7799-b6fa-287917c3aaa1`
+- **LIVE Mengenrabatt** „Belaege Mengenrabatt": `gid://shopify/DiscountAutomaticNode/2341460803932`,
+  auf Beläge, Staffeln **ab 2 → 15 %, ab 5 → 20 %, ab 10 → 25 %** (VIP-Vergleich 15/25/30, höchster gewinnt)
 
 ## Shopify Functions (JavaScript) — korrekter Aufbau
 
@@ -79,6 +82,26 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   → `npm install -g @shopify/cli@latest` → `shopify app deploy`.
 - Beim Deploy bestätigt man mit dem App-Namen (`VIP Beläge Discount`).
   **Vor dem Bestätigen** den Diff prüfen: „removed extensions" können Live-Daten löschen.
+- Nach dem Deploy muss die App im **Store installiert** werden (Dev Dashboard → App →
+  Store auswählen), sonst ist die Function nicht aktiv.
+
+### Rabatt anlegen (verifiziert – greift im Warenkorb)
+
+- `discountAutomaticAppCreate` muss von der **besitzenden App** (hier „VIP Beläge
+  Discount") kommen. Fremder Token (z. B. der Assistent-App) → Fehler
+  „Funktion … nicht in der aktuellen App". Mein MCP kann ihn daher NICHT anlegen.
+- **Store-Admin-Token** via Client-Credentials am **Store-OAuth-Endpunkt**:
+  `POST https://<shop>.myshopify.com/admin/oauth/access_token`
+  (NICHT `api.shopify.com/auth/access_token` – das ist App-Management, die Admin-API
+  gibt damit 401 „Invalid API key or access token").
+- Functions der neuen Discounts-API brauchen beim Anlegen `discountClasses: [PRODUCT]`.
+- Mit dem App-eigenen Store-Token findet `shopifyFunctions` die **eigene** Function-ID
+  (Skript ermittelt sie automatisch über den Titel).
+- Metafeld-Namespace **`kollektionsrabatt`** (plain) wird zur Laufzeit gelesen –
+  **kein `$app:` nötig** (verifiziert, Rabatt greift).
+- Konfig (Staffeln/Prozente) nachträglich ändern: `metafieldsSet` auf die
+  `DiscountAutomaticNode` – KEIN Neu-Anlegen. Geht auch über mein MCP.
+- Live-Skript: `vip-discount-function/scripts/create-kollektionsrabatt.mjs`.
 
 ## Irrwege (NICHT wiederholen)
 
