@@ -24,9 +24,13 @@ erhalten: `header-group.json` (Ticker/Suche/Chips), App-Embeds (Inbox/Judge.me) 
   (20911 B). Diese 4.1.1-Version liegt jetzt auch im Repo.
 - `config/settings_data.json` – VIP-Werte (`vip1/2/3_discount` = 15/25/30) wieder ergänzt
   (color_palette-Struktur + App-Embeds erhalten).
+- `config/settings_schema.json` – Gruppe **„Discount by tags"** wieder ergänzt: VIP1/2/3-Rabatt
+  als Editor-Felder + neu **B2B-MwSt. (`b2b_vat_rate`, Default 19)**. So sind die Prozente/der
+  MwSt.-Satz wieder im Theme-Editor pflegbar (nicht nur im Code). Datei liegt jetzt auch im Repo
+  (eingerückt; im Theme als kompaktes JSON, inhaltsgleich).
 
 **Offen / vom User:** 4.1.1-Theme durchtesten (Checkliste unten), dann per Go-Live-Rotation als neues
-Entwurf-Horizon übernehmen. Optional: VIP-Settings in `settings_schema.json` wieder als Editor-Felder.
+Entwurf-Horizon übernehmen.
 
 ## Warum überhaupt updaten?
 Neuere Horizon-Versionen bringen Performance- und Feature-Verbesserungen, die teils mit unseren
