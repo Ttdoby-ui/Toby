@@ -32,6 +32,12 @@
   - `assets/filter-panel-helpers.js`, `assets/filter-panel.css` – Helfer/Style.
 - **Konsequenz:** Kachel-Änderungen müssen **dort** rein, nicht (nur) in `price.liquid`.
   `price.liquid` greift weiter auf der **Produktdetailseite**.
+- **Performance: inkrementelles Rendern (Lazy-Grid).** `filter-panel-main.js` hält ALLE
+  Produktdaten im Speicher (Filter bleiben exakt), rendert aber nur **24 Kacheln** initial
+  (`fpCard`) und lädt beim Scrollen per **IntersectionObserver**-Sentinel batchweise nach
+  (`fpMore`/`fpEnsureSentinel`, `W.list`/`W.shown`/`W.sent`). Nach jedem Batch `$jdgm()` für
+  die Judge.me-Sterne. Filter/Sort/Reset → `W()` rendert wieder ab Batch 1. (Statt vorher
+  alle 400+ Kacheln+Bilder+Badges auf einmal.)
 - Diese Theme-Dateien lagen ursprünglich NICHT im Repo – Änderungen daran ins Repo
   spiegeln. (Rapid-Search-App ist installiert, aber auf Kollektionsseiten deaktiviert.)
 
