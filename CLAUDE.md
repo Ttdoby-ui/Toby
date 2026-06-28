@@ -208,12 +208,21 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       via `link.active/child_active` in Markenblau `#1d3686` + Unterstreichung (vorher als blaue
       Pills, dann auf Trennstrich-Optik umgestellt). In `header-group.json` als `fs_mobile_chips`
       direkt unter der mobilen Suchleiste eingehängt. Entwurf-Theme.
-      - ⚠️ **Overflow-Falle:** Eine `overflow-x:auto`-Flex-Leiste (Chips) dehnt die ganze
-        Seite, wenn sie nicht hart begrenzt ist → `max-width:100vw` (+ `box-sizing:border-box`)
-        auf `.fs-chips`/`.fs-chips__track`. Zusätzlich global `html{overflow-x:hidden}`
-        (+`@supports clip`) als Netz (fängt auch die Compare-App `.cots`). Diagnose:
-        per JS `getBoundingClientRect().right > innerWidth` die Verursacher finden.
-        `body{overflow-x:clip}` half NICHT (iOS scrollt `html`, `clip` erst iOS16+).
+      - ⚠️ **Overflow-Falle (horizontales Wegscrollen mobil):** Mehrere Quellen können die
+        Kollektionsseite breiter als den Bildschirm machen:
+        1. **Chips** selbst (`overflow-x:auto`-Flex-Leiste) → `max-width:100vw`
+           (+`box-sizing:border-box`) auf `.fs-chips`/`.fs-chips__track`.
+        2. **Topseller-Reihe** `sections/collection-topseller.liquid` (Klassen `cots` =
+           **CO**llection **T**op**S**eller, NICHT eine Fremd-App!): nutzte mobil ein
+           Grid mit **festen px-Spalten** (`repeat(N,140px)`)+`overflow-x:auto` → dehnt iOS
+           die Seite. Fix: unter 1200px auf **Flex-Scroller** umbauen
+           (`display:flex; .cots__item{flex:0 0 140px}; max-width:100%; overflow-x:auto`).
+        - Diagnose: per JS `getBoundingClientRect().right > innerWidth` die Verursacher +
+          deren `position` finden (Leiste **immer** anzeigen, sonst unklar ob sie lief).
+        - `body{overflow-x:clip}` half NICHT (iOS scrollt `html`; `clip` erst iOS16+).
+          `html{overflow-x:hidden}` allein reicht iOS oft auch nicht → `html,body{overflow-x:hidden}`.
+        - **Beläge/Hölzer nutzen die Vorlage `collection.filter`** (Sections:
+          `collection-topseller`, `filter-panel`, `produkt-vergleich-cards`).
 - [x] 🟢 **Mobile Filter in Kollektionen** — ERLEDIGT: eigenes „Filter-Panel" mit Mobil-Toggle
 - [ ] 🟢 **WhatsApp/Chat-Widget** (Beratung, Vereins-/Elternkäufe) — gering/mittel
 - [x] **Announcement-Banner** als Ticker mit CTA-Button statt langem Auth-Link — ERLEDIGT:
