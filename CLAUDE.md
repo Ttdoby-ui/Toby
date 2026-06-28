@@ -226,7 +226,11 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
         lesen/schreiben. Sein Code liegt außerhalb dieser Repo-Scope → Anbindung dort in seiner
         eigenen Cowork-Session umsetzen (gleiches JSON-Schema verwenden).
 - [~] **Cross-Sell direkt nach dem Kaufen-Button** (Belag→Holz/Kleber) — TEILWEISE (Konfigurator-CTA vorhanden)
-- [ ] **Produktkarten-Grid mobil größer** / Varianten-Dots auf der Kachel
+- [x] **Produktkarten-Grid mobil größer** / Varianten-Dots auf der Kachel — ERLEDIGT:
+      im Filter-Panel pro Kachel **Farb-Dots** aus den `farben`-Optionswerten (`fpDots()` in
+      `filter-panel-main.js`, mapt Farbnamen via `FPH.colorOf`, max. 5 + „+N", weiß mit Rand),
+      plus **mobil größere Kacheln** (Titel 1rem, Preis 1.1rem, engerer Grid-Gap) – CSS im
+      `{% style %}`-Block von `sections/filter-panel.liquid`. Entwurf-Theme.
 
 ## Git
 
