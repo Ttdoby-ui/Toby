@@ -77,6 +77,11 @@
    und die Seite dehnt. -> Bezugsrahmen schaffen + visually-hidden korrekt klippen. */
 .cots__price .compare-at-price-container{flex-wrap:wrap;max-width:100%;min-width:0;}
 .cots__price .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;border:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;}
+/* Staffelpreise als 2-Spalten-Raster: 10er steht direkt unter dem 2er (wie auf den Kacheln). */
+.cots__price .belag-tiers{display:grid;grid-template-columns:max-content max-content;justify-content:start;column-gap:.5em;row-gap:.15em;}
+.cots__price .belag-tier{padding:0;}
+.cots__price .belag-tier+.belag-tier{border-inline-start:0;padding-inline-start:0;}
+.cots__price .belag-tier:nth-child(2n){border-inline-start:1px solid #ddd;padding-inline-start:.5em;}
 {% endstyle %}
 
 {% schema %}
