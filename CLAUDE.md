@@ -185,8 +185,8 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 > Quelle: User-Analyse (Vergleich mit About You, Decathlon, Bergfreunde, Tischtennis-Profi).
 > Theme-Änderungen → **Entwurf-Horizon**. Status pflegen, wenn ein Punkt erledigt ist.
 
-- [ ] 🔴 **Sticky Add-to-Cart-Leiste** (Produktseite, blendet beim Scrollen ein: Name + Preis + Button) — gering/sehr hoch
-- [ ] 🔴 **Trust-Badges** unter dem Kaufen-Button (Lieferzeit, Gratisversand ab 69 €, 30 Tage Rückgabe) — gering/hoch
+- [x] 🔴 **Sticky Add-to-Cart-Leiste** (Produktseite) — ERLEDIGT
+- [x] 🔴 **Trust-Badges** unter dem Kaufen-Button — ERLEDIGT
 - [ ] 🔴 **Bildgrößen mobil / Performance** — Hero lädt mit `width=3840` aufs Handy! `srcset`, mobil ~800px (LCP) — mittel/sehr hoch
 - [ ] 🟡 **Bewertungs-App** (Judge.me/Loox) + Sterne auf PDP & Kacheln — gering/hoch
 - [ ] 🟡 **Suchleiste prominenter** (statt verstecktem Lupen-Icon) — gering/mittel
