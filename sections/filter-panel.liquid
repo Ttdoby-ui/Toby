@@ -152,10 +152,9 @@
 {{ 'filter-panel.css' | asset_url | stylesheet_tag }}
 {% style %}
   .fp-card__price{color:#1d3686;}
-  .fp-card .belag-tiers{display:flex;flex-wrap:wrap;margin-top:.35em;}
-  .fp-card .belag-tier{padding:0 .55em;line-height:1.25;}
-  .fp-card .belag-tier:first-child{padding-inline-start:0;}
-  .fp-card .belag-tier+.belag-tier{border-inline-start:1px solid #ddd;}
+  .fp-card .belag-tiers{display:grid;grid-template-columns:max-content max-content;justify-content:start;column-gap:.55em;row-gap:.2em;margin-top:.35em;}
+  .fp-card .belag-tier{padding:0;line-height:1.25;}
+  .fp-card .belag-tier:nth-child(2n){border-inline-start:1px solid #ddd;padding-inline-start:.55em;}
   .fp-card .belag-tier__label{display:block;font-size:.62em;color:#777;white-space:nowrap;}
   .fp-card .belag-tier__price{display:block;font-size:.8em;font-weight:700;color:#e02020;white-space:nowrap;}
   .fp-card__vip-badge{display:inline-block;background:#111;color:#fff;font-size:.7em;font-weight:700;padding:.12em .4em;border-radius:3px;margin-right:.35em;vertical-align:middle;line-height:1.4;}
