@@ -37,7 +37,7 @@ Alle **Custom-Dateien** (existieren nicht in Standard-Horizon): `assets/filter-p
 | `layout/theme.liquid` | komplett ersetzt (Header-JS neu) | 4.1.1-Basis behalten + unsere 5 Teile einsetzen: im `<head>` nach `content_for_header` → `{% render 'rapid-search-settings' %}` + `<link …sale-nav-style.css>`; vor `</body>` → **B2B-Cart-Skript** (`_b2b` aus Kunden-Tags B2B1/2/3) + `{%- render 'fs-mobile-ux' -%}` + `{%- render 'fs-vip-cards' -%}` |
 | `blocks/product-inventory.liquid` | native „X übrig"-Ampel | unsere **Ampel** (Status in_stock/low/out → „Bestand N · Lieferbar 1–3 Werktage" etc., Farben `--color-instock/lowstock/outofstock` MIT Fallbacks grün `#1a7f37`/gelb `#b25e09`/rot `#c0152f`) |
 | `config/settings_schema.json` | auf 4.1.1-Schema zurück (color_palette) | Gruppe **„Discount by tags"** ergänzen: `vip1/2/3_discount` (Default 15.05/25.05/30.05) + `b2b_vat_rate` (Default 19) als Editor-Felder |
-| `config/settings_data.json` | viele Custom-Settings verworfen (12 KB→6,7 KB) | mind. `vip1/2/3_discount`=15.0/25.0/30.0 wieder setzen; App-Embeds prüfen (Inbox `…/chat/841fc607…`, Judge.me `…/judgeme_core/61ccd3b1…`) |
+| `config/settings_data.json` | Farbsystem umgebaut (12 KB→6,7 KB) | mind. `vip1/2/3_discount`=15.0/25.0/30.0 wieder setzen; App-Embeds prüfen (Inbox `…/chat/841fc607…`, Judge.me `…/judgeme_core/61ccd3b1…`). ✅ **Größendifferenz ist KEIN Datenverlust:** 4.x ersetzt das alte `color_schemes` (scheme-1…6 + Custom) durch die kompaktere **`color_palette`** (background/foreground/color1/color3/color4/color7). Marken-Farben sind dort erhalten (weiß/schwarz/`#333333`/`#dfdfdf`/`#f5f5f5`/`#eef1ea`). Die alte Marken-Blau-Schema-4 (`#e1edf5`/`#486A8F`) wird von keiner Section referenziert → kein Eingriff. Markenblau `#486A8F` lebt in unseren Custom-CSS/Liquid weiter, nicht in Schemes. **Altes `color_schemes` NICHT ins 4.x-`settings_data` zurückkopieren** (anderes Schema, wird ignoriert/bricht). Geprüft 2026-06-29 |
 | `locales/de.json` + `locales/en.default.json` | durch Standard-Horizon ersetzt (unsere Texte weg) | 4.1.1-Basis behalten + Top-Level-Keys **`konfigurator`** (ganzer Baum) + **`klebe_service`** aus altem Theme einmergen (de = deutsch, en = englisch) |
 | `templates/index.json` | Startseite auf Horizon-Default zurück | unsere Startseite zurück (Slideshow, **hero_konfigurator** mit getrennten Desktop-/Mobil-Bildern, section/collection-list/product-list/media-with-content). Section-Typen existieren in 4.1.1; hero/slideshow-Schema änderte sich → optisch nachprüfen. ⚠️ **Hero-Mobil-Bild = neue Setting-IDs!** Im 4.1.1-`hero` heißen die Felder `custom_mobile_media:true` (Schalter MUSS an sein) + `media_type_1_mobile:"image"` + `image_1_mobile:"shopify://…"` — NICHT mehr `mobile_image`/`mobile_media_type` (alt). Stehen die alten Keys drin, wird das Mobil-Bild ignoriert und ist im Editor nicht einstellbar |
 | `templates/product.json` | PDP auf Default zurück | unser PDP-Layout zurück: `product-information`→ `_product-details` mit group(text+price), **product-inventory (Ampel)**, divider, variant-picker, **buy-buttons (+statische Sub-Blöcke)**, text, **produkt-werte/produkt-faq/hersteller-info/produkt-schema**; + `produkt-vergleich` + `product-recommendations` |
@@ -45,7 +45,7 @@ Alle **Custom-Dateien** (existieren nicht in Standard-Horizon): `assets/filter-p
 | `templates/collection.katalog.json` | dito | `collection-topseller` + `filter-panel` |
 | `templates/page.konfigurator.json` | Settings verloren | `schlaeger-finder` + `konfigurator` (Collection-Handles + Varianten-IDs `klebe_variant_id`/`versiegelung_variant_id` + Preise) + `schlaeger-berater`(disabled) |
 | `templates/page.b2b-registrierung.json` | zurückgesetzt | `main-page` (Hero-Text „B2B Händlerbereich" + Intro) + `b2b-registration` |
-| evtl. `sections/footer-group.json` | ggf. zurückgesetzt (alt 6966 vs neu 3043) | Footer-Konfig prüfen/abgleichen (war 2026-06 nicht akut nötig) |
+| `sections/footer-group.json` | von 4.x neu strukturiert (alt 6966 vs neu 3043) | ✅ **Kein Eingriff nötig (geprüft 2026-06-29):** 4.x splittet die alte Einzel-Section `footer` automatisch in `footer-utilities` + `section` (`migrated_footer_content`). Unser Custom-Block **`google-bewertung`** (4.9★/90), das Footer-Menü, alle 5 Social-Links, Copyright + Policy-Liste sind erhalten. Kleinere Größe = kompaktere neue Struktur (Social-Links als URL-Settings statt 5 Einzelblöcke) |
 
 **Wichtige Technik-Lehren (Theme-Push via MCP `themeFilesUpsert`):**
 - Nur **UNPUBLISHED**-Themes beschreibbar; Live/MAIN gesperrt.
@@ -55,8 +55,9 @@ Alle **Custom-Dateien** (existieren nicht in Standard-Horizon): `assets/filter-p
 - `sale-nav-style.css` jetzt **klassen-unabhängig** (`#header-group a[href*="sale" i]`), damit es auch
   mit der neuen 4.1.1-Header-Markup greift (alte `.menu-list__link`-Selektoren trafen nicht mehr).
 
-**Stand 2026-06-29:** Reconciliation in `200523612508` abgeschlossen (alle obigen Punkte erledigt,
-nur `footer-group`/restliche `settings_data`-Feinheiten offen). Wartet auf Test + Go-Live-Rotation.
+**Stand 2026-06-29:** Reconciliation in `200523612508` **vollständig abgeschlossen** (alle obigen Punkte
+erledigt; `footer-group.json` und `settings_data.json`/Farbsystem geprüft → kein Eingriff nötig, siehe Tabelle).
+Wartet auf Test + Go-Live-Rotation.
 
 ## Warum überhaupt updaten?
 Neuere Horizon-Versionen bringen Performance- und Feature-Verbesserungen, die teils mit unseren
