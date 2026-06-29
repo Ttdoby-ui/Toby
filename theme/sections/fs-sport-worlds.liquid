@@ -1,0 +1,260 @@
+{%- comment -%}
+  ============================================================================
+  Section: Sportwelten (fs-sport-worlds)
+  ----------------------------------------------------------------------------
+  Grosse, redaktionelle Kacheln fuer die einzelnen Sportwelten der Marke
+  (Tischtennis, Padel, Pickleball – beliebig erweiterbar).
+
+  Designziel: ruhig, hochwertig, viel White Space, grosse Bilder, klare
+  Hierarchie. Jede Sportwelt ist ein eigener Block und damit komplett ueber
+  den Theme-Customizer pflegbar – neue Sportarten lassen sich jederzeit
+  ergaenzen, ohne den Code anzufassen ("Sections Everywhere").
+
+  Konventionen (an bestehende fs-* Bloecke angelehnt):
+  - Klassen-Prefix .fs-sw
+  - Scoped <style>, Abstaende ueber das vorhandene 'spacing-style' Snippet
+  - Akzentfarbe (Futurespin-Blau) als konfigurierbare Section-Einstellung
+  ============================================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign accent = section.settings.accent_color | default: '#0a4fa0'
+  assign cols = section.settings.columns_desktop | default: 3
+  assign uid = section.id | replace: '_', '' | replace: '-', ''
+-%}
+
+{%- style -%}
+  .fs-sw--{{ uid }} { --fs-sw-accent: {{ accent }}; --fs-sw-cols: {{ cols }}; }
+{%- endstyle -%}
+
+<style>
+  .fs-sw { --fs-sw-radius: 16px; }
+  .fs-sw__inner {
+    max-width: var(--page-width, 1400px);
+    margin-inline: auto;
+    padding-inline: var(--page-margin, 2rem);
+  }
+  .fs-sw--bg-light { background: #ffffff; color: #14181c; }
+  .fs-sw--bg-grey { background: #f5f5f5; color: #14181c; }
+  .fs-sw--bg-anthracite { background: #14181c; color: #ffffff; }
+
+  .fs-sw__head { max-width: 46rem; margin: 0 0 clamp(1.5rem, 4vw, 2.75rem); }
+  .fs-sw--center .fs-sw__head { margin-inline: auto; text-align: center; }
+  .fs-sw__eyebrow {
+    display: inline-block; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; font-size: .8rem; color: var(--fs-sw-accent);
+    margin: 0 0 .6rem;
+  }
+  .fs-sw__title { font-size: clamp(1.8rem, 4vw, 2.75rem); line-height: 1.05; margin: 0; }
+  .fs-sw__intro { margin: .9rem 0 0; font-size: 1.05rem; line-height: 1.6; opacity: .8; }
+
+  .fs-sw__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(.75rem, 1.6vw, 1.25rem);
+  }
+  @media (min-width: 750px) {
+    .fs-sw__grid { grid-template-columns: repeat(var(--fs-sw-cols, 3), 1fr); }
+  }
+
+  .fs-sw__card {
+    position: relative; display: block; overflow: hidden;
+    border-radius: var(--fs-sw-radius); isolation: isolate;
+    aspect-ratio: 3 / 4; color: #fff; text-decoration: none;
+    background: #1a1f25;
+  }
+  .fs-sw__media, .fs-sw__media img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .fs-sw__media img { transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+  .fs-sw__card:hover .fs-sw__media img { transform: scale(1.05); }
+  .fs-sw__media--empty {
+    background:
+      radial-gradient(120% 120% at 30% 0%, color-mix(in srgb, var(--fs-sw-accent) 65%, #000) 0%, #11161b 60%);
+  }
+  .fs-sw__scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(180deg, rgba(8,12,18,0) 28%, rgba(8,12,18,.78) 100%);
+  }
+  .fs-sw__body {
+    position: absolute; inset: auto 0 0 0; z-index: 2;
+    padding: clamp(1.1rem, 2.4vw, 1.75rem);
+    display: flex; flex-direction: column; gap: .35rem;
+  }
+  .fs-sw__card-eyebrow {
+    font-size: .78rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+    color: #fff; opacity: .85;
+  }
+  .fs-sw__card-title { font-size: clamp(1.35rem, 2.4vw, 1.8rem); line-height: 1.1; margin: 0; }
+  .fs-sw__card-text { margin: .15rem 0 0; font-size: .98rem; line-height: 1.5; opacity: .9; max-width: 32ch; }
+  .fs-sw__cta {
+    margin-top: .9rem; display: inline-flex; align-items: center; gap: .5rem;
+    font-weight: 600; font-size: .95rem;
+  }
+  .fs-sw__cta svg { width: 1.05em; height: 1.05em; transition: transform .25s ease; }
+  .fs-sw__card:hover .fs-sw__cta svg { transform: translateX(4px); }
+
+  .fs-sw__badge {
+    position: absolute; top: 1rem; left: 1rem; z-index: 3;
+    font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    padding: .38rem .6rem; border-radius: 999px; line-height: 1;
+    background: var(--fs-sw-accent); color: #fff;
+  }
+  .fs-sw__badge--soon { background: rgba(255,255,255,.92); color: #14181c; }
+  .fs-sw__card--soon { cursor: default; }
+  .fs-sw__card--soon .fs-sw__media img,
+  .fs-sw__card--soon .fs-sw__media--empty { filter: grayscale(.35); }
+
+  .fs-sw__card:focus-visible { outline: 3px solid var(--fs-sw-accent); outline-offset: 3px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fs-sw__media img, .fs-sw__cta svg { transition: none; }
+    .fs-sw__card:hover .fs-sw__media img { transform: none; }
+  }
+</style>
+
+<div
+  class="fs-sw fs-sw--{{ uid }} fs-sw--bg-{{ section.settings.background }}{% if section.settings.text_align == 'center' %} fs-sw--center{% endif %}"
+  style="{% render 'spacing-style', settings: section.settings %}"
+>
+  <div class="fs-sw__inner">
+    {%- if section.settings.eyebrow != blank or section.settings.heading != blank or section.settings.intro != blank -%}
+      <header class="fs-sw__head">
+        {%- if section.settings.eyebrow != blank -%}
+          <span class="fs-sw__eyebrow">{{ section.settings.eyebrow }}</span>
+        {%- endif -%}
+        {%- if section.settings.heading != blank -%}
+          <h2 class="fs-sw__title">{{ section.settings.heading }}</h2>
+        {%- endif -%}
+        {%- if section.settings.intro != blank -%}
+          <div class="fs-sw__intro">{{ section.settings.intro }}</div>
+        {%- endif -%}
+      </header>
+    {%- endif -%}
+
+    <div class="fs-sw__grid">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign is_soon = block.settings.coming_soon
+          assign tag = 'a'
+          if is_soon or block.settings.link == blank
+            assign tag = 'div'
+          endif
+        -%}
+        <{{ tag }}
+          class="fs-sw__card{% if is_soon %} fs-sw__card--soon{% endif %}"
+          {% if tag == 'a' %}href="{{ block.settings.link }}"{% endif %}
+          {% if block.settings.eyebrow != blank or block.settings.title != blank %}aria-label="{{ block.settings.title | default: block.settings.eyebrow | escape }}"{% endif %}
+          {{ block.shopify_attributes }}
+        >
+          <div class="fs-sw__media{% if block.settings.image == blank %} fs-sw__media--empty{% endif %}">
+            {%- if block.settings.image != blank -%}
+              {{
+                block.settings.image
+                | image_url: width: 900
+                | image_tag:
+                  loading: 'lazy',
+                  sizes: '(min-width: 750px) 33vw, 100vw',
+                  widths: '300, 450, 600, 750, 900, 1200',
+                  alt: block.settings.title | default: block.settings.image.alt | escape
+              }}
+            {%- endif -%}
+          </div>
+          <div class="fs-sw__scrim"></div>
+
+          {%- if block.settings.badge != blank -%}
+            <span class="fs-sw__badge{% if is_soon %} fs-sw__badge--soon{% endif %}">{{ block.settings.badge }}</span>
+          {%- endif -%}
+
+          <div class="fs-sw__body">
+            {%- if block.settings.eyebrow != blank -%}
+              <span class="fs-sw__card-eyebrow">{{ block.settings.eyebrow }}</span>
+            {%- endif -%}
+            {%- if block.settings.title != blank -%}
+              <h3 class="fs-sw__card-title">{{ block.settings.title }}</h3>
+            {%- endif -%}
+            {%- if block.settings.text != blank -%}
+              <p class="fs-sw__card-text">{{ block.settings.text }}</p>
+            {%- endif -%}
+            {%- if block.settings.cta_label != blank and is_soon == false -%}
+              <span class="fs-sw__cta">
+                {{ block.settings.cta_label }}
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            {%- endif -%}
+          </div>
+        </{{ tag }}>
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Sportwelten",
+  "tag": "section",
+  "class": "section fs-section",
+  "settings": [
+    { "type": "header", "content": "Kopfbereich" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow (kleine Ueberschrift)", "default": "Racket Sports" },
+    { "type": "text", "id": "heading", "label": "Ueberschrift", "default": "Deine Sportwelten" },
+    { "type": "richtext", "id": "intro", "label": "Einleitungstext", "default": "<p>Von Tischtennis bis Padel und Pickleball – entdecke die Welt von Futurespin.</p>" },
+    {
+      "type": "select", "id": "text_align", "label": "Ausrichtung Kopfbereich",
+      "options": [ { "value": "left", "label": "Links" }, { "value": "center", "label": "Zentriert" } ],
+      "default": "left"
+    },
+    { "type": "header", "content": "Layout & Farben" },
+    {
+      "type": "range", "id": "columns_desktop", "label": "Spalten (Desktop)",
+      "min": 2, "max": 4, "step": 1, "default": 3
+    },
+    {
+      "type": "select", "id": "background", "label": "Hintergrund",
+      "options": [
+        { "value": "light", "label": "Weiss" },
+        { "value": "grey", "label": "Hellgrau" },
+        { "value": "anthracite", "label": "Anthrazit" }
+      ],
+      "default": "light"
+    },
+    {
+      "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)",
+      "default": "#0a4fa0",
+      "info": "Auf die exakte Futurespin-Markenfarbe setzen."
+    },
+    { "type": "header", "content": "Abstand" },
+    { "type": "range", "id": "padding-block-start", "label": "Oben", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 56 },
+    { "type": "range", "id": "padding-block-end", "label": "Unten", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 56 }
+  ],
+  "blocks": [
+    {
+      "type": "sport",
+      "name": "Sportwelt",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Bild" },
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Sportart" },
+        { "type": "text", "id": "title", "label": "Titel", "default": "Tischtennis" },
+        { "type": "text", "id": "text", "label": "Kurztext", "default": "Schlaeger, Belaege, Tische & Zubehoer." },
+        { "type": "text", "id": "cta_label", "label": "CTA-Text", "default": "Entdecken" },
+        { "type": "url", "id": "link", "label": "Link (Landingpage der Sportart)" },
+        { "type": "text", "id": "badge", "label": "Badge (optional, z.B. NEU)" },
+        { "type": "checkbox", "id": "coming_soon", "label": "Bald verfuegbar (deaktiviert Link)", "default": false }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sportwelten",
+      "blocks": [
+        { "type": "sport", "settings": { "eyebrow": "Sportart", "title": "Tischtennis", "text": "Schlaeger, Belaege, Hoelzer, Tische & Zubehoer.", "cta_label": "Entdecken", "badge": "" } },
+        { "type": "sport", "settings": { "eyebrow": "Sportart", "title": "Padel", "text": "Schlaeger, Baelle & Equipment fuer den Court.", "cta_label": "Entdecken", "badge": "Neu" } },
+        { "type": "sport", "settings": { "eyebrow": "Sportart", "title": "Pickleball", "text": "Paddles, Baelle & Zubehoer fuer Einsteiger und Profis.", "cta_label": "Entdecken", "badge": "Neu" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -2,9 +2,18 @@
 
 ## Shopify Theme-Regeln
 
-- **Alle Änderungen zuerst im Entwurf-Horizon Theme** (ID: `gid://shopify/OnlineStoreTheme/199959052636`, UNPUBLISHED)
-- Erst nach Abnahme durch den User ins Live-Theme ("Updated copy of Horizon", ID: `gid://shopify/OnlineStoreTheme/184788123996`, MAIN) übernehmen
-- Niemals direkt ins aktive/live Theme schreiben ohne ausdrückliche Anweisung
+- **Alle Änderungen zuerst in einem UNVERÖFFENTLICHTEN Entwurfs-Theme** – niemals direkt ins aktive/live (MAIN) Theme ohne ausdrückliche Anweisung
+- Erst nach Abnahme durch den User ins Live-Theme übernehmen
+
+### Aktuelle Theme-IDs (Stand 2026-06-29, via Admin-API verifiziert)
+
+> Hinweis: Die früher hier notierten IDs (`199959052636`, `184788123996`) existieren nicht mehr. Theme-IDs ändern sich bei jedem Kopier-/Update-Vorgang – vor dem Pushen immer per `themes`-Query gegenprüfen.
+
+- **Entwurf-Horizon** (UNPUBLISHED): `gid://shopify/OnlineStoreTheme/200401420636`
+- **Aktives Arbeits-Entwurf** „Aktualisierte Kopie von Kopie von Entwurf-Horizon" (UNPUBLISHED): `gid://shopify/OnlineStoreTheme/200523612508` – enthält die gesamte Futurespin-Custom-Arbeit (Schläger-Finder, Produkt-Vergleich, FAQ/Schema, Google-Bewertung etc.)
+- **futurespin live** (MAIN, schreibgeschützt): `gid://shopify/OnlineStoreTheme/200523088220`
+
+Store: `e7ee88-2.myshopify.com` (futurespin.de). Theme-Basis: **Horizon** (Block-Architektur), Schriften Outfit (Body) / Archivo (Headlines).
 
 ## Shopify App-Entwicklung (Dev Dashboard)
 
