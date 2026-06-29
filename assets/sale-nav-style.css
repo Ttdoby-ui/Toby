@@ -1,0 +1,7 @@
+/* Sale-Navigation: roter Link, klassen-unabhaengig, auf den Header beschraenkt.
+   Trifft sowohl die native Desktop-Navigation als auch unsere Mobil-Chips. */
+#header-group a[href*="sale" i],
+.menu-list__link[href*="sale" i],
+.fs-chip--sale {
+  color: #e00000 !important;
+}

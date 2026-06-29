@@ -18,6 +18,16 @@
   wird gelöscht. → Ich arbeite IMMER in **Entwurf-Horizon**; live entsteht durch diese Rotation.
   Aktuelle Live-ID daher bei Bedarf via `themes`-Query holen (MAIN-Rolle = aktuell live).
 - Niemals direkt ins aktive/live Theme schreiben ohne ausdrückliche Anweisung
+- **Horizon-Update-Reset (WICHTIG):** Ein „Theme aktualisieren" überschreibt VIELE unserer Anpassungen
+  – Custom-Dateien bleiben, aber zurückgesetzt werden u. a.: `snippets/price.liquid`,
+  `blocks/buy-buttons.liquid`, `layout/theme.liquid` (inkl. B2B-Cart-Skript, `sale-nav-style.css`-Link,
+  `rapid-search-settings`, `fs-mobile-ux`, `fs-vip-cards`), `blocks/product-inventory.liquid` (Ampel),
+  `config/settings_schema.json` + `settings_data.json` (VIP/B2B), `locales/de.json`+`en.default.json`
+  (`konfigurator`/`klebe_service`-Texte), `templates/index.json`, `product.json`, `collection.filter.json`,
+  `collection.katalog.json`, `page.konfigurator.json`, `page.b2b-registrierung.json`.
+  → **Vollständiges Reset-Playbook mit Wiederherstell-Tabelle: `docs/HORIZON-MIGRATION.md`** (zuerst dort
+  reinschauen). Alle Anpassungen liegen komplett im Repo und sind von dort wiederherstellbar.
+  Reconciliation 2.0.3→4.1.1 in Theme `200523612508` ist erledigt (Stand 2026-06-29).
 
 ## Kollektions-Grid: eigenes „Filter-Panel" (WICHTIG)
 

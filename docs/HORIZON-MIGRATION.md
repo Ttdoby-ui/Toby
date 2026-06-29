@@ -8,29 +8,55 @@
 > **Goldene Regel:** **Niemals** „Aktualisieren" auf dem Arbeits-/Live-Theme klicken – das überschreibt
 > unseren Code. Migration immer in einer **frischen Kopie** des neuen Horizon, Stück für Stück.
 
-## Durchgeführt (Reconciliation 2.0.3 → 4.1.1, Theme `200523612508`)
+## ✅ RESET-PLAYBOOK — Was ein Horizon-Update zerschießt (verifiziert 2.0.3 → 4.1.1)
 
-Beim Horizon-Update blieben alle **Custom-Dateien (Kategorie A) 1:1 erhalten** (verifiziert: gleiche
-Dateigröße wie im Repo – `filter-panel-main.js` 13080 inkl. Lazy-Grid `fpEnsureSentinel`/`fpMore`,
-`filter-panel.liquid` 11863, `cross-sell.liquid` 6582, `collection-topseller.liquid` 5786 inkl.
-`visually-hidden`-Overflow-Fix, alle in Markenblau `#486A8F`, **kein** altes `#1d3686` mehr). Ebenso
-erhalten: `header-group.json` (Ticker/Suche/Chips), App-Embeds (Inbox/Judge.me) in `settings_data.json`.
+> **Das ist die wichtigste Liste.** Bei JEDEM künftigen Horizon-Update genau diese Dateien prüfen
+> und wieder einspielen. **Alle diese Anpassungen liegen vollständig im Repo** (`ttdoby-ui/toby`,
+> Branch `claude/shopify-adhesive-service-vkfNR`) — bei Verlust von dort wiederherstellen.
+> Vorgehen pro Datei: **alte Version (funktionierendes Entwurf-Horizon) vs. neue Horizon-Version
+> vergleichen, unsere Änderung NEU auf die 4.1.1-Basis anwenden** (nicht alt drüberkopieren, sonst
+> gehen 4.1.1-Verbesserungen verloren). Themes-IDs via `themes(first:20){nodes{id name role}}`.
 
-**Überschriebene Kern-Dateien (Kategorie B) neu abgeglichen:**
-- `snippets/price.liquid` – unsere Version (9846 B, VIP/B2B/Belag-Staffel) **gepusht** (Horizons native
-  Volume-Pricing-Version überschrieben).
-- `blocks/buy-buttons.liquid` – Horizons **neue 4.1.1-Basis** behalten und nur unsere **2 Render-Zeilen**
-  (`schlaeger-konfigurieren-btn` + `cross-sell`) nach `</product-form-component>` wieder eingesetzt
-  (20911 B). Diese 4.1.1-Version liegt jetzt auch im Repo.
-- `config/settings_data.json` – VIP-Werte (`vip1/2/3_discount` = 15/25/30) wieder ergänzt
-  (color_palette-Struktur + App-Embeds erhalten).
-- `config/settings_schema.json` – Gruppe **„Discount by tags"** wieder ergänzt: VIP1/2/3-Rabatt
-  als Editor-Felder + neu **B2B-MwSt. (`b2b_vat_rate`, Default 19)**. So sind die Prozente/der
-  MwSt.-Satz wieder im Theme-Editor pflegbar (nicht nur im Code). Datei liegt jetzt auch im Repo
-  (eingerückt; im Theme als kompaktes JSON, inhaltsgleich).
+### Bleibt beim Update 1:1 erhalten (Kategorie A – nur prüfen)
+Alle **Custom-Dateien** (existieren nicht in Standard-Horizon): `assets/filter-panel-*`,
+`produkt-vergleich.*`, `schlaeger-finder.*`, `schlaeger-konfig-autoselect.js`, `sale-nav-style.css`;
+`sections/filter-panel`, `collection-topseller`, `mobile-category-chips`, `mobile-search-bar`,
+`announcement-ticker`, `produkt-vergleich(-cards)`, `produkt-werte`, `konfigurator(-banner)`,
+`schlaeger-berater`, `schlaeger-finder`, `fs-vip-status`, `b2b-registration`; `blocks/google-bewertung`,
+`hersteller-info`, `produkt-faq`, `produkt-schema`, `produkt-werte`; `snippets/cross-sell`,
+`klebe-service`, `schlaeger-konfigurieren-btn`, `fs-mobile-ux`, `fs-vip-cards`, `hersteller-info`,
+`produkt-werte`, `schlaeger-finder-data`, `rapid-search-*`. **App-Embeds** (Inbox/Judge.me) in
+`settings_data.json` und `sections/header-group.json` (Ticker/Suche/Chips) blieben ebenfalls erhalten.
+→ Trotzdem **funktional testen**, da sie neue Horizon-Klassen/Variablen voraussetzen können.
 
-**Offen / vom User:** 4.1.1-Theme durchtesten (Checkliste unten), dann per Go-Live-Rotation als neues
-Entwurf-Horizon übernehmen.
+### Wird zurückgesetzt → MUSS wieder eingespielt werden (Kategorie B – der eigentliche Aufwand)
+| Datei | Was 4.1.1 macht | Unsere Anpassung (wiederherstellen) |
+|---|---|---|
+| `snippets/price.liquid` | durch native Volume-Pricing-Version ersetzt | unsere 9846-B-Version (VIP `settings.vip1/2/3_discount`, B2B-Netto `preis_b2b*`+`b2b_vat_rate`, **Belag-Staffelpreise** uvp×85/80/75 %, `.compare-at-price-container`) zurückpushen |
+| `blocks/buy-buttons.liquid` | **neue 4.1.1-Basis** (statische Sub-Blöcke quantity/add-to-cart/accelerated-checkout) | 4.1.1-Basis behalten, nur **2 Render-Zeilen** nach `</product-form-component>` einsetzen: `{% render 'schlaeger-konfigurieren-btn' …%}` + `{% render 'cross-sell' …%}` |
+| `layout/theme.liquid` | komplett ersetzt (Header-JS neu) | 4.1.1-Basis behalten + unsere 5 Teile einsetzen: im `<head>` nach `content_for_header` → `{% render 'rapid-search-settings' %}` + `<link …sale-nav-style.css>`; vor `</body>` → **B2B-Cart-Skript** (`_b2b` aus Kunden-Tags B2B1/2/3) + `{%- render 'fs-mobile-ux' -%}` + `{%- render 'fs-vip-cards' -%}` |
+| `blocks/product-inventory.liquid` | native „X übrig"-Ampel | unsere **Ampel** (Status in_stock/low/out → „Bestand N · Lieferbar 1–3 Werktage" etc., Farben `--color-instock/lowstock/outofstock` MIT Fallbacks grün `#1a7f37`/gelb `#b25e09`/rot `#c0152f`) |
+| `config/settings_schema.json` | auf 4.1.1-Schema zurück (color_palette) | Gruppe **„Discount by tags"** ergänzen: `vip1/2/3_discount` (Default 15.05/25.05/30.05) + `b2b_vat_rate` (Default 19) als Editor-Felder |
+| `config/settings_data.json` | viele Custom-Settings verworfen (12 KB→6,7 KB) | mind. `vip1/2/3_discount`=15.0/25.0/30.0 wieder setzen; App-Embeds prüfen (Inbox `…/chat/841fc607…`, Judge.me `…/judgeme_core/61ccd3b1…`) |
+| `locales/de.json` + `locales/en.default.json` | durch Standard-Horizon ersetzt (unsere Texte weg) | 4.1.1-Basis behalten + Top-Level-Keys **`konfigurator`** (ganzer Baum) + **`klebe_service`** aus altem Theme einmergen (de = deutsch, en = englisch) |
+| `templates/index.json` | Startseite auf Horizon-Default zurück | unsere Startseite zurück (Slideshow, **hero_konfigurator** mit getrennten Desktop-/Mobil-Bildern, section/collection-list/product-list/media-with-content). Section-Typen existieren in 4.1.1; hero/slideshow-Schema änderte sich → optisch nachprüfen |
+| `templates/product.json` | PDP auf Default zurück | unser PDP-Layout zurück: `product-information`→ `_product-details` mit group(text+price), **product-inventory (Ampel)**, divider, variant-picker, **buy-buttons (+statische Sub-Blöcke)**, text, **produkt-werte/produkt-faq/hersteller-info/produkt-schema**; + `produkt-vergleich` + `product-recommendations` |
+| `templates/collection.filter.json` | natives `main-collection` eingefügt → unser Filter-Panel verdrängt | nur `collection-topseller` + `filter-panel` + `produkt-vergleich-cards` (KEIN `main-collection`) |
+| `templates/collection.katalog.json` | dito | `collection-topseller` + `filter-panel` |
+| `templates/page.konfigurator.json` | Settings verloren | `schlaeger-finder` + `konfigurator` (Collection-Handles + Varianten-IDs `klebe_variant_id`/`versiegelung_variant_id` + Preise) + `schlaeger-berater`(disabled) |
+| `templates/page.b2b-registrierung.json` | zurückgesetzt | `main-page` (Hero-Text „B2B Händlerbereich" + Intro) + `b2b-registration` |
+| evtl. `sections/footer-group.json` | ggf. zurückgesetzt (alt 6966 vs neu 3043) | Footer-Konfig prüfen/abgleichen (war 2026-06 nicht akut nötig) |
+
+**Wichtige Technik-Lehren (Theme-Push via MCP `themeFilesUpsert`):**
+- Nur **UNPUBLISHED**-Themes beschreibbar; Live/MAIN gesperrt.
+- **Templates als ORIGINAL/pretty JSON** pushen — minifiziert kam „Inhalt enthält ungültige Zeichen".
+- Große Dateien (>~50 KB Base64) sprengen das Output-Limit eines einzelnen Tool-Calls → vorher
+  verkleinern (z. B. deaktivierte Sektionen entfernen) oder als kleinere Datei pushen.
+- `sale-nav-style.css` jetzt **klassen-unabhängig** (`#header-group a[href*="sale" i]`), damit es auch
+  mit der neuen 4.1.1-Header-Markup greift (alte `.menu-list__link`-Selektoren trafen nicht mehr).
+
+**Stand 2026-06-29:** Reconciliation in `200523612508` abgeschlossen (alle obigen Punkte erledigt,
+nur `footer-group`/restliche `settings_data`-Feinheiten offen). Wartet auf Test + Go-Live-Rotation.
 
 ## Warum überhaupt updaten?
 Neuere Horizon-Versionen bringen Performance- und Feature-Verbesserungen, die teils mit unseren
