@@ -70,7 +70,9 @@
   - Öffentliche Domain (NICHT für API): `futurespin.de`
 - Wichtige Kollektionen:
   - **Beläge** (manuell, 433 Produkte): `gid://shopify/Collection/607791087964`
-  - **VIP** (Smart-Kollektion, Regel `TAG = for_vip`, 1164 Produkte): `gid://shopify/Collection/664158142812`
+  - **VIP** (Smart-Kollektion, Regel `for_vip AND NOT mws_apo_generated AND NOT Belag AND NOT Textil`,
+    aktuell 562 Produkte): `gid://shopify/Collection/664158142812` (Beläge + Textilien ausgeschlossen,
+    da deren VIP-Logik die Function steuert; `for_vip`-Tag bleibt für Preisanzeige)
 - **VIP-Rabatte laufen als AUTOMATISCHE Basic-Rabatte** (die alten Codes sind EXPIRED):
   - VIP1 15 % → `2340297605468`, VIP2 25 % → `2340297671004`, VIP3 30 % → `2340297736540`
   - jeweils auf die VIP-Kollektion, Kundensegmente nach Tags `VIP1`/`VIP2`/`VIP3`
@@ -83,13 +85,14 @@
   auf **Textilien** (`gid://shopify/Collection/607791874396`, Handle `bekleidung`, 388 Produkte),
   Staffeln **ab 6 → 20 %, ab 20 → 25 %, ab 30 → 30 %** (VIP-aware: max(Menge, VIP) 15/25/30). Angelegt
   2026-06-29 über den Workflow „Kollektionsrabatt anlegen" (gleiche `kollektionsrabatt`-Function).
-  - ⚠️ **Offener Folgeschritt für volle Determiniertheit:** ~40 % der Textilien sind `for_vip` und bekommen
-    weiterhin **zusätzlich** die nativen VIP-Rabatte. Da beide `combinesWith.productDiscounts=false` sind,
-    greift pro Position nur **einer** – welcher ist NICHT garantiert der höhere (v. a. VIP1-Kunden können
-    statt 20/25/30 % nur 15 % bekommen). Saubere Lösung wie bei Belägen: alle Textilien mit einem Tag
-    (z. B. `Textil`) markieren und die **VIP-Smart-Kollektion** um `TAG NOT_EQUALS Textil` ergänzen – dann
-    steuert die VIP-aware Function die for_vip-Textilien allein (VIP-Preisanzeige bleibt via `for_vip`-Tag).
-    NOCH NICHT umgesetzt (auf User-Freigabe).
+  - ✅ **Determiniertheit umgesetzt (2026-06-29):** Alle Textilien sind mit Tag **`Textil`** markiert und die
+    **VIP-Smart-Kollektion** (`664158142812`) um **`TAG NOT_EQUALS Textil`** ergänzt → 296 for_vip-Textilien
+    aus den nativen VIP-Rabatten genommen (VIP-Produktzahl 858 → 562). Die VIP-aware Function steuert die
+    for_vip-Textilien jetzt allein (auch bei Menge 1: `max(0, VIP)` liefert den VIP-Satz, Kachelpreis =
+    Warenkorbpreis). `for_vip`-Tag bleibt → VIP-Preisanzeige (price.liquid) intakt. Skript/Workflow:
+    `scripts/tag-textilien-vip-exclude.mjs` + `.github/workflows/tag-textilien-vip-exclude.yml` (idempotent,
+    `dry_run`-Option). **Neue Textilien** brauchen künftig denselben `Textil`-Tag (sonst Doppelrabatt) –
+    Workflow erneut laufen lassen.
 - **Hinweis:** Workflow „Kollektionsrabatt anlegen" liegt jetzt auch auf `main` (vorher nur Feature-Branch),
   damit er per `workflow_dispatch` auslösbar ist. Künftige Staffelrabatte → Actions → „Kollektionsrabatt anlegen".
 
