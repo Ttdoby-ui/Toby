@@ -86,7 +86,7 @@
 
 <div
   class="fs-courts fs-courts--{{ uid }} fs-courts--bg-{{ section.settings.background }}{% if section.settings.text_align == 'center' %} fs-courts--center{% endif %}"
-  style="{% render 'spacing-style', settings: section.settings %}"
+  style="padding-block-start: {{ section.settings['padding-block-start'] | default: 56 }}px; padding-block-end: {{ section.settings['padding-block-end'] | default: 56 }}px;"
 >
   <div class="fs-courts__inner">
     {%- if section.settings.eyebrow != blank or section.settings.heading != blank or section.settings.intro != blank -%}

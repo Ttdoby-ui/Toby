@@ -59,7 +59,7 @@
 
 <div
   class="fs-trust fs-trust--{{ uid }} fs-trust--bg-{{ section.settings.background }}"
-  style="--fs-t-cols: {{ section.blocks.size }}; --fs-t-min: {{ section.blocks.size | at_most: 3 }}; {% render 'spacing-style', settings: section.settings %}"
+  style="--fs-t-cols: {{ section.blocks.size }}; --fs-t-min: {{ section.blocks.size | at_most: 3 }}; padding-block-start: {{ section.settings['padding-block-start'] | default: 40 }}px; padding-block-end: {{ section.settings['padding-block-end'] | default: 40 }}px;"
 >
   <div class="fs-trust__inner">
     {%- if section.settings.heading != blank -%}

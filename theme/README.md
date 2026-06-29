@@ -33,10 +33,14 @@ Der Asset-Key in Shopify entspricht dem Pfad **nach** `theme/`, z. B.
 - **Voll konfigurierbar**: Texte, Bilder, Farben, Spalten, Links – alles über
   den Customizer pflegbar. **Keine hartkodierten Inhalte oder URLs** (gilt
   besonders für die Playtomic-Court-Links).
+- **Theme-portabel**: Die Sections nutzen das Standard-OS-2.0-Muster
+  (Section + `{% schema %}`-Blocks), eigenes scoped CSS und **keine
+  theme-spezifischen Snippets**. Sie laufen damit sowohl auf **Horizon** als
+  auch auf dem geplanten **Enterprise**-Theme. Details: `ENTERPRISE-MIGRATION.md`.
 - **Haus-Konventionen** (an bestehende `fs-*`-Blöcke angelehnt):
   - Klassen-Prefix `fs-…`
   - Scoped `<style>` direkt in der Section (keine globalen CSS-Konflikte)
-  - Abstände über das vorhandene Snippet `{% render 'spacing-style' %}`
+  - Abstände inline aus den Section-Einstellungen (`padding-block-start/-end`)
   - `{{ block.shopify_attributes }}` für Theme-Editor-Support
 - **Markenfarbe**: Das Horizon-Palette ist monochrom (Schwarz/Weiß/Grau). Die
   **Futurespin-Akzentfarbe (Blau)** ist je Section als `accent_color`

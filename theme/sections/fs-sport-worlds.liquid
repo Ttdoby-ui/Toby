@@ -12,7 +12,7 @@
 
   Konventionen (an bestehende fs-* Bloecke angelehnt):
   - Klassen-Prefix .fs-sw
-  - Scoped <style>, Abstaende ueber das vorhandene 'spacing-style' Snippet
+  - Scoped <style>, Abstaende inline aus den Section-Einstellungen (theme-portabel)
   - Akzentfarbe (Futurespin-Blau) als konfigurierbare Section-Einstellung
   ============================================================================
 {%- endcomment -%}
@@ -116,7 +116,7 @@
 
 <div
   class="fs-sw fs-sw--{{ uid }} fs-sw--bg-{{ section.settings.background }}{% if section.settings.text_align == 'center' %} fs-sw--center{% endif %}"
-  style="{% render 'spacing-style', settings: section.settings %}"
+  style="padding-block-start: {{ section.settings['padding-block-start'] | default: 56 }}px; padding-block-end: {{ section.settings['padding-block-end'] | default: 56 }}px;"
 >
   <div class="fs-sw__inner">
     {%- if section.settings.eyebrow != blank or section.settings.heading != blank or section.settings.intro != blank -%}
