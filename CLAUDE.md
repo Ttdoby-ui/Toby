@@ -12,6 +12,14 @@
 - **Entwurf-Horizon** (UNPUBLISHED): `gid://shopify/OnlineStoreTheme/200401420636`
 - **Aktives Arbeits-Entwurf** „Aktualisierte Kopie von Kopie von Entwurf-Horizon" (UNPUBLISHED): `gid://shopify/OnlineStoreTheme/200523612508` – enthält die gesamte Futurespin-Custom-Arbeit (Schläger-Finder, Produkt-Vergleich, FAQ/Schema, Google-Bewertung etc.)
 - **futurespin live** (MAIN, schreibgeschützt): `gid://shopify/OnlineStoreTheme/200523088220`
+- **Enterprise** (DEMO/Testversion, geplante neue Basis): `gid://shopify/OnlineStoreTheme/200576827740`
+
+> ⚠️ Enterprise ist noch eine **Testversion (Rolle DEMO)**. Shopify sperrt den
+> Code-Zugriff auf nicht gekaufte Theme-Store-Themes – Lesen UND Schreiben der
+> Theme-Dateien per API liefert „Zugriff verweigert". **Erst nach dem Kauf**
+> (400 USD, einmalig) wird Enterprise zu einem editierbaren unveröffentlichten
+> Theme; dann fs-Sections per Workflow „Theme-Dateien pushen" (`theme_id`
+> = `200576827740`) deployen. Umstiegsplan: `theme/ENTERPRISE-MIGRATION.md`.
 
 Store: `e7ee88-2.myshopify.com` (futurespin.de). Theme-Basis: **Horizon** (Block-Architektur), Schriften Outfit (Body) / Archivo (Headlines).
 
