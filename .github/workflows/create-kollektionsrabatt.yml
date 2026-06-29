@@ -1,0 +1,88 @@
+name: Kollektionsrabatt anlegen
+
+# Formular zum Anlegen eines gestaffelten Kollektionsrabatts.
+# Unter "Actions" → "Kollektionsrabatt anlegen" → "Run workflow" ausfüllen.
+#
+# Benötigte Secrets:
+#   VIP_DISCOUNT_SHOPIFY_API_KEY     Client-ID der App
+#   VIP_DISCOUNT_SHOPIFY_API_SECRET  Client-Secret der App
+#   SHOPIFY_STORE_DOMAIN             (optional) z. B. e7ee88-2.myshopify.com
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: "Anzeigename des Rabatts (z. B. Beläge – Mengenrabatt)"
+        required: true
+      collection_id:
+        description: "Kollektion (GID oder numerische ID)"
+        required: true
+      function_id:
+        description: "Function-ID (leer = automatisch ermitteln)"
+        required: false
+        default: ""
+      tier1_qty:
+        description: "Staffel 1 – ab Menge"
+        required: true
+        default: "2"
+      tier1_pct:
+        description: "Staffel 1 – Prozent"
+        required: true
+        default: "20"
+      tier2_qty:
+        description: "Staffel 2 – ab Menge (leer = keine)"
+        required: false
+        default: "5"
+      tier2_pct:
+        description: "Staffel 2 – Prozent"
+        required: false
+        default: "25"
+      tier3_qty:
+        description: "Staffel 3 – ab Menge (leer = keine)"
+        required: false
+        default: "10"
+      tier3_pct:
+        description: "Staffel 3 – Prozent"
+        required: false
+        default: "30"
+      vip_highest_wins:
+        description: "VIP berücksichtigen (höchster gewinnt)"
+        type: boolean
+        required: false
+        default: true
+      starts_at:
+        description: "Startzeitpunkt ISO (leer = sofort)"
+        required: false
+        default: ""
+
+jobs:
+  create:
+    name: Rabatt erstellen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Kollektionsrabatt anlegen
+        working-directory: vip-discount-function
+        env:
+          STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN || 'e7ee88-2.myshopify.com' }}
+          CLIENT_ID: ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}
+          CLIENT_SECRET: ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_SECRET }}
+          TITLE: ${{ inputs.title }}
+          COLLECTION_ID: ${{ inputs.collection_id }}
+          FUNCTION_ID: ${{ inputs.function_id }}
+          TIER1_QTY: ${{ inputs.tier1_qty }}
+          TIER1_PCT: ${{ inputs.tier1_pct }}
+          TIER2_QTY: ${{ inputs.tier2_qty }}
+          TIER2_PCT: ${{ inputs.tier2_pct }}
+          TIER3_QTY: ${{ inputs.tier3_qty }}
+          TIER3_PCT: ${{ inputs.tier3_pct }}
+          VIP_HIGHEST_WINS: ${{ inputs.vip_highest_wins }}
+          STARTS_AT: ${{ inputs.starts_at }}
+        run: node scripts/create-kollektionsrabatt.mjs
