@@ -105,6 +105,17 @@
 - **Hinweis:** Workflow „Kollektionsrabatt anlegen" liegt jetzt auch auf `main` (vorher nur Feature-Branch),
   damit er per `workflow_dispatch` auslösbar ist. Künftige Staffelrabatte → Actions → „Kollektionsrabatt anlegen".
 
+## Storefront-Übersetzungen (EN)
+
+- **Menü-Übersetzungen (Navigation/Footer) ins Englische** liegen als Shopify-`translationsRegister`
+  auf den **`LINK`**-Ressourcen (key `title`, locale `en`) – NICHT im Theme. Sie gehen gelegentlich
+  verloren (z. B. bei Menü-Neuanlage). **Wiederherstellen:** `scripts/register-menu-en-translations.mjs`
+  (idempotent, matcht deutschen Titel → EN aus der MAP, holt aktuelle Digests selbst). Neue Menüpunkte
+  einfach in die MAP ergänzen. Braucht `write_translations` – läuft über mein MCP; der Standard-Store-Token
+  hat den Scope evtl. nicht. Vollständig angewandt 2026-06-29 (55 Links).
+- Textil-Mengenrabatt-Staffeln werden auf PDP (`price.liquid`) **und** Kacheln (`filter-panel`) angezeigt:
+  Tag `Textil` + B2B/noVolume blenden aus; Staffeln ab 6/20/30 → 20/25/30 % (synchron zur Function halten).
+
 ## Shopify Functions (JavaScript) — korrekter Aufbau
 
 So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
