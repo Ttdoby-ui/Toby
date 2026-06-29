@@ -93,6 +93,7 @@
           "isHolz": {{ is_holz }},
           "forVip": {{ is_for_vip }},
           "isBelag": {% if product.tags contains 'Belag' %}true{% else %}false{% endif %},
+          "isTextil": {% if product.tags contains 'Textil' %}true{% else %}false{% endif %},
           "noVolume": {% if product.tags contains 'kein_mengenrabatt' %}true{% else %}false{% endif %},
           "available": {{ product.available }},
           "created": {{ product.created_at | date: '%s' }},

@@ -208,6 +208,46 @@
       </div>
     {%- endif -%}
   {%- endif -%}
+
+  {%- comment -%}
+    Staffelpreise für Textilien (Mengenrabatt) – Preis je Stück nach Menge.
+    WICHTIG: Mengen/Prozente synchron zum Rabatt „Textilien – Mengenrabatt" halten
+    (aktuell: ab 6 → 20 %, ab 20 → 25 %, ab 30 → 30 %).
+  {%- endcomment -%}
+  {%- if product_resource.tags contains 'Textil' and show_b2b_net == false and product_resource != blank and belag_excluded == false -%}
+    {%- liquid
+      assign textil_current = selected_variant.price
+      assign textil_uvp = textil_current
+      if selected_variant.compare_at_price > textil_current
+        assign textil_uvp = selected_variant.compare_at_price
+      endif
+      assign textil_t6 = textil_uvp | times: 80 | divided_by: 100
+      assign textil_t20 = textil_uvp | times: 75 | divided_by: 100
+      assign textil_t30 = textil_uvp | times: 70 | divided_by: 100
+    -%}
+    {%- if textil_t30 < textil_current -%}
+      <div class="belag-tiers">
+        {%- if textil_t6 < textil_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">ab 6 Stück</span>
+            <span class="belag-tier__price">{{ textil_t6 | money }}</span>
+          </div>
+        {%- endif -%}
+        {%- if textil_t20 < textil_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">ab 20 Stück</span>
+            <span class="belag-tier__price">{{ textil_t20 | money }}</span>
+          </div>
+        {%- endif -%}
+        {%- if textil_t30 < textil_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">ab 30 Stück</span>
+            <span class="belag-tier__price">{{ textil_t30 | money }}</span>
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  {%- endif -%}
 </div>
 
 {% stylesheet %}
