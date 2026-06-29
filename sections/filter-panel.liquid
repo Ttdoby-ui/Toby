@@ -42,6 +42,21 @@
   elsif customer.tags contains 'VIP3'
     assign fs_vip_pct = settings.vip3_discount | times: 1.0
   endif
+  comment
+    B2B-Netto-Anzeige analog price.liquid: Stufe aus Kunden-Tags B2B1/2/3,
+    Preis aus Metafeld custom.preis_b2b1/2/3 (netto). Fallback: Brutto -> Netto
+    via settings.b2b_vat_rate. B2B blendet (im JS) VIP/Angebot/Staffel aus.
+  endcomment
+  assign b2b_level = ''
+  if customer.tags contains 'B2B1'
+    assign b2b_level = 'B2B1'
+  elsif customer.tags contains 'B2B2'
+    assign b2b_level = 'B2B2'
+  elsif customer.tags contains 'B2B3'
+    assign b2b_level = 'B2B3'
+  endif
+  assign b2b_vat_rate = settings.b2b_vat_rate | default: 19
+  assign b2b_vat_divisor = 100 | plus: b2b_vat_rate
 -%}
 
 <script id="fp-catalog-data" type="application/json">
@@ -49,6 +64,7 @@
   "handle": {{ collection.handle | json }},
   "title": {{ collection.title | json }},
   "vipPct": {{ fs_vip_pct | default: 0 }},
+  "b2bLevel": {{ b2b_level | json }},
   "total": {{ collection.all_products_count | default: 0 }},
   "products": [
     {%- paginate collection.products by 250 -%}
@@ -83,6 +99,29 @@
           "price": {{ product.price | divided_by: 100.0 | json }},
           "priceFormatted": {{ product.price | money | json }},
           "compareAt": {{ fp_var.compare_at_price | default: 0 | divided_by: 100.0 | json }},
+          {%- if b2b_level != '' -%}
+            {%- liquid
+              assign b2b_field = blank
+              if b2b_level == 'B2B1'
+                assign b2b_field = mf.preis_b2b1
+              elsif b2b_level == 'B2B2'
+                assign b2b_field = mf.preis_b2b2
+              elsif b2b_level == 'B2B3'
+                assign b2b_field = mf.preis_b2b3
+              endif
+              assign b2b_comp = 0
+              if b2b_field != blank and b2b_field.value != blank
+                assign b2b_net = b2b_field.value | times: 1.0
+              else
+                assign b2b_net = product.price | times: 1.0 | divided_by: b2b_vat_divisor
+                if fp_var.compare_at_price > 0
+                  assign b2b_comp = fp_var.compare_at_price | times: 1.0 | divided_by: b2b_vat_divisor
+                endif
+              endif
+            -%}
+          "b2b": {{ b2b_net | json }},
+          "b2bCompare": {{ b2b_comp | json }},
+          {%- endif -%}
           {%- if product.featured_image -%}
           "img": {{ product.featured_image | image_url: width: 360 | prepend: 'https:' | json }},
           {%- else -%}
@@ -162,6 +201,7 @@
   .fp-card__price-was{color:#9aa0a6;text-decoration:line-through;opacity:1;font-weight:400;margin-right:.4em;}
   .fp-card__price--vip{color:#486A8F;font-weight:700;}
   .fp-card__price--sale{color:#486A8F;font-weight:700;}
+  .fp-card__price .b2b-net-note{display:block;font-size:.62em;font-weight:400;color:#777;margin-top:.1em;}
   .fp-card .jdgm-preview-badge{display:block;margin:.15em 0 .35em;line-height:1;}
   .fp-card .jdgm-preview-badge:empty{margin:0;}
   .fp-card__dots{display:flex;align-items:center;gap:.3em;flex-wrap:wrap;margin:.1em 0 .4em;}
