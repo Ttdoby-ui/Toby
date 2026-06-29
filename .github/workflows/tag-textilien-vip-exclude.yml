@@ -1,0 +1,49 @@
+name: Textilien taggen + aus VIP nehmen
+
+# Markiert alle Textilien mit Tag `Textil` und ergänzt die VIP-Smart-Kollektion
+# um `TAG NOT_EQUALS Textil`, damit der VIP-aware Textil-Mengenrabatt die
+# for_vip-Textilien allein steuert (deterministisch „höchster gewinnt").
+#
+# Benötigte Secrets:
+#   SHOPIFY_STORE_DOMAIN   z. B. e7ee88-2.myshopify.com
+#   SHOPIFY_ACCESS_TOKEN   Store-Admin-Token (write_products, write_publications)
+
+on:
+  workflow_dispatch:
+    inputs:
+      textil_collection_id:
+        description: "Textilien-Kollektion (GID)"
+        required: false
+        default: "gid://shopify/Collection/607791874396"
+      vip_collection_id:
+        description: "VIP-Kollektion (GID)"
+        required: false
+        default: "gid://shopify/Collection/664158142812"
+      textil_tag:
+        description: "Tag-Name"
+        required: false
+        default: "Textil"
+      dry_run:
+        description: "Nur zählen, nichts schreiben"
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  run:
+    name: Textilien taggen + VIP-Ausschluss
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Tag + VIP-Ausschluss
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN || 'e7ee88-2.myshopify.com' }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          TEXTIL_COLLECTION_ID: ${{ inputs.textil_collection_id }}
+          VIP_COLLECTION_ID: ${{ inputs.vip_collection_id }}
+          TEXTIL_TAG: ${{ inputs.textil_tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: node scripts/tag-textilien-vip-exclude.mjs
