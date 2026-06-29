@@ -79,6 +79,19 @@
   - Store-Function-ID (für `discountAutomaticAppCreate`): `019f08c1-5ddb-7799-b6fa-287917c3aaa1`
 - **LIVE Mengenrabatt** „Belaege Mengenrabatt": `gid://shopify/DiscountAutomaticNode/2341460803932`,
   auf Beläge, Staffeln **ab 2 → 15 %, ab 5 → 20 %, ab 10 → 25 %** (VIP-Vergleich 15/25/30, höchster gewinnt)
+- **LIVE Mengenrabatt** „Textilien – Mengenrabatt": `gid://shopify/DiscountAutomaticNode/2341602459996`,
+  auf **Textilien** (`gid://shopify/Collection/607791874396`, Handle `bekleidung`, 388 Produkte),
+  Staffeln **ab 6 → 20 %, ab 20 → 25 %, ab 30 → 30 %** (VIP-aware: max(Menge, VIP) 15/25/30). Angelegt
+  2026-06-29 über den Workflow „Kollektionsrabatt anlegen" (gleiche `kollektionsrabatt`-Function).
+  - ⚠️ **Offener Folgeschritt für volle Determiniertheit:** ~40 % der Textilien sind `for_vip` und bekommen
+    weiterhin **zusätzlich** die nativen VIP-Rabatte. Da beide `combinesWith.productDiscounts=false` sind,
+    greift pro Position nur **einer** – welcher ist NICHT garantiert der höhere (v. a. VIP1-Kunden können
+    statt 20/25/30 % nur 15 % bekommen). Saubere Lösung wie bei Belägen: alle Textilien mit einem Tag
+    (z. B. `Textil`) markieren und die **VIP-Smart-Kollektion** um `TAG NOT_EQUALS Textil` ergänzen – dann
+    steuert die VIP-aware Function die for_vip-Textilien allein (VIP-Preisanzeige bleibt via `for_vip`-Tag).
+    NOCH NICHT umgesetzt (auf User-Freigabe).
+- **Hinweis:** Workflow „Kollektionsrabatt anlegen" liegt jetzt auch auf `main` (vorher nur Feature-Branch),
+  damit er per `workflow_dispatch` auslösbar ist. Künftige Staffelrabatte → Actions → „Kollektionsrabatt anlegen".
 
 ## Shopify Functions (JavaScript) — korrekter Aufbau
 
