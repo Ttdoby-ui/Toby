@@ -39,6 +39,15 @@
   - `assets/filter-panel-main.js` – baut die Kacheln client-seitig (`.fp-card`,
     `.fp-card__price`); repliziert dort selbst VIP-/Angebots-Preise **und** die
     Belag-Staffelpreise (gleiche „höchster gewinnt"-Logik wie `price.liquid`).
+  - **B2B-Netto-Preise auf Kacheln (2026-06-29):** `filter-panel.liquid` emittiert `b2bLevel`
+    (aus Kunden-Tags B2B1/2/3) + pro Produkt `b2b`/`b2bCompare` (Netto aus `custom.preis_b2b1/2/3`,
+    Fallback Brutto→Netto via `settings.b2b_vat_rate`). `filter-panel-main.js` zeigt bei B2B den
+    Netto-Preis + „zzgl. MwSt." mit **Vorrang** und blendet VIP/Angebot/Staffel aus (wie `price.liquid`).
+  - ⚠️ **Theme-Dateien pushen:** Der Store-Token (`SHOPIFY_ACCESS_TOKEN`) hat **kein** `write_themes`
+    (Shopify-Exemption fehlt) → `themeFilesUpsert` per GitHub-Action schlägt fehl. Nur **mein MCP** darf
+    Theme-Dateien schreiben. Großes base64 NICHT als einen Riesen-Blob abtippen (Fremdzeichen-Korruption
+    → „ungültige Zeichen") → **eine Datei pro Mutation**, base64 in ≤9000er-Chunks lesen und konkatenieren.
+    Workflow `push-theme-files.yml` existiert, ist aber mangels `write_themes` aktuell nicht nutzbar.
   - `assets/filter-panel-helpers.js`, `assets/filter-panel.css` – Helfer/Style.
 - **Konsequenz:** Kachel-Änderungen müssen **dort** rein, nicht (nur) in `price.liquid`.
   `price.liquid` greift weiter auf der **Produktdetailseite**.
