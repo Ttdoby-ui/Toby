@@ -1,0 +1,30 @@
+name: Theme-Dateien pushen
+
+# Pusht ausgewaehlte Repo-Dateien byte-genau in ein UNVEROEFFENTLICHTES Theme.
+# Benoetigte Secrets: SHOPIFY_STORE_DOMAIN, SHOPIFY_ACCESS_TOKEN (write_themes)
+
+on:
+  workflow_dispatch:
+    inputs:
+      theme_id:
+        description: "Ziel-Theme (numerische ID oder GID, UNVEROEFFENTLICHT!)"
+        required: true
+      files:
+        description: "Komma-separierte Repo-Pfade"
+        required: true
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Theme-Dateien pushen
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN || 'e7ee88-2.myshopify.com' }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          THEME_ID: ${{ inputs.theme_id }}
+          FILES: ${{ inputs.files }}
+        run: node scripts/push-theme-files.mjs
