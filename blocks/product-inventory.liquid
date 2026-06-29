@@ -53,9 +53,9 @@
         {%- else -%}
           {{- 'content.inventory_in_stock' | t -}}
         {%- endif -%}
-        &nbsp;&middot;&nbsp;Lieferbar in 1-3 Werktagen
+        &nbsp;&middot;&nbsp;in 1-3 Werktagen bei dir
       {%- elsif status == 'low' -%}
-        Bestand 0&nbsp;&middot;&nbsp;lieferbar in 3-7 Werktagen
+        Bestand 0&nbsp;&middot;&nbsp;in 3-5 Werktagen bei dir
       {%- else -%}
         {{- 'products.product.sold_out' | t -}}
       {%- endif -%}
