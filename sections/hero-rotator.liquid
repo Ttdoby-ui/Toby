@@ -1,0 +1,91 @@
+{%- comment -%}
+  Futurespin: Rotierender Hero-Banner.
+  Pro Banner ein echtes Desktop- UND Mobil-Bild via <picture> (anders als die
+  Horizon-Slideshow, die nur EIN responsives Bild je Slide kann). Banner rotieren
+  per JS (Auto-Play, pausiert bei Hover, respektiert reduzierte Bewegung).
+{%- endcomment -%}
+
+<hero-rotator
+  class="fs-hero-rot"
+  data-autoplay="{% if section.settings.autoplay %}1{% else %}0{% endif %}"
+  data-interval="{{ section.settings.interval | default: 5 | times: 1000 }}"
+>
+  {%- assign s = section.settings -%}
+  {%- assign idx = '1,2' | split: ',' -%}
+  {%- for i in idx -%}
+    {%- assign dkey = 'b' | append: i | append: '_desktop' -%}
+    {%- assign mkey = 'b' | append: i | append: '_mobile' -%}
+    {%- assign lkey = 'b' | append: i | append: '_link' -%}
+    {%- assign dsrc = s[dkey] -%}
+    {%- assign msrc = s[mkey] | default: dsrc -%}
+    {%- assign lnk = s[lkey] -%}
+    {%- if dsrc != blank -%}
+      <div class="fs-hero-rot__slide{% if forloop.first %} is-active{% endif %}" data-fs-slide="{{ forloop.index0 }}">
+        {%- if lnk != blank -%}<a class="fs-hero-rot__link" href="{{ lnk }}">{%- endif -%}
+        <picture>
+          <source media="(max-width: 749px)" srcset="{{ msrc }}">
+          <img
+            src="{{ dsrc }}"
+            alt=""
+            class="fs-hero-rot__img"
+            loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+          >
+        </picture>
+        {%- if lnk != blank -%}</a>{%- endif -%}
+      </div>
+    {%- endif -%}
+  {%- endfor -%}
+</hero-rotator>
+
+{% style %}
+  .fs-hero-rot{position:relative;display:block;width:100%;max-width:100%;overflow:hidden;aspect-ratio:1774/887;}
+  @media (max-width:749px){ .fs-hero-rot{aspect-ratio:1024/1536;} }
+  .fs-hero-rot__slide{position:absolute;inset:0;opacity:0;transition:opacity .8s ease;pointer-events:none;}
+  .fs-hero-rot__slide.is-active{opacity:1;pointer-events:auto;}
+  .fs-hero-rot picture,.fs-hero-rot__link{display:block;width:100%;height:100%;}
+  .fs-hero-rot__img{display:block;width:100%;height:100%;object-fit:cover;}
+  @media (prefers-reduced-motion: reduce){ .fs-hero-rot__slide{transition:none;} }
+{% endstyle %}
+
+<script>
+(function(){
+  var roots = document.querySelectorAll('hero-rotator');
+  for (var r = 0; r < roots.length; r++) {
+    (function(root){
+      if (root.__fsInit) return; root.__fsInit = 1;
+      var slides = root.querySelectorAll('.fs-hero-rot__slide');
+      if (slides.length < 2) return;
+      var i = 0, timer = null;
+      var auto = root.getAttribute('data-autoplay') === '1';
+      var iv = parseInt(root.getAttribute('data-interval'), 10) || 5000;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) auto = false;
+      function show(n){ for (var k = 0; k < slides.length; k++) slides[k].classList.toggle('is-active', k === n); i = n; }
+      function next(){ show((i + 1) % slides.length); }
+      function start(){ if (auto && !timer) timer = setInterval(next, iv); }
+      function stop(){ if (timer) { clearInterval(timer); timer = null; } }
+      root.addEventListener('mouseenter', stop);
+      root.addEventListener('mouseleave', start);
+      start();
+    })(roots[r]);
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Hero-Rotator",
+  "settings": [
+    { "type": "checkbox", "id": "autoplay", "label": "Automatisch rotieren", "default": true },
+    { "type": "range", "id": "interval", "label": "Intervall", "min": 2, "max": 15, "step": 1, "unit": "s", "default": 5 },
+    { "type": "header", "content": "Banner 1" },
+    { "type": "text", "id": "b1_desktop", "label": "Banner 1 – Desktop-Bild-URL" },
+    { "type": "text", "id": "b1_mobile", "label": "Banner 1 – Mobil-Bild-URL" },
+    { "type": "url", "id": "b1_link", "label": "Banner 1 – Link" },
+    { "type": "header", "content": "Banner 2" },
+    { "type": "text", "id": "b2_desktop", "label": "Banner 2 – Desktop-Bild-URL" },
+    { "type": "text", "id": "b2_mobile", "label": "Banner 2 – Mobil-Bild-URL" },
+    { "type": "url", "id": "b2_link", "label": "Banner 2 – Link" }
+  ],
+  "presets": [ { "name": "Hero-Rotator" } ]
+}
+{% endschema %}
