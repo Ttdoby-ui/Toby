@@ -116,6 +116,29 @@
 - Textil-Mengenrabatt-Staffeln werden auf PDP (`price.liquid`) **und** Kacheln (`filter-panel`) angezeigt:
   Tag `Textil` + B2B/noVolume blenden aus; Staffeln ab 6/20/30 → 20/25/30 % (synchron zur Function halten).
 
+## Produktbeschreibungen & Hersteller-Angaben (GPSR)
+
+- **GPSR-Pflichtangaben (Hersteller/Adresse/Kontakt)** kommen NICHT aus der Beschreibung, sondern aus dem
+  Theme-Block **`hersteller-info`** (`blocks/hersteller-info.liquid` → Snippet `hersteller-info`), Quelle
+  Metafeld **`custom.hersteller` → Metaobjekt „Hersteller"** (pro Marke einmal pflegen). Der oben auf der PDP
+  sichtbare „Marken-Logo + Tel."-Block ist genau dieser GPSR-Block → **behalten**, nicht entfernen.
+- **Hersteller-Text in der `descriptionHtml` war doppelt** (Importe der Hersteller) und wurde 2026-06-30 aus
+  **1366 Produkten** entfernt. Tool: `scripts/strip-hersteller-from-descriptions.mjs` + Workflow
+  „Hersteller-Block aus Beschreibungen entfernen" (`.github/workflows/strip-hersteller.yml`, auf `main`,
+  `workflow_dispatch` mit `dry_run`/`limit`; checkt den Feature-Branch aus). DOM-basiert (node-html-parser):
+  Anker „Hersteller:", entfernt das oberste Block-Element samt Folgegeschwistern + räumt leere Wrapper auf,
+  idempotent. Store-Token (`SHOPIFY_ACCESS_TOKEN`) hat `write_products`. **Neue Produkte mit eingebettetem
+  Hersteller-Text** → Workflow erneut laufen lassen (erst `dry_run=true`). ⚠️ Das ändert **Produktdaten**
+  (sofort live in ALLEN Themes, nicht per Theme-Rotation rückgängig).
+- **Beschreibungs-Style „sportlich edel"** ist reine Darstellung per CSS in `assets/sale-nav-style.css`
+  (global im Header geladen), gescopt auf die PDP-Sektion **`produktbeschreibung_full`**
+  (`[id*="produktbeschreibung_full"]`): klare Body-Schrift (Outfit, NICHT Akzent/Headline), Fließtext normal
+  (nur Überschriften fett 700), einheitliche Überschriften mit dezenter Marken-Hairline `#486A8F`,
+  Chevron-Listenpunkte, `h5/h6` klein/dezent. Die Beschreibung rendert über die eigene full-width Section
+  `produktbeschreibung_full` (in `templates/product.json`, Textblock `{{ closest.product.description }}`),
+  NICHT mehr in der rechten Spalte. (Diese CSS-Datei ist inzwischen Sammelstelle für Header-/Drawer-/
+  Beschreibungs-CSS – auch das Mobil-Drawer-Styling: Trennlinien + Chevron statt „+", %SALE% rot.)
+
 ## Shopify Functions (JavaScript) — korrekter Aufbau
 
 So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
