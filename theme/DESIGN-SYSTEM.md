@@ -21,7 +21,7 @@ Basis: **Horizon** (Online Store 2.0). Wir bauen **additiv** mit eigenen
 ## Design-Tokens (einheitliche Sprache aller Komponenten)
 
 - **Akzentfarbe**: Futurespin-Blau – pro Section als `accent_color` einstellbar
-  (Default `#0a4fa0`; auf exakten Markenwert setzen). Genutzt für CTAs, Links,
+  (Default `#486A8F`; auf exakten Markenwert setzen). Genutzt für CTAs, Links,
   Icons, aktive Zustände, Badges.
 - **Flächen**: `light` (Weiß) · `grey` (Hellgrau `#f5f5f5`) · `anthracite`
   (`#14181c`). Wählbar je Section.
@@ -47,6 +47,8 @@ Basis: **Horizon** (Online Store 2.0). Wir bauen **additiv** mit eigenen
 | **Standorte** | `sections/fs-locations.liquid` | Store Locator + Schema.org `SportingGoodsStore` (Local SEO) |
 | **Card Grid** | `sections/fs-card-grid.liquid` | Beratung, Guides, Community, Events, Academy, Kategorien |
 | **Trust-Leiste** | `sections/fs-trust-bar.liquid` | USP-/Trust-Signale (Inline-SVG-Icons) |
+| **CTA-Banner** | `sections/fs-cta-banner.liquid` | Wiederverwendbares Call-to-Action-Band (Akzent/Anthrazit/Bild) |
+| **Marken-Grid** | `sections/fs-brand-grid.liquid` | Logo-Raster (Graustufe→Farbe bei Hover), je Marke ein Block |
 
 > **Eine** generische `Card Grid`-Komponente deckt viele Inhaltsarten ab
 > (Beratung/Community/Events/Academy/Guides) – statt vieler Spezial-Sections

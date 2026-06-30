@@ -32,8 +32,8 @@ Legende: ✅ fertig · 🟡 teilweise · ⬜ offen
   (Setting), Flächen Weiß/Grau/Anthrazit, Outfit/Archivo, Radius/Spacing/Motion.
 - ✅ Komponenten v1: Brand Hero, Sportwelten, Courts buchen, Standorte
   (Store Locator), Card Grid, Trust-Leiste – alle deployt.
-- ⬜ **Exakten Marken-Blauwert** in allen Sections setzen (aktuell `#0a4fa0`).
-- ⬜ Weitere Komponenten: CTA-Banner, Marken-/Logo-Grid, Comparison-Table,
+- ✅ Marken-Blau verbindlich gesetzt: `#486A8F` (aus Announcement-Bar/Chat) als Default in allen Sections.
+- 🟡 Weitere Komponenten: ✅ CTA-Banner, ✅ Marken-/Logo-Grid; offen: Comparison-Table,
   FAQ-Block (Horizon hat bereits `produkt-faq` – wiederverwenden), USP-Strip.
 - ⬜ Optional: zentrales Tokens-Snippet statt Pro-Section-Defaults.
 

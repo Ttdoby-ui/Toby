@@ -18,7 +18,7 @@
 {%- endcomment -%}
 
 {%- liquid
-  assign accent = section.settings.accent_color | default: '#0a4fa0'
+  assign accent = section.settings.accent_color | default: '#486A8F'
   assign cols = section.settings.columns_desktop | default: 3
   assign uid = section.id | replace: '_', '' | replace: '-', ''
 -%}
@@ -223,7 +223,7 @@
     },
     {
       "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)",
-      "default": "#0a4fa0",
+      "default": "#486A8F",
       "info": "Auf die exakte Futurespin-Markenfarbe setzen."
     },
     { "type": "header", "content": "Abstand" },

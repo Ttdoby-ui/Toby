@@ -65,7 +65,7 @@ Aus dem aktuellen Theme übernommen, damit das Erscheinungsbild erhalten bleibt
 - Hintergrund `#ffffff`, Text `#000000`
 - Grautöne: `#333333`, `#dfdfdf`, `#f5f5f5`, `#eef1ea`
 - **Akzent = Futurespin-Blau** → exakten Markenwert eintragen (Platzhalter
-  in den Sections: `#0a4fa0`). In Enterprise als eigenes Color-Scheme/
+  in den Sections: `#486A8F`). In Enterprise als eigenes Color-Scheme/
   Accent hinterlegen und konsequent für Buttons, Links, Icons, Badges,
   aktive Zustände nutzen.
 

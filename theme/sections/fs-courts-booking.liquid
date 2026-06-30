@@ -15,7 +15,7 @@
 {%- endcomment -%}
 
 {%- liquid
-  assign accent = section.settings.accent_color | default: '#0a4fa0'
+  assign accent = section.settings.accent_color | default: '#486A8F'
   assign uid = section.id | replace: '_', '' | replace: '-', ''
   assign cols = section.settings.columns_desktop | default: 2
 -%}
@@ -189,7 +189,7 @@
       ],
       "default": "grey"
     },
-    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#0a4fa0" },
+    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#486A8F" },
     { "type": "header", "content": "Hinweis" },
     { "type": "text", "id": "note", "label": "Fusszeilen-Hinweis", "default": "Buchung & Verfuegbarkeit ueber Playtomic. Aenderungen vorbehalten." },
     { "type": "header", "content": "Abstand" },

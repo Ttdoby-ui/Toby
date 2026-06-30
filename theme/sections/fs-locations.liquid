@@ -13,7 +13,7 @@
 {%- endcomment -%}
 
 {%- liquid
-  assign accent = section.settings.accent_color | default: '#0a4fa0'
+  assign accent = section.settings.accent_color | default: '#486A8F'
   assign uid = section.id | replace: '_', '' | replace: '-', ''
   assign cols = section.settings.columns_desktop | default: 2
 -%}
@@ -190,7 +190,7 @@
     { "type": "header", "content": "Layout & Farben" },
     { "type": "range", "id": "columns_desktop", "label": "Spalten (Desktop)", "min": 1, "max": 3, "step": 1, "default": 2 },
     { "type": "select", "id": "background", "label": "Hintergrund", "options": [ { "value": "light", "label": "Weiß" }, { "value": "grey", "label": "Hellgrau" }, { "value": "anthracite", "label": "Anthrazit" } ], "default": "light" },
-    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#0a4fa0" },
+    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#486A8F" },
     { "type": "header", "content": "Abstand" },
     { "type": "range", "id": "padding-block-start", "label": "Oben", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 56 },
     { "type": "range", "id": "padding-block-end", "label": "Unten", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 56 }

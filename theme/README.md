@@ -44,7 +44,7 @@ Der Asset-Key in Shopify entspricht dem Pfad **nach** `theme/`, z. B.
   - `{{ block.shopify_attributes }}` für Theme-Editor-Support
 - **Markenfarbe**: Das Horizon-Palette ist monochrom (Schwarz/Weiß/Grau). Die
   **Futurespin-Akzentfarbe (Blau)** ist je Section als `accent_color`
-  einstellbar (Default `#0a4fa0`). **Bitte auf die exakte Markenfarbe setzen.**
+  einstellbar (Default `#486A8F`). **Bitte auf die exakte Markenfarbe setzen.**
 - **Performance & A11y**: native `loading="lazy"`, responsive `srcset`/`sizes`,
   Inline-SVG statt Icon-Bibliotheken, `prefers-reduced-motion`, sichtbare
   `:focus-visible`-Outlines, semantische Headings.

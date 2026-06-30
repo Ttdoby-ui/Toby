@@ -12,7 +12,7 @@
 {%- endcomment -%}
 
 {%- liquid
-  assign accent = section.settings.accent_color | default: '#0a4fa0'
+  assign accent = section.settings.accent_color | default: '#486A8F'
   assign uid = section.id | replace: '_', '' | replace: '-', ''
 -%}
 
@@ -131,7 +131,7 @@
       ],
       "default": "light"
     },
-    { "type": "color", "id": "accent_color", "label": "Icon-Farbe (Futurespin-Blau)", "default": "#0a4fa0" },
+    { "type": "color", "id": "accent_color", "label": "Icon-Farbe (Futurespin-Blau)", "default": "#486A8F" },
     { "type": "header", "content": "Abstand" },
     { "type": "range", "id": "padding-block-start", "label": "Oben", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 40 },
     { "type": "range", "id": "padding-block-end", "label": "Unten", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 40 }

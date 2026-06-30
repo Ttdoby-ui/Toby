@@ -1,0 +1,128 @@
+{%- comment -%}
+  ============================================================================
+  Design System · Section: CTA-Banner (fs-cta-banner)
+  ----------------------------------------------------------------------------
+  Wiederverwendbares Call-to-Action-Band: ruhige Fläche, klare Headline,
+  ein bis zwei Buttons. Hintergrund wahlweise Akzent (Futurespin-Blau),
+  Anthrazit oder Bild mit Overlay. Voll über den Customizer konfigurierbar.
+  ============================================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign accent = section.settings.accent_color | default: '#486A8F'
+  assign uid = section.id | replace: '_', '' | replace: '-', ''
+  assign overlay = section.settings.overlay_opacity | default: 45 | divided_by: 100.0
+-%}
+
+{%- style -%}
+  .fs-cta--{{ uid }} { --fs-cta-accent: {{ accent }}; --fs-cta-overlay: {{ overlay }}; }
+{%- endstyle -%}
+
+<style>
+  .fs-cta { position: relative; isolation: isolate; overflow: hidden; }
+  .fs-cta__inner {
+    position: relative; z-index: 2; max-width: var(--page-width, 1400px);
+    margin-inline: auto; padding-inline: var(--page-margin, 2rem);
+    display: flex; flex-direction: column; gap: 1.1rem;
+  }
+  .fs-cta--left   .fs-cta__inner { align-items: flex-start; text-align: left; }
+  .fs-cta--center .fs-cta__inner { align-items: center; text-align: center; }
+
+  .fs-cta--bg-accent     { background: var(--fs-cta-accent); color: #fff; }
+  .fs-cta--bg-anthracite { background: #14181c; color: #fff; }
+  .fs-cta--bg-grey       { background: #f5f5f5; color: #14181c; }
+  .fs-cta--bg-image      { color: #fff; }
+  .fs-cta__media, .fs-cta__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+  .fs-cta__overlay { position: absolute; inset: 0; z-index: 1; background: rgba(8,12,18,var(--fs-cta-overlay)); }
+
+  .fs-cta__eyebrow { font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: .8rem; opacity: .9; }
+  .fs-cta__title { font-size: clamp(1.7rem, 4vw, 3rem); line-height: 1.05; margin: 0; max-width: 24ch; letter-spacing: -.02em; }
+  .fs-cta--center .fs-cta__title { max-width: 30ch; }
+  .fs-cta__text { font-size: clamp(1rem, 1.4vw, 1.15rem); line-height: 1.55; margin: 0; opacity: .92; max-width: 46ch; }
+
+  .fs-cta__ctas { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .4rem; }
+  .fs-cta__btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: .85rem 1.5rem; border-radius: 999px; font-weight: 600; font-size: 1rem;
+    text-decoration: none; line-height: 1; border: 1.5px solid transparent;
+    transition: transform .15s ease, filter .15s ease;
+  }
+  .fs-cta__btn--primary { background: #fff; color: #14181c; border-color: #fff; }
+  .fs-cta--bg-grey .fs-cta__btn--primary { background: var(--fs-cta-accent); color: #fff; border-color: var(--fs-cta-accent); }
+  .fs-cta__btn--secondary { background: transparent; color: currentColor; border-color: currentColor; }
+  .fs-cta__btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .fs-cta__btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .fs-cta--bg-grey .fs-cta__btn:focus-visible { outline-color: var(--fs-cta-accent); }
+
+  @media (prefers-reduced-motion: reduce) { .fs-cta__btn { transition: none; } }
+</style>
+
+<div
+  class="fs-cta fs-cta--{{ uid }} fs-cta--bg-{{ section.settings.background }} fs-cta--{{ section.settings.text_align }}"
+  style="padding-block-start: {{ section.settings['padding-block-start'] | default: 72 }}px; padding-block-end: {{ section.settings['padding-block-end'] | default: 72 }}px;"
+>
+  {%- if section.settings.background == 'image' and section.settings.image != blank -%}
+    <div class="fs-cta__media">
+      {{ section.settings.image | image_url: width: 2000 | image_tag: loading: 'lazy', sizes: '100vw', widths: '600, 900, 1200, 1600, 2000', alt: section.settings.heading | escape }}
+    </div>
+    <div class="fs-cta__overlay"></div>
+  {%- endif -%}
+
+  <div class="fs-cta__inner">
+    {%- if section.settings.eyebrow != blank -%}<span class="fs-cta__eyebrow">{{ section.settings.eyebrow }}</span>{%- endif -%}
+    {%- if section.settings.heading != blank -%}<h2 class="fs-cta__title">{{ section.settings.heading }}</h2>{%- endif -%}
+    {%- if section.settings.text != blank -%}<div class="fs-cta__text">{{ section.settings.text }}</div>{%- endif -%}
+    {%- if section.settings.cta1_label != blank or section.settings.cta2_label != blank -%}
+      <div class="fs-cta__ctas">
+        {%- if section.settings.cta1_label != blank -%}
+          <a class="fs-cta__btn fs-cta__btn--primary" href="{{ section.settings.cta1_link | default: '#' }}">{{ section.settings.cta1_label }}</a>
+        {%- endif -%}
+        {%- if section.settings.cta2_label != blank -%}
+          <a class="fs-cta__btn fs-cta__btn--secondary" href="{{ section.settings.cta2_link | default: '#' }}">{{ section.settings.cta2_label }}</a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "CTA-Banner",
+  "tag": "section",
+  "class": "section fs-section",
+  "settings": [
+    { "type": "header", "content": "Inhalt" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+    { "type": "text", "id": "heading", "label": "Headline", "default": "Werde Teil der Futurespin-Community" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Beratung, Events, Academy und eigene Courts – erlebe Racket Sports neu.</p>" },
+    { "type": "header", "content": "Buttons" },
+    { "type": "text", "id": "cta1_label", "label": "Button 1 – Text", "default": "Jetzt entdecken" },
+    { "type": "url", "id": "cta1_link", "label": "Button 1 – Link" },
+    { "type": "text", "id": "cta2_label", "label": "Button 2 – Text" },
+    { "type": "url", "id": "cta2_link", "label": "Button 2 – Link" },
+    { "type": "header", "content": "Layout & Farben" },
+    {
+      "type": "select", "id": "background", "label": "Hintergrund",
+      "options": [
+        { "value": "accent", "label": "Akzent (Futurespin-Blau)" },
+        { "value": "anthracite", "label": "Anthrazit" },
+        { "value": "grey", "label": "Hellgrau" },
+        { "value": "image", "label": "Bild" }
+      ],
+      "default": "accent"
+    },
+    { "type": "image_picker", "id": "image", "label": "Hintergrundbild (bei Option Bild)" },
+    { "type": "range", "id": "overlay_opacity", "label": "Overlay-Stärke (Bild)", "min": 0, "max": 80, "step": 5, "unit": "%", "default": 45 },
+    {
+      "type": "select", "id": "text_align", "label": "Ausrichtung",
+      "options": [ { "value": "left", "label": "Links" }, { "value": "center", "label": "Zentriert" } ],
+      "default": "center"
+    },
+    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#486A8F" },
+    { "type": "header", "content": "Abstand" },
+    { "type": "range", "id": "padding-block-start", "label": "Oben", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding-block-end", "label": "Unten", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 }
+  ],
+  "presets": [ { "name": "CTA-Banner" } ]
+}
+{% endschema %}
