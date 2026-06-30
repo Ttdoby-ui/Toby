@@ -1,14 +1,17 @@
 {%- comment -%}
   ============================================================================
-  Design System · Section: Standorte / Store Locator (fs-locations)
+  Section: Standorte / Store Locator (fs-locations)
   ----------------------------------------------------------------------------
   Übersicht aller Futurespin-Standorte (Fachgeschäft + Courts). Jeder Standort
   ist ein Block mit Adresse, Öffnungszeiten, Kontakt, Click & Collect, Courts
-  und konfigurierbaren Links (Standort-Landingpage, Playtomic, Google Maps).
-  Keine URL ist hart codiert (Master-Prompt: Playtomic/Links nur über Settings).
+  und konfigurierbaren Links. Keine URL ist hart codiert.
 
-  Local SEO: pro Standort wird strukturiertes Schema.org-Markup
-  (SportingGoodsStore / LocalBusiness) als JSON-LD ausgegeben.
+  Zwei Layouts (Setting "layout"):
+  - "grid":  Kopf oben, Karten im Raster.
+  - "split": Intro-Spalte links + Karten als horizontaler Slider (CSS-Scroll-
+             Snap, kein JS) rechts – wie auf der Startseite.
+
+  Local SEO: pro Standort strukturiertes Schema.org-Markup (SportingGoodsStore).
   ============================================================================
 {%- endcomment -%}
 
@@ -16,6 +19,7 @@
   assign accent = section.settings.accent_color | default: '#486A8F'
   assign uid = section.id | replace: '_', '' | replace: '-', ''
   assign cols = section.settings.columns_desktop | default: 2
+  assign s = section.settings
 -%}
 
 {%- style -%}
@@ -31,148 +35,170 @@
   .fs-loc__head { max-width: 48rem; margin: 0 0 clamp(1.5rem, 4vw, 2.5rem); }
   .fs-loc--center .fs-loc__head { margin-inline: auto; text-align: center; }
   .fs-loc__eyebrow { display:inline-block; font-weight:600; letter-spacing:.12em; text-transform:uppercase; font-size:.8rem; color:var(--fs-loc-accent); margin:0 0 .6rem; }
+  .fs-loc--bg-anthracite .fs-loc__eyebrow { color: color-mix(in srgb, var(--fs-loc-accent) 70%, #fff); }
   .fs-loc__title { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.05; margin: 0; }
   .fs-loc__intro { margin: .9rem 0 0; font-size: 1.05rem; line-height: 1.6; opacity: .8; }
 
+  /* ---- Grid-Layout ---- */
   .fs-loc__grid { display: grid; grid-template-columns: 1fr; gap: clamp(1rem, 2vw, 1.5rem); }
   @media (min-width: 800px) { .fs-loc__grid { grid-template-columns: repeat(var(--fs-loc-cols, 2), 1fr); } }
 
+  /* ---- Split-Layout ---- */
+  .fs-loc__split { display: grid; grid-template-columns: 1fr; gap: clamp(1.5rem, 4vw, 2.5rem); }
+  @media (min-width: 900px) { .fs-loc__split { grid-template-columns: 20rem 1fr; align-items: center; } }
+  .fs-loc__split-intro { display: flex; flex-direction: column; gap: 1rem; }
+  .fs-loc__scroller {
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(17rem, 1fr);
+    gap: clamp(1rem, 2vw, 1.25rem); overflow-x: auto; scroll-snap-type: x mandatory;
+    padding-bottom: .5rem; scrollbar-width: thin;
+  }
+  @media (min-width: 900px) { .fs-loc__scroller { grid-auto-columns: minmax(20rem, 23rem); } }
+  .fs-loc__scroller > .fs-loc__card { scroll-snap-align: start; }
+
+  /* ---- Karte (beide Layouts) ---- */
   .fs-loc__card { display: flex; flex-direction: column; overflow: hidden; border-radius: 16px; border: 1px solid rgba(128,128,128,.16); background: #fff; }
   .fs-loc--bg-anthracite .fs-loc__card { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.12); }
   .fs-loc__media { position: relative; aspect-ratio: 16 / 9; background: #11161b; overflow: hidden; }
   .fs-loc__media img { width: 100%; height: 100%; object-fit: cover; }
   .fs-loc__body { padding: clamp(1.1rem, 2.2vw, 1.6rem); display: flex; flex-direction: column; gap: .85rem; }
   .fs-loc__name { font-size: 1.3rem; line-height: 1.2; margin: 0; }
-
   .fs-loc__rows { display: flex; flex-direction: column; gap: .5rem; font-size: .95rem; line-height: 1.5; }
   .fs-loc__row { display: flex; gap: .6rem; align-items: flex-start; }
   .fs-loc__row svg { width: 1.15rem; height: 1.15rem; flex: none; margin-top: .12rem; color: var(--fs-loc-accent); }
   .fs-loc__row a { color: inherit; text-decoration: none; }
   .fs-loc__row a:hover { text-decoration: underline; text-underline-offset: 2px; }
   .fs-loc__hours { white-space: pre-line; opacity: .85; }
-
   .fs-loc__chips { display: flex; flex-wrap: wrap; gap: .4rem; }
-  .fs-loc__chip { font-size: .76rem; font-weight: 600; padding: .3rem .6rem; border-radius: 999px; background: color-mix(in srgb, var(--fs-loc-accent) 12%, transparent); color: var(--fs-loc-accent); line-height: 1.1; }
+  .fs-loc__chip { font-size: .76rem; font-weight: 600; padding: .3rem .6rem; border-radius: 999px; background: color-mix(in srgb, var(--fs-loc-accent) 14%, transparent); color: var(--fs-loc-accent); line-height: 1.1; }
   .fs-loc--bg-anthracite .fs-loc__chip { background: rgba(255,255,255,.1); color: #fff; }
-
   .fs-loc__actions { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: .25rem; }
   .fs-loc__btn { display: inline-flex; align-items: center; gap: .45rem; padding: .6rem .9rem; border-radius: 999px; font-weight: 600; font-size: .9rem; text-decoration: none; line-height: 1; border: 1px solid transparent; background: var(--fs-loc-accent); color: #fff; transition: filter .15s ease, transform .15s ease; }
   .fs-loc__btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
   .fs-loc__btn--ghost { background: transparent; color: inherit; border-color: rgba(128,128,128,.4); }
   .fs-loc--bg-anthracite .fs-loc__btn--ghost { border-color: rgba(255,255,255,.35); }
+  .fs-loc__btn--link { background: transparent; color: var(--fs-loc-accent); border: none; padding-inline: 0; }
+  .fs-loc--bg-anthracite .fs-loc__btn--link { color: color-mix(in srgb, var(--fs-loc-accent) 70%, #fff); }
   .fs-loc__btn:focus-visible { outline: 3px solid var(--fs-loc-accent); outline-offset: 2px; }
 
   @media (prefers-reduced-motion: reduce) { .fs-loc__btn { transition: none; } }
 </style>
 
-<div
-  class="fs-loc fs-loc--{{ uid }} fs-loc--bg-{{ section.settings.background }}{% if section.settings.text_align == 'center' %} fs-loc--center{% endif %}"
-  style="padding-block-start: {{ section.settings['padding-block-start'] | default: 56 }}px; padding-block-end: {{ section.settings['padding-block-end'] | default: 56 }}px;"
->
-  <div class="fs-loc__inner">
-    {%- if section.settings.eyebrow != blank or section.settings.heading != blank or section.settings.intro != blank -%}
-      <header class="fs-loc__head">
-        {%- if section.settings.eyebrow != blank -%}<span class="fs-loc__eyebrow">{{ section.settings.eyebrow }}</span>{%- endif -%}
-        {%- if section.settings.heading != blank -%}<h2 class="fs-loc__title">{{ section.settings.heading }}</h2>{%- endif -%}
-        {%- if section.settings.intro != blank -%}<div class="fs-loc__intro">{{ section.settings.intro }}</div>{%- endif -%}
-      </header>
-    {%- endif -%}
-
-    <div class="fs-loc__grid">
-      {%- for block in section.blocks -%}
-        {%- liquid
-          assign s = block.settings
-          assign addr_line = ''
-          if s.street != blank
-            assign addr_line = s.street
-          endif
-        -%}
-        <div class="fs-loc__card" {{ block.shopify_attributes }}>
-          {%- if s.image != blank -%}
-            <div class="fs-loc__media">
-              {{ s.image | image_url: width: 800 | image_tag: loading: 'lazy', sizes: '(min-width: 800px) 50vw, 100vw', widths: '400, 600, 800, 1000', alt: s.name | escape }}
+{%- comment -%} Karten einmal rendern, in beiden Layouts wiederverwenden {%- endcomment -%}
+{%- capture cards_html -%}
+  {%- for block in section.blocks -%}
+    {%- assign b = block.settings -%}
+    <div class="fs-loc__card" {{ block.shopify_attributes }}>
+      {%- if b.image != blank -%}
+        <div class="fs-loc__media">
+          {{ b.image | image_url: width: 800 | image_tag: loading: 'lazy', sizes: '(min-width: 800px) 33vw, 100vw', widths: '400, 600, 800, 1000', alt: b.name | escape }}
+        </div>
+      {%- endif -%}
+      <div class="fs-loc__body">
+        {%- if b.name != blank -%}<h3 class="fs-loc__name">{{ b.name }}</h3>{%- endif -%}
+        <div class="fs-loc__rows">
+          {%- if b.street != blank or b.city != blank -%}
+            <div class="fs-loc__row">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/></svg>
+              <span>{{ b.street }}{% if b.street != blank and b.city != blank %}, {% endif %}{{ b.zip }} {{ b.city }}</span>
             </div>
           {%- endif -%}
-          <div class="fs-loc__body">
-            {%- if s.name != blank -%}<h3 class="fs-loc__name">{{ s.name }}</h3>{%- endif -%}
-
-            <div class="fs-loc__rows">
-              {%- if s.street != blank or s.city != blank -%}
-                <div class="fs-loc__row">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.6"/></svg>
-                  <span>{{ s.street }}{% if s.street != blank and s.city != blank %}, {% endif %}{{ s.zip }} {{ s.city }}</span>
-                </div>
-              {%- endif -%}
-              {%- if s.hours != blank -%}
-                <div class="fs-loc__row">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                  <span class="fs-loc__hours">{{ s.hours }}</span>
-                </div>
-              {%- endif -%}
-              {%- if s.phone != blank -%}
-                <div class="fs-loc__row">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5V19a2 2 0 0 1-2 2A16 16 0 0 1 4 6a2 2 0 0 1 1-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-                  <a href="tel:{{ s.phone | strip | replace: ' ', '' }}">{{ s.phone }}</a>
-                </div>
-              {%- endif -%}
-              {%- if s.email != blank -%}
-                <div class="fs-loc__row">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6"/></svg>
-                  <a href="mailto:{{ s.email }}">{{ s.email }}</a>
-                </div>
-              {%- endif -%}
+          {%- if b.hours != blank -%}
+            <div class="fs-loc__row">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              <span class="fs-loc__hours">{{ b.hours }}</span>
             </div>
-
-            {%- assign has_chip = false -%}
-            {%- if s.click_collect or s.has_padel or s.has_pickleball or s.has_tabletennis -%}{%- assign has_chip = true -%}{%- endif -%}
-            {%- if has_chip -%}
-              <div class="fs-loc__chips">
-                {%- if s.click_collect -%}<span class="fs-loc__chip">Click & Collect</span>{%- endif -%}
-                {%- if s.has_padel -%}<span class="fs-loc__chip">Padel</span>{%- endif -%}
-                {%- if s.has_pickleball -%}<span class="fs-loc__chip">Pickleball</span>{%- endif -%}
-                {%- if s.has_tabletennis -%}<span class="fs-loc__chip">Tischtennis</span>{%- endif -%}
-              </div>
-            {%- endif -%}
-
-            <div class="fs-loc__actions">
-              {%- if s.playtomic_url != blank -%}
-                <a class="fs-loc__btn" href="{{ s.playtomic_url }}" target="_blank" rel="noopener">{{ s.playtomic_label | default: 'Court buchen' }}</a>
-              {%- endif -%}
-              {%- if s.landing_url != blank -%}
-                <a class="fs-loc__btn fs-loc__btn--ghost" href="{{ s.landing_url }}">{{ s.landing_label | default: 'Standort ansehen' }}</a>
-              {%- endif -%}
-              {%- if s.maps_url != blank -%}
-                <a class="fs-loc__btn fs-loc__btn--ghost" href="{{ s.maps_url }}" target="_blank" rel="noopener">Route</a>
-              {%- endif -%}
+          {%- endif -%}
+          {%- if b.phone != blank -%}
+            <div class="fs-loc__row">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5V19a2 2 0 0 1-2 2A16 16 0 0 1 4 6a2 2 0 0 1 1-2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              <a href="tel:{{ b.phone | strip | replace: ' ', '' }}">{{ b.phone }}</a>
             </div>
-          </div>
+          {%- endif -%}
+          {%- if b.email != blank -%}
+            <div class="fs-loc__row">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.6"/></svg>
+              <a href="mailto:{{ b.email }}">{{ b.email }}</a>
+            </div>
+          {%- endif -%}
         </div>
 
-        {%- comment -%} Local SEO: Schema.org pro Standort {%- endcomment -%}
-        {%- capture ld_json -%}
-          {
-            "@context": "https://schema.org",
-            "@type": "SportingGoodsStore",
-            {% if s.name != blank %}"name": {{ s.name | json }},{% endif %}
-            {% if s.image != blank %}"image": {{ s.image | image_url: width: 1200 | json }},{% endif %}
-            {% if s.phone != blank %}"telephone": {{ s.phone | json }},{% endif %}
-            {% if s.email != blank %}"email": {{ s.email | json }},{% endif %}
-            {% if s.hours != blank %}"openingHours": {{ s.hours | strip_newlines | json }},{% endif %}
-            {% if s.maps_url != blank %}"hasMap": {{ s.maps_url | json }},{% endif %}
-            "address": {
-              "@type": "PostalAddress",
-              {% if s.street != blank %}"streetAddress": {{ s.street | json }},{% endif %}
-              {% if s.zip != blank %}"postalCode": {{ s.zip | json }},{% endif %}
-              {% if s.city != blank %}"addressLocality": {{ s.city | json }},{% endif %}
-              "addressCountry": {{ s.country | default: 'DE' | json }}
-            }
-          }
-        {%- endcapture -%}
-        {%- if s.name != blank and s.add_schema -%}
-          <script type="application/ld+json">{{ ld_json | strip_newlines }}</script>
+        {%- assign has_chip = false -%}
+        {%- if b.click_collect or b.has_padel or b.has_pickleball or b.has_tabletennis -%}{%- assign has_chip = true -%}{%- endif -%}
+        {%- if has_chip -%}
+          <div class="fs-loc__chips">
+            {%- if b.click_collect -%}<span class="fs-loc__chip">Click & Collect</span>{%- endif -%}
+            {%- if b.has_padel -%}<span class="fs-loc__chip">Padel Courts</span>{%- endif -%}
+            {%- if b.has_pickleball -%}<span class="fs-loc__chip">Pickleball Courts</span>{%- endif -%}
+            {%- if b.has_tabletennis -%}<span class="fs-loc__chip">Tischtennishalle</span>{%- endif -%}
+          </div>
         {%- endif -%}
-      {%- endfor -%}
+
+        <div class="fs-loc__actions">
+          {%- if b.playtomic_url != blank -%}
+            <a class="fs-loc__btn" href="{{ b.playtomic_url }}" target="_blank" rel="noopener">{{ b.playtomic_label | default: 'Court buchen' }}</a>
+          {%- endif -%}
+          {%- if b.landing_url != blank -%}
+            <a class="fs-loc__btn fs-loc__btn--link" href="{{ b.landing_url }}">{{ b.landing_label | default: 'Standort entdecken' }} →</a>
+          {%- endif -%}
+          {%- if b.maps_url != blank -%}
+            <a class="fs-loc__btn fs-loc__btn--ghost" href="{{ b.maps_url }}" target="_blank" rel="noopener">Route</a>
+          {%- endif -%}
+        </div>
+      </div>
     </div>
+
+    {%- capture ld_json -%}
+      {
+        "@context": "https://schema.org",
+        "@type": "SportingGoodsStore",
+        {% if b.name != blank %}"name": {{ b.name | json }},{% endif %}
+        {% if b.image != blank %}"image": {{ b.image | image_url: width: 1200 | json }},{% endif %}
+        {% if b.phone != blank %}"telephone": {{ b.phone | json }},{% endif %}
+        {% if b.email != blank %}"email": {{ b.email | json }},{% endif %}
+        {% if b.hours != blank %}"openingHours": {{ b.hours | strip_newlines | json }},{% endif %}
+        {% if b.maps_url != blank %}"hasMap": {{ b.maps_url | json }},{% endif %}
+        "address": {
+          "@type": "PostalAddress",
+          {% if b.street != blank %}"streetAddress": {{ b.street | json }},{% endif %}
+          {% if b.zip != blank %}"postalCode": {{ b.zip | json }},{% endif %}
+          {% if b.city != blank %}"addressLocality": {{ b.city | json }},{% endif %}
+          "addressCountry": {{ b.country | default: 'DE' | json }}
+        }
+      }
+    {%- endcapture -%}
+    {%- if b.name != blank and b.add_schema -%}
+      <script type="application/ld+json">{{ ld_json | strip_newlines }}</script>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+
+<div
+  class="fs-loc fs-loc--{{ uid }} fs-loc--bg-{{ s.background }}{% if s.text_align == 'center' and s.layout != 'split' %} fs-loc--center{% endif %}"
+  style="padding-block-start: {{ s['padding-block-start'] | default: 56 }}px; padding-block-end: {{ s['padding-block-end'] | default: 56 }}px;"
+>
+  <div class="fs-loc__inner">
+    {%- if s.layout == 'split' -%}
+      <div class="fs-loc__split">
+        <div class="fs-loc__split-intro">
+          {%- if s.eyebrow != blank -%}<span class="fs-loc__eyebrow">{{ s.eyebrow }}</span>{%- endif -%}
+          {%- if s.heading != blank -%}<h2 class="fs-loc__title">{{ s.heading }}</h2>{%- endif -%}
+          {%- if s.intro != blank -%}<div class="fs-loc__intro">{{ s.intro }}</div>{%- endif -%}
+          {%- if s.button_label != blank -%}
+            <a class="fs-loc__btn fs-loc__btn--ghost" href="{{ s.button_link | default: '#' }}" style="align-self:flex-start;margin-top:.4rem;">{{ s.button_label }} →</a>
+          {%- endif -%}
+        </div>
+        <div class="fs-loc__scroller">{{ cards_html }}</div>
+      </div>
+    {%- else -%}
+      {%- if s.eyebrow != blank or s.heading != blank or s.intro != blank -%}
+        <header class="fs-loc__head">
+          {%- if s.eyebrow != blank -%}<span class="fs-loc__eyebrow">{{ s.eyebrow }}</span>{%- endif -%}
+          {%- if s.heading != blank -%}<h2 class="fs-loc__title">{{ s.heading }}</h2>{%- endif -%}
+          {%- if s.intro != blank -%}<div class="fs-loc__intro">{{ s.intro }}</div>{%- endif -%}
+        </header>
+      {%- endif -%}
+      <div class="fs-loc__grid">{{ cards_html }}</div>
+    {%- endif -%}
   </div>
 </div>
 
@@ -182,14 +208,32 @@
   "tag": "section",
   "class": "section fs-section",
   "settings": [
+    {
+      "type": "select", "id": "layout", "label": "Layout",
+      "options": [
+        { "value": "grid", "label": "Raster" },
+        { "value": "split", "label": "Intro links + Slider" }
+      ],
+      "default": "grid"
+    },
     { "type": "header", "content": "Kopfbereich" },
     { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Omnichannel" },
-    { "type": "text", "id": "heading", "label": "Überschrift", "default": "Unsere Standorte" },
-    { "type": "richtext", "id": "intro", "label": "Einleitungstext", "default": "<p>Fachgeschäft, Beratung, Click & Collect und eigene Courts – besuche uns vor Ort.</p>" },
-    { "type": "select", "id": "text_align", "label": "Ausrichtung Kopfbereich", "options": [ { "value": "left", "label": "Links" }, { "value": "center", "label": "Zentriert" } ], "default": "left" },
+    { "type": "text", "id": "heading", "label": "Überschrift", "default": "Unsere Standorte." },
+    { "type": "richtext", "id": "intro", "label": "Einleitungstext", "default": "<p>Erlebe Racket Sports live – in unseren Stores, Hallen und auf unseren Courts.</p>" },
+    { "type": "text", "id": "button_label", "label": "Button-Text (Split-Layout)", "default": "Alle Standorte ansehen" },
+    { "type": "url", "id": "button_link", "label": "Button-Link (Split-Layout)" },
+    { "type": "select", "id": "text_align", "label": "Ausrichtung Kopf (Raster)", "options": [ { "value": "left", "label": "Links" }, { "value": "center", "label": "Zentriert" } ], "default": "left" },
     { "type": "header", "content": "Layout & Farben" },
-    { "type": "range", "id": "columns_desktop", "label": "Spalten (Desktop)", "min": 1, "max": 3, "step": 1, "default": 2 },
-    { "type": "select", "id": "background", "label": "Hintergrund", "options": [ { "value": "light", "label": "Weiß" }, { "value": "grey", "label": "Hellgrau" }, { "value": "anthracite", "label": "Anthrazit" } ], "default": "light" },
+    { "type": "range", "id": "columns_desktop", "label": "Spalten (Raster)", "min": 1, "max": 3, "step": 1, "default": 2 },
+    {
+      "type": "select", "id": "background", "label": "Hintergrund",
+      "options": [
+        { "value": "light", "label": "Weiß" },
+        { "value": "grey", "label": "Hellgrau" },
+        { "value": "anthracite", "label": "Anthrazit" }
+      ],
+      "default": "anthracite"
+    },
     { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#486A8F" },
     { "type": "header", "content": "Abstand" },
     { "type": "range", "id": "padding-block-start", "label": "Oben", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 56 },
@@ -217,21 +261,18 @@
         { "type": "checkbox", "id": "has_padel", "label": "Padel Courts", "default": false },
         { "type": "checkbox", "id": "has_pickleball", "label": "Pickleball Courts", "default": false },
         { "type": "checkbox", "id": "has_tabletennis", "label": "Tischtennis", "default": true },
-        { "type": "header", "content": "Links (nur ausgefüllte werden angezeigt)" },
+        { "type": "header", "content": "Links (nur ausgefuellte sichtbar)" },
         { "type": "url", "id": "playtomic_url", "label": "Playtomic / Court-Buchung – URL" },
         { "type": "text", "id": "playtomic_label", "label": "Court-Button – Text", "default": "Court buchen" },
         { "type": "url", "id": "landing_url", "label": "Standort-Landingpage – URL" },
-        { "type": "text", "id": "landing_label", "label": "Standort-Button – Text", "default": "Standort ansehen" },
+        { "type": "text", "id": "landing_label", "label": "Standort – Button-Text", "default": "Standort entdecken" },
         { "type": "header", "content": "SEO" },
         { "type": "checkbox", "id": "add_schema", "label": "Schema.org-Markup ausgeben (Local SEO)", "default": true }
       ]
     }
   ],
   "presets": [
-    {
-      "name": "Standorte",
-      "blocks": [ { "type": "location" } ]
-    }
+    { "name": "Standorte", "blocks": [ { "type": "location" } ] }
   ]
 }
 {% endschema %}

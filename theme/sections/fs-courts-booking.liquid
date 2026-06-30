@@ -3,14 +3,15 @@
   Section: Courts buchen (fs-courts-booking)
   ----------------------------------------------------------------------------
   "Spiele bei Futurespin" – Buchung der eigenen Padel-, Pickleball- und
-  Tischtennis-Courts. Die Buchung laeuft ueber Playtomic.
+  Tischtennis-Courts über Playtomic.
 
-  WICHTIG: Es wird NICHTS hart codiert. Jeder Standort ist ein Block, jede
-  Buchungs-URL (Padel / Pickleball / Tischtennis / Standort-Seite) ist eine
-  konfigurierbare Einstellung. So lassen sich beliebig viele Standorte mit
-  jeweils eigenen Playtomic-Links pflegen, ohne den Code zu aendern.
+  Zwei Layouts (Setting "layout"):
+  - "cards":     je Standort eine Karte mit Buchungs-Buttons (Multi-Standort)
+  - "playtomic": Split-Editorial (Text + runde Icon-Buttons + Playtomic-Button
+                 links, Banner rechts) – wie auf der Startseite.
 
-  Ein Sport-Button wird nur dann angezeigt, wenn dafuer eine URL hinterlegt ist.
+  WICHTIG: Keine URL ist hart codiert. Im Cards-Layout je Standort-Block, im
+  Playtomic-Layout über die Section-Einstellungen pflegbar.
   ============================================================================
 {%- endcomment -%}
 
@@ -18,6 +19,7 @@
   assign accent = section.settings.accent_color | default: '#486A8F'
   assign uid = section.id | replace: '_', '' | replace: '-', ''
   assign cols = section.settings.columns_desktop | default: 2
+  assign s = section.settings
 -%}
 
 {%- style -%}
@@ -39,16 +41,13 @@
     display: inline-block; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
     font-size: .8rem; color: var(--fs-c-accent); margin: 0 0 .6rem;
   }
+  .fs-courts--bg-anthracite .fs-courts__eyebrow { color: color-mix(in srgb, var(--fs-c-accent) 70%, #fff); }
   .fs-courts__title { font-size: clamp(1.8rem, 4vw, 2.75rem); line-height: 1.05; margin: 0; }
   .fs-courts__intro { margin: .9rem 0 0; font-size: 1.05rem; line-height: 1.6; opacity: .82; }
 
-  .fs-courts__grid {
-    display: grid; grid-template-columns: 1fr; gap: clamp(1rem, 2vw, 1.5rem);
-  }
-  @media (min-width: 750px) {
-    .fs-courts__grid { grid-template-columns: repeat(var(--fs-c-cols, 2), 1fr); }
-  }
-
+  /* ---- Cards-Layout ---- */
+  .fs-courts__grid { display: grid; grid-template-columns: 1fr; gap: clamp(1rem, 2vw, 1.5rem); }
+  @media (min-width: 750px) { .fs-courts__grid { grid-template-columns: repeat(var(--fs-c-cols, 2), 1fr); } }
   .fs-courts__card {
     display: flex; flex-direction: column; overflow: hidden;
     border-radius: 16px; border: 1px solid rgba(128,128,128,.18);
@@ -60,7 +59,6 @@
   .fs-courts__card-body { padding: clamp(1.1rem, 2.2vw, 1.6rem); display: flex; flex-direction: column; gap: .85rem; }
   .fs-courts__loc-name { font-size: 1.25rem; line-height: 1.2; margin: 0; }
   .fs-courts__loc-addr { margin: 0; font-size: .95rem; line-height: 1.5; opacity: .75; }
-
   .fs-courts__sports { display: flex; flex-wrap: wrap; gap: .55rem; margin-top: .25rem; }
   .fs-courts__btn {
     display: inline-flex; align-items: center; gap: .5rem;
@@ -70,96 +68,159 @@
   }
   .fs-courts__btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
   .fs-courts__btn svg { width: 1.1em; height: 1.1em; }
-  .fs-courts__btn--ghost {
-    background: transparent; color: inherit; border-color: rgba(128,128,128,.4);
-  }
+  .fs-courts__btn--ghost { background: transparent; color: inherit; border-color: rgba(128,128,128,.4); }
   .fs-courts--bg-anthracite .fs-courts__btn--ghost { border-color: rgba(255,255,255,.35); }
   .fs-courts__btn:focus-visible { outline: 3px solid var(--fs-c-accent); outline-offset: 2px; }
-
   .fs-courts__note { margin: clamp(1.25rem, 3vw, 2rem) 0 0; font-size: .92rem; opacity: .7; }
   .fs-courts--center .fs-courts__note { text-align: center; }
 
+  /* ---- Playtomic-Layout ---- */
+  .fs-courts__pt {
+    display: grid; grid-template-columns: 1fr; gap: 0; overflow: hidden;
+    border-radius: 20px; border: 1px solid rgba(255,255,255,.12);
+    background: var(--fs-c-pt-bg, rgba(255,255,255,.03));
+  }
+  .fs-courts--bg-light .fs-courts__pt, .fs-courts--bg-grey .fs-courts__pt { border-color: rgba(128,128,128,.18); background: rgba(255,255,255,.6); }
+  @media (min-width: 850px) { .fs-courts__pt { grid-template-columns: 1.05fr .95fr; } }
+  .fs-courts__pt-content { padding: clamp(1.5rem, 4vw, 3rem); display: flex; flex-direction: column; gap: 1.1rem; }
+  .fs-courts__pt-content .fs-courts__title { font-size: clamp(1.6rem, 3.2vw, 2.4rem); }
+  .fs-courts__pt-media { position: relative; min-height: 16rem; background: #0e1318; }
+  .fs-courts__pt-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .fs-courts__pt-media--empty {
+    background: radial-gradient(120% 120% at 70% 30%, color-mix(in srgb, var(--fs-c-accent) 60%, #000) 0%, #0c1117 65%);
+  }
+
+  .fs-courts__quick { display: flex; flex-wrap: wrap; gap: clamp(.75rem, 2vw, 1.5rem); margin: .25rem 0; }
+  .fs-courts__quickbtn { display: flex; flex-direction: column; align-items: center; gap: .5rem; width: 5rem; text-decoration: none; color: inherit; }
+  .fs-courts__quickbtn .fs-courts__circle {
+    width: 3.4rem; height: 3.4rem; border-radius: 50%; display: grid; place-items: center;
+    border: 1px solid rgba(255,255,255,.3); color: var(--fs-c-accent);
+    transition: border-color .15s ease, background .15s ease, transform .15s ease;
+  }
+  .fs-courts--bg-light .fs-courts__quickbtn .fs-courts__circle, .fs-courts--bg-grey .fs-courts__quickbtn .fs-courts__circle { border-color: rgba(0,0,0,.18); }
+  .fs-courts__quickbtn:hover .fs-courts__circle { border-color: var(--fs-c-accent); background: color-mix(in srgb, var(--fs-c-accent) 14%, transparent); transform: translateY(-2px); }
+  .fs-courts__circle svg { width: 1.5rem; height: 1.5rem; }
+  .fs-courts__quicklbl { font-size: .82rem; font-weight: 600; text-align: center; line-height: 1.2; }
+  .fs-courts__quickbtn:focus-visible { outline: 3px solid var(--fs-c-accent); outline-offset: 3px; border-radius: 8px; }
+
+  .fs-courts__ptbtn {
+    align-self: flex-start; display: inline-flex; align-items: center; gap: .5rem;
+    padding: .85rem 1.5rem; border-radius: 999px; font-weight: 600; font-size: 1rem;
+    text-decoration: none; line-height: 1; background: #fff; color: #14181c; border: 1.5px solid #fff;
+    transition: transform .15s ease, filter .15s ease;
+  }
+  .fs-courts--bg-light .fs-courts__ptbtn, .fs-courts--bg-grey .fs-courts__ptbtn { background: var(--fs-c-accent); color: #fff; border-color: var(--fs-c-accent); }
+  .fs-courts__ptbtn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .fs-courts__ptbtn svg { width: 1.05em; height: 1.05em; }
+  .fs-courts__ptnote { font-size: .85rem; opacity: .65; margin: 0; }
+
   @media (prefers-reduced-motion: reduce) {
-    .fs-courts__btn { transition: none; }
+    .fs-courts__btn, .fs-courts__quickbtn .fs-courts__circle, .fs-courts__ptbtn { transition: none; }
   }
 </style>
 
+{%- comment -%} SVG-Icons als wiederverwendbare Snippets via capture {%- endcomment -%}
+{%- capture icon_padel -%}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="9" r="6" stroke="currentColor" stroke-width="2"/><path d="M9 14l-3 7M12 15v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>{%- endcapture -%}
+{%- capture icon_pickle -%}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="6" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="7" r="1" fill="currentColor"/><circle cx="14" cy="7" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><path d="M12 14v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>{%- endcapture -%}
+{%- capture icon_tt -%}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13h16M6 13c0-4 3-7 7-7s5 2 5 4-2 3-4 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 13l1 7M16 13l-1 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>{%- endcapture -%}
+{%- capture icon_pin -%}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2"/></svg>{%- endcapture -%}
+
 <div
-  class="fs-courts fs-courts--{{ uid }} fs-courts--bg-{{ section.settings.background }}{% if section.settings.text_align == 'center' %} fs-courts--center{% endif %}"
-  style="padding-block-start: {{ section.settings['padding-block-start'] | default: 56 }}px; padding-block-end: {{ section.settings['padding-block-end'] | default: 56 }}px;"
+  class="fs-courts fs-courts--{{ uid }} fs-courts--bg-{{ s.background }}{% if s.text_align == 'center' %} fs-courts--center{% endif %}"
+  style="padding-block-start: {{ s['padding-block-start'] | default: 56 }}px; padding-block-end: {{ s['padding-block-end'] | default: 56 }}px;"
 >
   <div class="fs-courts__inner">
-    {%- if section.settings.eyebrow != blank or section.settings.heading != blank or section.settings.intro != blank -%}
-      <header class="fs-courts__head">
-        {%- if section.settings.eyebrow != blank -%}
-          <span class="fs-courts__eyebrow">{{ section.settings.eyebrow }}</span>
-        {%- endif -%}
-        {%- if section.settings.heading != blank -%}
-          <h2 class="fs-courts__title">{{ section.settings.heading }}</h2>
-        {%- endif -%}
-        {%- if section.settings.intro != blank -%}
-          <div class="fs-courts__intro">{{ section.settings.intro }}</div>
-        {%- endif -%}
-      </header>
-    {%- endif -%}
 
-    <div class="fs-courts__grid">
-      {%- for block in section.blocks -%}
-        <div class="fs-courts__card" {{ block.shopify_attributes }}>
-          {%- if block.settings.image != blank -%}
-            <div class="fs-courts__card-media">
-              {{
-                block.settings.image
-                | image_url: width: 800
-                | image_tag:
-                  loading: 'lazy',
-                  sizes: '(min-width: 750px) 50vw, 100vw',
-                  widths: '400, 600, 800, 1000',
-                  alt: block.settings.name | escape
-              }}
-            </div>
+    {%- if s.layout == 'playtomic' -%}
+      {%- comment -%} ===== Playtomic Split-Editorial ===== {%- endcomment -%}
+      <div class="fs-courts__pt">
+        <div class="fs-courts__pt-content">
+          {%- if s.eyebrow != blank -%}<span class="fs-courts__eyebrow">{{ s.eyebrow }}</span>{%- endif -%}
+          {%- if s.heading != blank -%}<h2 class="fs-courts__title">{{ s.heading }}</h2>{%- endif -%}
+          {%- if s.intro != blank -%}<div class="fs-courts__intro">{{ s.intro }}</div>{%- endif -%}
+
+          <div class="fs-courts__quick">
+            {%- if s.padel_url != blank -%}
+              <a class="fs-courts__quickbtn" href="{{ s.padel_url }}"{% if s.padel_url contains '//' %} target="_blank" rel="noopener"{% endif %}>
+                <span class="fs-courts__circle">{{ icon_padel }}</span><span class="fs-courts__quicklbl">{{ s.padel_label | default: 'Padel buchen' }}</span>
+              </a>
+            {%- endif -%}
+            {%- if s.pickleball_url != blank -%}
+              <a class="fs-courts__quickbtn" href="{{ s.pickleball_url }}"{% if s.pickleball_url contains '//' %} target="_blank" rel="noopener"{% endif %}>
+                <span class="fs-courts__circle">{{ icon_pickle }}</span><span class="fs-courts__quicklbl">{{ s.pickleball_label | default: 'Pickleball buchen' }}</span>
+              </a>
+            {%- endif -%}
+            {%- if s.tabletennis_url != blank -%}
+              <a class="fs-courts__quickbtn" href="{{ s.tabletennis_url }}"{% if s.tabletennis_url contains '//' %} target="_blank" rel="noopener"{% endif %}>
+                <span class="fs-courts__circle">{{ icon_tt }}</span><span class="fs-courts__quicklbl">{{ s.tabletennis_label | default: 'Tischtennis buchen' }}</span>
+              </a>
+            {%- endif -%}
+            {%- if s.standort_url != blank -%}
+              <a class="fs-courts__quickbtn" href="{{ s.standort_url }}">
+                <span class="fs-courts__circle">{{ icon_pin }}</span><span class="fs-courts__quicklbl">{{ s.standort_label | default: 'Standort wählen' }}</span>
+              </a>
+            {%- endif -%}
+          </div>
+
+          {%- if s.playtomic_url != blank -%}
+            <a class="fs-courts__ptbtn" href="{{ s.playtomic_url }}" target="_blank" rel="noopener">
+              {{ s.playtomic_label | default: 'Jetzt auf Playtomic buchen' }}
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
           {%- endif -%}
-          <div class="fs-courts__card-body">
-            {%- if block.settings.name != blank -%}
-              <h3 class="fs-courts__loc-name">{{ block.settings.name }}</h3>
-            {%- endif -%}
-            {%- if block.settings.address != blank -%}
-              <p class="fs-courts__loc-addr">{{ block.settings.address }}</p>
-            {%- endif -%}
+          {%- if s.note != blank -%}<p class="fs-courts__ptnote">{{ s.note }}</p>{%- endif -%}
+        </div>
 
-            <div class="fs-courts__sports">
-              {%- if block.settings.padel_url != blank -%}
-                <a class="fs-courts__btn" href="{{ block.settings.padel_url }}" target="_blank" rel="noopener">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="9" r="6" stroke="currentColor" stroke-width="2"/><path d="M9 14l-3 7M12 15v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  {{ block.settings.padel_label | default: 'Padel buchen' }}
-                </a>
-              {%- endif -%}
-              {%- if block.settings.pickleball_url != blank -%}
-                <a class="fs-courts__btn" href="{{ block.settings.pickleball_url }}" target="_blank" rel="noopener">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="6" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="7" r="1" fill="currentColor"/><circle cx="14" cy="7" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><path d="M12 14v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  {{ block.settings.pickleball_label | default: 'Pickleball buchen' }}
-                </a>
-              {%- endif -%}
-              {%- if block.settings.tabletennis_url != blank -%}
-                <a class="fs-courts__btn" href="{{ block.settings.tabletennis_url }}" target="_blank" rel="noopener">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13h16M6 13c0-4 3-7 7-7s5 2 5 4-2 3-4 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 13l1 7M16 13l-1 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  {{ block.settings.tabletennis_label | default: 'Tischtennis buchen' }}
-                </a>
-              {%- endif -%}
-              {%- if block.settings.location_url != blank -%}
-                <a class="fs-courts__btn fs-courts__btn--ghost" href="{{ block.settings.location_url }}">
-                  {{ block.settings.location_label | default: 'Standort ansehen' }}
-                </a>
-              {%- endif -%}
+        <div class="fs-courts__pt-media{% if s.image == blank %} fs-courts__pt-media--empty{% endif %}">
+          {%- if s.image != blank -%}
+            {{ s.image | image_url: width: 1400 | image_tag: loading: 'lazy', sizes: '(min-width: 850px) 50vw, 100vw', widths: '600, 900, 1200, 1600', alt: s.heading | escape }}
+          {%- endif -%}
+        </div>
+      </div>
+
+    {%- else -%}
+      {%- comment -%} ===== Cards-Layout (Multi-Standort) ===== {%- endcomment -%}
+      {%- if s.eyebrow != blank or s.heading != blank or s.intro != blank -%}
+        <header class="fs-courts__head">
+          {%- if s.eyebrow != blank -%}<span class="fs-courts__eyebrow">{{ s.eyebrow }}</span>{%- endif -%}
+          {%- if s.heading != blank -%}<h2 class="fs-courts__title">{{ s.heading }}</h2>{%- endif -%}
+          {%- if s.intro != blank -%}<div class="fs-courts__intro">{{ s.intro }}</div>{%- endif -%}
+        </header>
+      {%- endif -%}
+
+      <div class="fs-courts__grid">
+        {%- for block in section.blocks -%}
+          <div class="fs-courts__card" {{ block.shopify_attributes }}>
+            {%- if block.settings.image != blank -%}
+              <div class="fs-courts__card-media">
+                {{ block.settings.image | image_url: width: 800 | image_tag: loading: 'lazy', sizes: '(min-width: 750px) 50vw, 100vw', widths: '400, 600, 800, 1000', alt: block.settings.name | escape }}
+              </div>
+            {%- endif -%}
+            <div class="fs-courts__card-body">
+              {%- if block.settings.name != blank -%}<h3 class="fs-courts__loc-name">{{ block.settings.name }}</h3>{%- endif -%}
+              {%- if block.settings.address != blank -%}<p class="fs-courts__loc-addr">{{ block.settings.address }}</p>{%- endif -%}
+              <div class="fs-courts__sports">
+                {%- if block.settings.padel_url != blank -%}
+                  <a class="fs-courts__btn" href="{{ block.settings.padel_url }}" target="_blank" rel="noopener">{{ icon_padel }}{{ block.settings.padel_label | default: 'Padel buchen' }}</a>
+                {%- endif -%}
+                {%- if block.settings.pickleball_url != blank -%}
+                  <a class="fs-courts__btn" href="{{ block.settings.pickleball_url }}" target="_blank" rel="noopener">{{ icon_pickle }}{{ block.settings.pickleball_label | default: 'Pickleball buchen' }}</a>
+                {%- endif -%}
+                {%- if block.settings.tabletennis_url != blank -%}
+                  <a class="fs-courts__btn" href="{{ block.settings.tabletennis_url }}" target="_blank" rel="noopener">{{ icon_tt }}{{ block.settings.tabletennis_label | default: 'Tischtennis buchen' }}</a>
+                {%- endif -%}
+                {%- if block.settings.location_url != blank -%}
+                  <a class="fs-courts__btn fs-courts__btn--ghost" href="{{ block.settings.location_url }}">{{ block.settings.location_label | default: 'Standort ansehen' }}</a>
+                {%- endif -%}
+              </div>
             </div>
           </div>
-        </div>
-      {%- endfor -%}
-    </div>
+        {%- endfor -%}
+      </div>
 
-    {%- if section.settings.note != blank -%}
-      <p class="fs-courts__note">{{ section.settings.note }}</p>
+      {%- if s.note != blank -%}<p class="fs-courts__note">{{ s.note }}</p>{%- endif -%}
     {%- endif -%}
+
   </div>
 </div>
 
@@ -169,29 +230,45 @@
   "tag": "section",
   "class": "section fs-section",
   "settings": [
-    { "type": "header", "content": "Kopfbereich" },
-    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Spiele bei Futurespin" },
-    { "type": "text", "id": "heading", "label": "Ueberschrift", "default": "Courts buchen" },
-    { "type": "richtext", "id": "intro", "label": "Einleitungstext", "default": "<p>Reserviere deinen Padel-, Pickleball- oder Tischtennis-Court an einem unserer Standorte – schnell und bequem ueber Playtomic.</p>" },
     {
-      "type": "select", "id": "text_align", "label": "Ausrichtung Kopfbereich",
-      "options": [ { "value": "left", "label": "Links" }, { "value": "center", "label": "Zentriert" } ],
-      "default": "left"
+      "type": "select", "id": "layout", "label": "Layout",
+      "options": [
+        { "value": "cards", "label": "Karten je Standort" },
+        { "value": "playtomic", "label": "Playtomic-Banner (Split)" }
+      ],
+      "default": "cards"
     },
+    { "type": "header", "content": "Kopfbereich" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Spiele, wann du willst." },
+    { "type": "text", "id": "heading", "label": "Überschrift", "default": "Auf unseren Courts." },
+    { "type": "richtext", "id": "intro", "label": "Einleitungstext", "default": "<p>Buche Padel, Pickleball oder Tischtennistische an unserem Standort – schnell, einfach und jederzeit.</p>" },
+    { "type": "header", "content": "Playtomic-Layout: Quick-Links & Banner" },
+    { "type": "paragraph", "content": "Nur im Layout \"Playtomic-Banner\". Buttons erscheinen nur bei hinterlegter URL." },
+    { "type": "image_picker", "id": "image", "label": "Banner-Bild (rechts)" },
+    { "type": "url", "id": "padel_url", "label": "Padel – URL" },
+    { "type": "text", "id": "padel_label", "label": "Padel – Text", "default": "Padel buchen" },
+    { "type": "url", "id": "pickleball_url", "label": "Pickleball – URL" },
+    { "type": "text", "id": "pickleball_label", "label": "Pickleball – Text", "default": "Pickleball buchen" },
+    { "type": "url", "id": "tabletennis_url", "label": "Tischtennis – URL" },
+    { "type": "text", "id": "tabletennis_label", "label": "Tischtennis – Text", "default": "Tischtennis buchen" },
+    { "type": "url", "id": "standort_url", "label": "Standort wählen – URL" },
+    { "type": "text", "id": "standort_label", "label": "Standort – Text", "default": "Standort wählen" },
+    { "type": "url", "id": "playtomic_url", "label": "Haupt-Button (Playtomic) – URL" },
+    { "type": "text", "id": "playtomic_label", "label": "Haupt-Button – Text", "default": "Jetzt auf Playtomic buchen" },
     { "type": "header", "content": "Layout & Farben" },
-    { "type": "range", "id": "columns_desktop", "label": "Spalten (Desktop)", "min": 1, "max": 3, "step": 1, "default": 2 },
+    { "type": "range", "id": "columns_desktop", "label": "Spalten (Cards-Layout)", "min": 1, "max": 3, "step": 1, "default": 2 },
     {
       "type": "select", "id": "background", "label": "Hintergrund",
       "options": [
-        { "value": "light", "label": "Weiss" },
+        { "value": "light", "label": "Weiß" },
         { "value": "grey", "label": "Hellgrau" },
         { "value": "anthracite", "label": "Anthrazit" }
       ],
-      "default": "grey"
+      "default": "anthracite"
     },
     { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#486A8F" },
     { "type": "header", "content": "Hinweis" },
-    { "type": "text", "id": "note", "label": "Fusszeilen-Hinweis", "default": "Buchung & Verfuegbarkeit ueber Playtomic. Aenderungen vorbehalten." },
+    { "type": "text", "id": "note", "label": "Fußzeilen-Hinweis", "default": "Offizielle Buchungsplattform von Futurespin · Playtomic" },
     { "type": "header", "content": "Abstand" },
     { "type": "range", "id": "padding-block-start", "label": "Oben", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 56 },
     { "type": "range", "id": "padding-block-end", "label": "Unten", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 56 }
