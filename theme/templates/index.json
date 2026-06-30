@@ -1,0 +1,176 @@
+{
+  "sections": {
+    "fs_hero": {
+      "type": "fs-brand-hero",
+      "settings": {
+        "eyebrow": "PLAY. SHOP. IMPROVE.",
+        "heading": "Dein Sport. Deine Community. Dein Erfolg.",
+        "text": "<p>Futurespin ist dein Racket Sports Hub. Shop, Courts, Beratung, Academy und Events – alles an einem Ort.</p>",
+        "cta1_label": "Courts buchen",
+        "cta1_link": "/pages/courts",
+        "cta2_label": "Standorte entdecken",
+        "cta2_link": "/pages/standorte",
+        "height": "large",
+        "text_align": "left",
+        "text_color": "light",
+        "overlay_opacity": 45
+      }
+    },
+    "fs_courts": {
+      "type": "fs-courts-booking",
+      "blocks": {
+        "loc": {
+          "type": "location",
+          "settings": {
+            "name": "Futurespin Courts",
+            "address": "Padel · Pickleball · Tischtennis – Buchung über Playtomic",
+            "padel_url": "#",
+            "padel_label": "Padel buchen",
+            "pickleball_url": "#",
+            "pickleball_label": "Pickleball buchen",
+            "tabletennis_url": "#",
+            "tabletennis_label": "Tischtennis buchen",
+            "location_url": "/pages/standorte",
+            "location_label": "Standort wählen"
+          }
+        }
+      },
+      "block_order": ["loc"],
+      "settings": {
+        "eyebrow": "Spiele, wann du willst.",
+        "heading": "Auf unseren Courts.",
+        "intro": "<p>Buche Padel, Pickleball oder Tischtennistische an unserem Standort – schnell, einfach und jederzeit.</p>",
+        "text_align": "left",
+        "columns_desktop": 1,
+        "background": "anthracite",
+        "note": "Offizielle Buchungsplattform von Futurespin · Playtomic"
+      }
+    },
+    "fs_sportworlds": {
+      "type": "fs-sport-worlds",
+      "blocks": {
+        "tt": {
+          "type": "sport",
+          "settings": {
+            "eyebrow": "Sportart",
+            "title": "Tischtennis",
+            "text": "Produkte, Beratung & Know-how.",
+            "cta_label": "Entdecken",
+            "link": "/pages/tischtennis"
+          }
+        },
+        "padel": {
+          "type": "sport",
+          "settings": {
+            "eyebrow": "Sportart",
+            "title": "Padel",
+            "text": "Ausrüstung, Guides & Inspiration.",
+            "cta_label": "Entdecken",
+            "link": "/collections/padel"
+          }
+        },
+        "pickleball": {
+          "type": "sport",
+          "settings": {
+            "eyebrow": "Sportart",
+            "title": "Pickleball",
+            "text": "Paddles, Gear & Community.",
+            "cta_label": "Entdecken",
+            "link": "/collections/pickleball"
+          }
+        }
+      },
+      "block_order": ["tt", "padel", "pickleball"],
+      "settings": {
+        "eyebrow": "",
+        "heading": "Finde deinen Sport.",
+        "intro": "<p>Entdecke unsere Welten und alles, was du für dein Spiel brauchst.</p>",
+        "text_align": "center",
+        "columns_desktop": 3,
+        "background": "anthracite"
+      }
+    },
+    "fs_locations": {
+      "type": "fs-locations",
+      "blocks": {
+        "adelsdorf": {
+          "type": "location",
+          "settings": {
+            "name": "Futurespin Adelsdorf",
+            "street": "Weppersdorf 6a",
+            "zip": "91325",
+            "city": "Adelsdorf",
+            "country": "DE",
+            "hours": "Mo–Fr: 15:30–18:30\nSa: 10:00–13:00",
+            "click_collect": true,
+            "has_tabletennis": true,
+            "has_padel": false,
+            "has_pickleball": false,
+            "landing_url": "/pages/standorte",
+            "landing_label": "Standort entdecken",
+            "add_schema": true
+          }
+        },
+        "weiterer": {
+          "type": "location",
+          "settings": {
+            "name": "Weiterer Standort (in Planung)",
+            "street": "",
+            "zip": "",
+            "city": "",
+            "country": "DE",
+            "hours": "",
+            "click_collect": true,
+            "has_padel": true,
+            "has_pickleball": true,
+            "has_tabletennis": true,
+            "landing_url": "/pages/standorte",
+            "landing_label": "Standort entdecken",
+            "add_schema": false
+          }
+        }
+      },
+      "block_order": ["adelsdorf", "weiterer"],
+      "settings": {
+        "eyebrow": "Omnichannel",
+        "heading": "Unsere Standorte.",
+        "intro": "<p>Erlebe Racket Sports live – in unseren Stores, Hallen und auf unseren Courts.</p>",
+        "text_align": "left",
+        "columns_desktop": 2,
+        "background": "anthracite"
+      }
+    },
+    "fs_trust": {
+      "type": "fs-trust-bar",
+      "blocks": {
+        "courts": { "type": "item", "settings": { "icon": "court", "label": "Eigene Courts", "sub": "Top-Anlagen an allen Standorten" } },
+        "advice": { "type": "item", "settings": { "icon": "advice", "label": "Persönliche Beratung", "sub": "Von Spielern für Spieler" } },
+        "shipping": { "type": "item", "settings": { "icon": "shipping", "label": "Schneller Versand", "sub": "Ab 69 € kostenlos in DE" } },
+        "collect": { "type": "item", "settings": { "icon": "collect", "label": "Click & Collect", "sub": "Online bestellen, im Store abholen" } },
+        "secure": { "type": "item", "settings": { "icon": "secure", "label": "Sichere Zahlung", "sub": "SSL-verschlüsselt und sicher" } }
+      },
+      "block_order": ["courts", "advice", "shipping", "collect", "secure"],
+      "settings": {
+        "background": "anthracite"
+      }
+    },
+    "fs_newsletter": {
+      "type": "fs-newsletter",
+      "settings": {
+        "heading": "Bleib auf dem Laufenden.",
+        "text": "<p>News, Events, Tipps und exklusive Angebote.</p>",
+        "placeholder": "E-Mail-Adresse eingeben",
+        "button_label": "Anmelden",
+        "background": "anthracite"
+      }
+    }
+  },
+  "order": [
+    "fs_hero",
+    "fs_courts",
+    "fs_sportworlds",
+    "fs_locations",
+    "fs_trust",
+    "fs_newsletter"
+  ]
+}

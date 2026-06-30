@@ -1,0 +1,124 @@
+{%- comment -%}
+  ============================================================================
+  Design System · Section: Newsletter (fs-newsletter)
+  ----------------------------------------------------------------------------
+  Newsletter-Anmeldung über das native Shopify-Kundenformular
+  ({% form 'customer' %}) – keine App nötig. Dunkles Band mit optionalem Bild,
+  Headline, Text und E-Mail-Feld. Voll über den Customizer konfigurierbar.
+  ============================================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign accent = section.settings.accent_color | default: '#486A8F'
+  assign uid = section.id | replace: '_', '' | replace: '-', ''
+-%}
+
+{%- style -%}
+  .fs-nl--{{ uid }} { --fs-nl-accent: {{ accent }}; }
+{%- endstyle -%}
+
+<style>
+  .fs-nl { position: relative; isolation: isolate; overflow: hidden; }
+  .fs-nl--bg-anthracite { background: #14181c; color: #fff; }
+  .fs-nl--bg-accent { background: var(--fs-nl-accent); color: #fff; }
+  .fs-nl--bg-grey { background: #f5f5f5; color: #14181c; }
+  .fs-nl__media, .fs-nl__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+  .fs-nl__overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, rgba(8,12,18,.85) 0%, rgba(8,12,18,.55) 100%); }
+
+  .fs-nl__inner {
+    position: relative; z-index: 2; max-width: var(--page-width, 1400px);
+    margin-inline: auto; padding-inline: var(--page-margin, 2rem);
+    display: flex; flex-direction: column; gap: 1rem; max-width: 46rem;
+  }
+  .fs-nl__title { font-size: clamp(1.6rem, 3.5vw, 2.4rem); line-height: 1.05; margin: 0; letter-spacing: -.02em; }
+  .fs-nl__text { font-size: 1.02rem; line-height: 1.5; margin: 0; opacity: .9; }
+
+  .fs-nl__form { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .4rem; max-width: 34rem; }
+  .fs-nl__input {
+    flex: 1 1 16rem; min-width: 0; padding: .85rem 1.1rem; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08);
+    color: inherit; font-size: 1rem;
+  }
+  .fs-nl--bg-grey .fs-nl__input { border-color: rgba(0,0,0,.2); background: #fff; }
+  .fs-nl__input::placeholder { color: currentColor; opacity: .6; }
+  .fs-nl__input:focus-visible { outline: 3px solid var(--fs-nl-accent); outline-offset: 2px; }
+  .fs-nl__btn {
+    padding: .85rem 1.6rem; border-radius: 999px; border: none; cursor: pointer;
+    font-weight: 600; font-size: 1rem; background: var(--fs-nl-accent); color: #fff;
+    transition: filter .15s ease, transform .15s ease;
+  }
+  .fs-nl--bg-accent .fs-nl__btn { background: #fff; color: #14181c; }
+  .fs-nl__btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .fs-nl__note { font-size: .85rem; opacity: .7; margin: .2rem 0 0; }
+  .fs-nl__success { margin: .4rem 0 0; font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) { .fs-nl__btn { transition: none; } }
+</style>
+
+<div
+  class="fs-nl fs-nl--{{ uid }} fs-nl--bg-{{ section.settings.background }}"
+  style="padding-block-start: {{ section.settings['padding-block-start'] | default: 64 }}px; padding-block-end: {{ section.settings['padding-block-end'] | default: 64 }}px;"
+>
+  {%- if section.settings.image != blank -%}
+    <div class="fs-nl__media">
+      {{ section.settings.image | image_url: width: 2000 | image_tag: loading: 'lazy', sizes: '100vw', widths: '800, 1200, 1600, 2000', alt: '' }}
+    </div>
+    <div class="fs-nl__overlay"></div>
+  {%- endif -%}
+
+  <div class="fs-nl__inner">
+    {%- if section.settings.heading != blank -%}<h2 class="fs-nl__title">{{ section.settings.heading }}</h2>{%- endif -%}
+    {%- if section.settings.text != blank -%}<div class="fs-nl__text">{{ section.settings.text }}</div>{%- endif -%}
+
+    {%- form 'customer', class: 'fs-nl__form' -%}
+      <input type="hidden" name="contact[tags]" value="newsletter">
+      {%- if form.posted_successfully? -%}
+        <p class="fs-nl__success">{{ section.settings.success_text | default: 'Danke für deine Anmeldung!' }}</p>
+      {%- else -%}
+        <label class="visually-hidden" for="fs-nl-email-{{ uid }}">E-Mail-Adresse</label>
+        <input
+          id="fs-nl-email-{{ uid }}"
+          class="fs-nl__input"
+          type="email" name="contact[email]" required
+          placeholder="{{ section.settings.placeholder | default: 'E-Mail-Adresse eingeben' }}"
+          autocomplete="email"
+        >
+        <button type="submit" class="fs-nl__btn">{{ section.settings.button_label | default: 'Anmelden' }}</button>
+      {%- endif -%}
+    {%- endform -%}
+
+    {%- if section.settings.note != blank -%}<p class="fs-nl__note">{{ section.settings.note }}</p>{%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Newsletter",
+  "tag": "section",
+  "class": "section fs-section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Überschrift", "default": "Bleib auf dem Laufenden." },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>News, Events, Tipps und exklusive Angebote.</p>" },
+    { "type": "text", "id": "placeholder", "label": "Platzhalter Eingabefeld", "default": "E-Mail-Adresse eingeben" },
+    { "type": "text", "id": "button_label", "label": "Button-Text", "default": "Anmelden" },
+    { "type": "text", "id": "success_text", "label": "Erfolgsmeldung", "default": "Danke für deine Anmeldung!" },
+    { "type": "text", "id": "note", "label": "Hinweis (optional)" },
+    { "type": "header", "content": "Farben & Bild" },
+    {
+      "type": "select", "id": "background", "label": "Hintergrund",
+      "options": [
+        { "value": "anthracite", "label": "Anthrazit" },
+        { "value": "accent", "label": "Akzent (Futurespin-Blau)" },
+        { "value": "grey", "label": "Hellgrau" }
+      ],
+      "default": "anthracite"
+    },
+    { "type": "image_picker", "id": "image", "label": "Hintergrundbild (optional)" },
+    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#486A8F" },
+    { "type": "header", "content": "Abstand" },
+    { "type": "range", "id": "padding-block-start", "label": "Oben", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 64 },
+    { "type": "range", "id": "padding-block-end", "label": "Unten", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 64 }
+  ],
+  "presets": [ { "name": "Newsletter" } ]
+}
+{% endschema %}
