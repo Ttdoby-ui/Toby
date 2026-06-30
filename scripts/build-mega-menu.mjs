@@ -60,7 +60,14 @@ export const items = [
   { title: 'LEHRGÄNGE', type: 'HTTP', url: '/collections/lehrgange' },
 
   TOP('BELÄGE', 'belage', [
-    G('NOPPEN INNEN', 'noppen-innen', [L('Alle Noppen Innen', 'noppen-innen')]),
+    G('NOPPEN INNEN', 'noppen-innen', [
+      L('Alle Noppen Innen', 'noppen-innen'),
+      // Noppen-Innen nach Spielsystem (Kollektionen offensiv/allround/defensiv =
+      // productType "Noppen Innen - Offensiv/Allround/Defensiv")
+      L('Offensiv', 'offensiv'),
+      L('Allround', 'allround'),
+      L('Defensiv', 'defensiv'),
+    ]),
     G('NOPPEN AUSSEN', 'noppen-aussen', [
       L('Alle Noppen Außen', 'noppen-aussen'),
       L('Lange Noppe', 'lange-noppe'),
