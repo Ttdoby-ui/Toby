@@ -6,6 +6,20 @@
   color: #e00000 !important;
 }
 
+/* ...ABER: das %SALE%-Untermenue (Dropdown-Spalten) soll schwarz bleiben,
+   nur der oberste %SALE%-Trigger rot. Die breite Regel oben faerbt sonst
+   alle Sale-URLs rot. Hier die Mega-Menue-Farben im Dropdown mit Vorrang
+   wiederherstellen (Gruppen-Header dunkel, Leaf-Links 0.82, Hover Markenblau). */
+#header-group .mega-menu__list .mega-menu__link--parent[href*="sale" i] {
+  color: var(--color-foreground) !important;
+}
+#header-group .mega-menu__list .mega-menu__column ul .mega-menu__link[href*="sale" i] {
+  color: rgb(var(--color-foreground-rgb, 0 0 0) / 0.82) !important;
+}
+#header-group .mega-menu__list .mega-menu__column ul .mega-menu__link[href*="sale" i]:hover {
+  color: #486a8f !important;
+}
+
 /* === Futurespin: Mobil-Menue (Drawer) wie Live-Theme ===
    Trennlinien zwischen den obersten Eintraegen + Chevron statt "+",
    kompaktere Schrift, vollbreiter Drawer. */
