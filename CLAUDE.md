@@ -105,6 +105,29 @@
 - **Hinweis:** Workflow „Kollektionsrabatt anlegen" liegt jetzt auch auf `main` (vorher nur Feature-Branch),
   damit er per `workflow_dispatch` auslösbar ist. Künftige Staffelrabatte → Actions → „Kollektionsrabatt anlegen".
 
+## Desktop-Mega-Menü (Contra-Stil, gruppiert)
+
+- Das **Desktop**-Header-Menü nutzt ein eigenes, **3-stufig gruppiertes** Menü
+  **`main-menu-mega`** (`gid://shopify/Menu/336718102876`) im Contra-Look: jede Top-Kategorie
+  hat 2.-Ebene-**Gruppen** (fette, uppercase Spalten-Überschriften wie OFFENSIV/ALLROUND/DEFENSIV),
+  deren 3.-Ebene-Kinder die einzelnen Kollektions-Links sind. Horizon rendert 2.-Ebene-Items **mit
+  Kindern** als `.mega-menu__link--parent` (= Spalten-Header), die Leaf-Kinder stapeln darunter →
+  ergibt automatisch die mehrspaltige Contra-Optik.
+- **Verdrahtung:** `sections/header-group.json` → `header-menu` `"menu": "main-menu-mega"`
+  (die **Mobil-Chips** `fs_mobile_chips` bleiben bewusst auf `main-menu`). Das Live/`main-menu`
+  bleibt unangetastet.
+- **Optik** liefert `assets/sale-nav-style.css` (Block „Mega-Menü Contra-Stil"): fette/uppercase
+  Gruppen-Header mit Marken-Hairline `rgba(72,106,143,0.35)`, vertikale Trennlinien zwischen den
+  Spalten (`.mega-menu__list > .mega-menu__column + .mega-menu__column`), Hover `#486a8f`. Greift nur
+  bei gruppierten Menüs; flache Menüs (LEHRGÄNGE/GUTSCHEINE ohne Kinder) bleiben einfache Links.
+- **Reproduzierbar/erweiterbar:** `scripts/build-mega-menu.mjs` baut die komplette Item-Struktur und
+  kann sie per `menuUpdate` anwenden (braucht `write_navigation` → sonst über MCP `menuUpdate` mit der
+  `items`-Struktur). **Nur existierende Kollektions-Handles** verwenden (sonst 404 – vor dem Anlegen
+  gegen die `collections`-Liste prüfen). Neue Kategorie/Gruppe → im Skript ergänzen, erneut laufen
+  lassen (idempotent, ersetzt die ganze Item-Liste). ⚠️ Menüs gehen bei Neuanlage gelegentlich verloren
+  → dann Skript erneut anwenden. EN-Übersetzungen der neuen Links ggf. via
+  `scripts/register-menu-en-translations.mjs` (MAP ergänzen) nachziehen.
+
 ## Storefront-Übersetzungen (EN)
 
 - **Menü-Übersetzungen (Navigation/Footer) ins Englische** liegen als Shopify-`translationsRegister`
