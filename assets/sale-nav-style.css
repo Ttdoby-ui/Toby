@@ -62,3 +62,100 @@ summary[id^="HeaderDrawer-sale"] .menu-drawer__menu-item-text,
 .menu-drawer__menu-item[href*="sale" i] .menu-drawer__menu-item-text {
   color: #e00000;
 }
+
+/* ============================================================
+   Produktbeschreibung – einheitlicher Style "sportlich edel"
+   Gescopt auf die PDP-Sektion produktbeschreibung_full, damit die
+   uneinheitlichen Hersteller-HTMLs trotzdem konsistent aussehen.
+   ============================================================ */
+[id*="produktbeschreibung_full"] {
+  --fs-accent: #486a8f;
+}
+
+/* Ruhiger, gut lesbarer Fliesstext */
+[id*="produktbeschreibung_full"] p {
+  font-size: 1rem;
+  line-height: 1.75;
+  margin: 0 0 1em;
+}
+[id*="produktbeschreibung_full"] p:first-child {
+  margin-top: 0;
+}
+
+/* Echte Ueberschriften (h2-h4) einheitlich + dezenter Marken-Akzent */
+[id*="produktbeschreibung_full"] :is(h1, h2, h3, h4) {
+  font-family: var(--font-accent--family, inherit);
+  font-weight: 600;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--color-foreground);
+  margin: 1.6em 0 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid rgba(72, 106, 143, 0.35);
+}
+[id*="produktbeschreibung_full"] :is(h1, h2, h3, h4):first-child {
+  margin-top: 0;
+}
+
+/* h5/h6 = in diesen Beschreibungen meist Hersteller-/Kontaktangaben
+   -> kleines, dezentes Kleingedrucktes statt Riesen-Ueberschrift */
+[id*="produktbeschreibung_full"] :is(h5, h6) {
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-transform: none;
+  color: rgb(var(--color-foreground-rgb, 0 0 0) / 0.62);
+  border: 0;
+  margin: 0.15em 0;
+  padding: 0;
+}
+
+/* Listen: saubere Chevron-Punkte in Markenfarbe */
+[id*="produktbeschreibung_full"] ul {
+  list-style: none;
+  margin: 0 0 1em;
+  padding: 0;
+}
+[id*="produktbeschreibung_full"] ul li {
+  position: relative;
+  padding-left: 1.35em;
+  margin: 0.4em 0;
+  line-height: 1.6;
+}
+[id*="produktbeschreibung_full"] ul li::before {
+  content: "";
+  position: absolute;
+  left: 0.1em;
+  top: 0.55em;
+  width: 0.42em;
+  height: 0.42em;
+  border-right: 2px solid var(--fs-accent);
+  border-bottom: 2px solid var(--fs-accent);
+  transform: rotate(-45deg);
+}
+[id*="produktbeschreibung_full"] ol {
+  margin: 0 0 1em;
+  padding-left: 1.3em;
+}
+[id*="produktbeschreibung_full"] li {
+  margin: 0.4em 0;
+}
+
+[id*="produktbeschreibung_full"] strong {
+  font-weight: 600;
+}
+
+/* Trennlinien/Bilder ruhig einbinden */
+[id*="produktbeschreibung_full"] img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+[id*="produktbeschreibung_full"] a {
+  color: var(--fs-accent);
+  text-underline-offset: 2px;
+}
