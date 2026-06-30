@@ -297,11 +297,21 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       angestoßen (mit Poll, falls Judge.me noch lädt), sonst bleiben die clientseitig
       gebauten Kacheln ohne Sterne. Markenfarbe für Judge.me-Widgets: `#486A8F`.
 - [x] 🟡 **Suchleiste prominenter** — ERLEDIGT: Section `sections/mobile-search-bar.liquid` (Typ/Handle bleibt
-      `mobile-search-bar`), öffnet die bestehende Predictive-Search-Modal `#search-modal`, via `header-group.json`
-      unter dem Header global eingehängt. **Jetzt auf ALLEN Geräten** (vorher nur < 750px): mobil vollbreit,
-      **Desktop oben zentral** (`max-width:640px`, mittig) — und auf Desktop wird das **Header-Lupensymbol
-      `.search-action` ausgeblendet** (die Leiste ersetzt es; die Modal selbst bleibt, nur der Trigger-Button
-      ist weg). Entwurf-Theme.
+      `mobile-search-bar`), via `header-group.json` unter dem Header global eingehängt, auf ALLEN Geräten
+      (mobil vollbreit, **Desktop oben zentral** `max-width:640px` mittig). Auf Desktop wird das **Header-
+      Lupensymbol `.search-action` ausgeblendet** (die Leiste ersetzt es).
+      - **Echtes Eingabefeld (kein Button mehr):** Die Section rendert eine **eigene
+        `<predictive-search-component>`-Instanz inline** (identische Markup wie `snippets/search-modal.liquid`,
+        nur ohne Dialog/Close-Button) + lädt `assets/predictive-search.js` und `{% render 'predictive-search-styles' %}`.
+        Man tippt direkt ins Feld → Live-Vorschläge im Dropdown (Section-Rendering über `data-section-id="predictive-search"`,
+        gleicher Mechanismus wie die Modal). Die Komponente läuft **ohne** Dialog (`get dialog(){ this.closest('dialog-component') }`
+        ist dann `null`, der `if (dialog)`-Block wird übersprungen) — mehrere Instanzen sind erlaubt (Refs sind
+        instanz-scoped, `customElements.define` ist guarded). **Eindeutige IDs** (`fs-inline-search-input`/`-results`)
+        statt der Modal-IDs, sonst Doppel-ID-Konflikt mit der weiterhin existierenden Modal.
+      - **Dropdown-Sichtbarkeit:** `.predictive-search-form__content-wrapper` ist per Default `display:none` und
+        wird nur bei `:focus-within` **und** `:has([data-search-results])` eingeblendet → kein leerer Kasten beim
+        Laden/leerer Eingabe. **Fallback:** `<form action="{{ routes.search_url }}" method="get">` → Enter macht
+        eine normale Suche, auch wenn die Live-Vorschläge mal nicht laden. Entwurf-Theme.
 - [x] 🟡 **Navigation vereinfachen** / horizontale Kategorie-Leiste — ERLEDIGT: neue Section
       `sections/mobile-category-chips.liquid` (Typ/Handle bleibt `mobile-category-chips`, nur < 750px,
       horizontal scrollbar, aus wählbarem Menü = Default `main-menu`, oberste Menüpunkte). Aktuelle
