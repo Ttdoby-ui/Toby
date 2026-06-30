@@ -1,8 +1,11 @@
 {%- comment -%}
-  Mobile Suchleiste (Futurespin)
-  Sichtbare, prominente Suchleiste unter dem Header — NUR auf Smartphones (< 750px).
+  Prominente Suchleiste (Futurespin)
+  Sichtbare, prominente Suchleiste unter dem Header — auf ALLEN Geräten.
   Öffnet die bestehende Predictive-Search-Modal (#search-modal) des Themes,
-  inkl. Live-Vorschlägen. Auf Desktop ausgeblendet (dort gibt es die Header-Suche).
+  inkl. Live-Vorschlägen.
+  - Mobil (< 750px): vollbreit unter dem Header.
+  - Desktop (>= 750px): oben zentral, breitenbegrenzt + das Header-Lupensymbol
+    (.search-action) wird ausgeblendet, da die Leiste es ersetzt.
 {%- endcomment -%}
 
 <div class="fs-msearch color-{{ section.settings.color_scheme }}">
@@ -11,6 +14,7 @@
     class="fs-msearch__bar"
     on:click="#search-modal/showDialog"
     aria-label="{{ 'accessibility.open_search_modal' | t }}"
+    aria-haspopup="dialog"
   >
     <span class="fs-msearch__icon svg-wrapper" aria-hidden="true">
       {{ 'icon-search.svg' | inline_asset_content }}
@@ -21,59 +25,86 @@
 
 {% stylesheet %}
   .fs-msearch {
-    display: none;
+    display: block;
+    padding: 0.55rem var(--page-margin, 16px);
   }
 
-  @media screen and (max-width: 749px) {
+  .fs-msearch__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: var(--style-border-radius-inputs, 8px);
+    background: var(--color-background, #fff);
+    color: var(--color-foreground, #555);
+    font: inherit;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .fs-msearch__bar:hover,
+  .fs-msearch__bar:focus-visible {
+    border-color: #486a8f;
+    box-shadow: 0 0 0 1px rgba(72, 106, 143, 0.35);
+    outline: none;
+  }
+
+  .fs-msearch__icon {
+    display: inline-flex;
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 auto;
+    opacity: 0.7;
+  }
+
+  .fs-msearch__icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .fs-msearch__placeholder {
+    opacity: 0.7;
+  }
+
+  /* Desktop: prominent + oben zentral, Breite begrenzt */
+  @media screen and (min-width: 750px) {
     .fs-msearch {
-      display: block;
-      padding: 0.5rem var(--page-margin, 16px);
+      padding: 0.7rem var(--page-margin, 16px);
     }
 
     .fs-msearch__bar {
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
-      width: 100%;
-      padding: 0.7rem 0.9rem;
-      border: 1px solid var(--color-border, #ddd);
-      border-radius: var(--style-border-radius-inputs, 8px);
-      background: var(--color-background, #fff);
-      color: var(--color-foreground, #555);
-      font: inherit;
-      font-size: 0.95rem;
-      line-height: 1.2;
-      text-align: left;
-      cursor: pointer;
+      max-width: 640px;
+      margin-inline: auto;
+      padding: 0.85rem 1.15rem;
+      font-size: 1rem;
     }
 
     .fs-msearch__icon {
-      display: inline-flex;
-      width: 1.1rem;
-      height: 1.1rem;
-      flex: 0 0 auto;
-      opacity: 0.7;
+      width: 1.2rem;
+      height: 1.2rem;
     }
 
-    .fs-msearch__icon svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    .fs-msearch__placeholder {
-      opacity: 0.7;
+    /* Lupensymbol im Header entfernen — die prominente Leiste ersetzt es. */
+    #header-group .search-action,
+    .header .search-action {
+      display: none !important;
     }
   }
 {% endstylesheet %}
 
 {% schema %}
 {
-  "name": "Mobile Suchleiste",
+  "name": "Suchleiste",
   "tag": "section",
   "settings": [
     {
       "type": "paragraph",
-      "content": "Sichtbare Suchleiste unter dem Header — nur auf Smartphones. Öffnet die normale Suche mit Live-Vorschlägen. Am besten direkt unter dem Header platzieren."
+      "content": "Sichtbare, prominente Suchleiste unter dem Header — auf allen Geräten. Öffnet die normale Suche mit Live-Vorschlägen. Auf Desktop zentriert und ersetzt das Header-Lupensymbol. Am besten direkt unter dem Header platzieren."
     },
     {
       "type": "text",
@@ -89,7 +120,7 @@
     }
   ],
   "presets": [
-    { "name": "Mobile Suchleiste" }
+    { "name": "Suchleiste" }
   ]
 }
 {% endschema %}

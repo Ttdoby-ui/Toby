@@ -296,9 +296,12 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       `assets/filter-panel-main.js`; nach jedem Render/Filter wird `jdgm.batchRenderBadges()`
       angestoßen (mit Poll, falls Judge.me noch lädt), sonst bleiben die clientseitig
       gebauten Kacheln ohne Sterne. Markenfarbe für Judge.me-Widgets: `#486A8F`.
-- [x] 🟡 **Suchleiste prominenter** — ERLEDIGT: neue Section `sections/mobile-search-bar.liquid`
-      (nur < 750px, öffnet die bestehende Predictive-Search-Modal `#search-modal`), via `header-group.json`
-      unter dem Header global eingehängt. Entwurf-Theme.
+- [x] 🟡 **Suchleiste prominenter** — ERLEDIGT: Section `sections/mobile-search-bar.liquid` (Typ/Handle bleibt
+      `mobile-search-bar`), öffnet die bestehende Predictive-Search-Modal `#search-modal`, via `header-group.json`
+      unter dem Header global eingehängt. **Jetzt auf ALLEN Geräten** (vorher nur < 750px): mobil vollbreit,
+      **Desktop oben zentral** (`max-width:640px`, mittig) — und auf Desktop wird das **Header-Lupensymbol
+      `.search-action` ausgeblendet** (die Leiste ersetzt es; die Modal selbst bleibt, nur der Trigger-Button
+      ist weg). Entwurf-Theme.
 - [x] 🟡 **Navigation vereinfachen** / horizontale Kategorie-Leiste — ERLEDIGT: neue Section
       `sections/mobile-category-chips.liquid` (Typ/Handle bleibt `mobile-category-chips`, nur < 750px,
       horizontal scrollbar, aus wählbarem Menü = Default `main-menu`, oberste Menüpunkte). Aktuelle
