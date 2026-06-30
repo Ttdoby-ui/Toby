@@ -54,7 +54,11 @@
   transform: translateY(0.1em) rotate(-135deg);
 }
 
-/* %SALE% rot auch im mobilen Drawer */
+/* %SALE% rot auch im mobilen Drawer.
+   Oberster Punkt hat ein Untermenue => <summary id="HeaderDrawer-sale"> (kein href),
+   daher zusaetzlich ueber die ID treffen. Unterpunkte sind <a href> (sale im Link). */
+#HeaderDrawer-sale > .menu-drawer__menu-item-text,
+summary[id^="HeaderDrawer-sale"] .menu-drawer__menu-item-text,
 .menu-drawer__menu-item[href*="sale" i] .menu-drawer__menu-item-text {
   color: #e00000;
 }
