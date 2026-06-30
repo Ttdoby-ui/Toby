@@ -22,6 +22,7 @@
         "loc": {
           "type": "location",
           "settings": {
+            "image": "shopify://shop_images/IMG-5627.png",
             "name": "Futurespin Courts",
             "address": "Padel · Pickleball · Tischtennis – Buchung über Playtomic",
             "padel_url": "#",
@@ -52,6 +53,7 @@
         "tt": {
           "type": "sport",
           "settings": {
+            "image": "shopify://shop_images/IMG-5629.png",
             "eyebrow": "Sportart",
             "title": "Tischtennis",
             "text": "Produkte, Beratung & Know-how.",
@@ -62,6 +64,7 @@
         "padel": {
           "type": "sport",
           "settings": {
+            "image": "shopify://shop_images/IMG-5630.png",
             "eyebrow": "Sportart",
             "title": "Padel",
             "text": "Ausrüstung, Guides & Inspiration.",
@@ -72,6 +75,7 @@
         "pickleball": {
           "type": "sport",
           "settings": {
+            "image": "shopify://shop_images/IMG-5631.png",
             "eyebrow": "Sportart",
             "title": "Pickleball",
             "text": "Paddles, Gear & Community.",
@@ -96,6 +100,7 @@
         "adelsdorf": {
           "type": "location",
           "settings": {
+            "image": "shopify://shop_images/IMG-5628.png",
             "name": "Futurespin Adelsdorf",
             "street": "Weppersdorf 6a",
             "zip": "91325",
