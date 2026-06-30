@@ -179,3 +179,35 @@ summary[id^="HeaderDrawer-sale"] .menu-drawer__menu-item-text,
   max-inline-size: 100%;
   align-items: stretch;
 }
+
+/* ============================================================
+   Mega-Menue (Desktop) im Contra-Stil: Gruppen der 2. Ebene mit
+   Kindern werden zu fetten Spalten-Ueberschriften mit vertikalen
+   Trennlinien dazwischen. Greift nur bei gruppierten Menues
+   (z. B. SCHUHE & TEXTILIEN -> TEXTILIEN/SCHUHE/SOCKEN); flache
+   Menues bleiben einspaltig unveraendert.
+   ============================================================ */
+.header .mega-menu__link--parent {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.95rem;
+  color: var(--color-foreground);
+  margin-bottom: 0.7em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid rgba(72, 106, 143, 0.35);
+}
+.header .mega-menu__column ul .mega-menu__link {
+  display: inline-flex;
+  padding: 0.4em 0;
+  color: rgb(var(--color-foreground-rgb, 0 0 0) / 0.82);
+  transition: color 0.15s ease;
+}
+.header .mega-menu__column ul .mega-menu__link:hover {
+  color: #486a8f;
+}
+/* Vertikale Trennlinie zwischen den Gruppen-Spalten */
+.header .mega-menu__list > .mega-menu__column + .mega-menu__column {
+  border-inline-start: 1px solid var(--color-border);
+  padding-inline-start: clamp(1.5rem, 3vw, 3rem);
+}
