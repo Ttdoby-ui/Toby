@@ -1,0 +1,31 @@
+name: Hersteller-Block aus Beschreibungen entfernen
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Trockenlauf (nichts schreiben, nur zaehlen + Beispiele)"
+        type: boolean
+        default: true
+      limit:
+        description: "Max. Anzahl zu aendernder Produkte (0 = alle)"
+        required: false
+        default: "0"
+
+jobs:
+  strip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Abhaengigkeit installieren
+        run: npm install node-html-parser@6
+      - name: Hersteller-Block entfernen
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          LIMIT: ${{ inputs.limit }}
+        run: node scripts/strip-hersteller-from-descriptions.mjs
