@@ -5,3 +5,56 @@
 .fs-chip--sale {
   color: #e00000 !important;
 }
+
+/* === Futurespin: Mobil-Menue (Drawer) wie Live-Theme ===
+   Trennlinien zwischen den obersten Eintraegen + Chevron statt "+",
+   kompaktere Schrift, vollbreiter Drawer. */
+@media screen and (max-width: 749px) {
+  .menu-drawer {
+    width: 100%;
+    max-width: 100%;
+    border-right: none;
+  }
+}
+
+/* Kompaktere Hauptpunkte */
+.menu-drawer__menu-item--mainlist {
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  min-height: calc(2 * var(--padding-lg) + var(--icon-size-xs));
+}
+
+/* Trennlinie zwischen jedem obersten Eintrag */
+.menu-drawer__menu.has-submenu > li {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* "+" durch rotierenden Chevron ersetzen (kein Plus mehr) */
+.menu-drawer summary .icon-plus svg {
+  display: none;
+}
+.menu-drawer summary .icon-plus {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1em;
+  transform: none !important;
+}
+.menu-drawer summary .icon-plus::after {
+  content: "";
+  width: 0.5em;
+  height: 0.5em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-0.15em) rotate(45deg);
+  transition: transform 0.25s ease;
+}
+.menu-drawer details[open] > summary .icon-plus::after {
+  transform: translateY(0.1em) rotate(-135deg);
+}
+
+/* %SALE% rot auch im mobilen Drawer */
+.menu-drawer__menu-item[href*="sale" i] .menu-drawer__menu-item-text {
+  color: #e00000;
+}
