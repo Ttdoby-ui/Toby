@@ -37,9 +37,11 @@ Legende: ✅ fertig · 🟡 teilweise · ⬜ offen
   FAQ-Block (Horizon hat bereits `produkt-faq` – wiederverwenden), USP-Strip.
 - ⬜ Optional: zentrales Tokens-Snippet statt Pro-Section-Defaults.
 
-## Phase 3 – Homepage & Sportwelten ⬜
+## Phase 3 – Homepage & Sportwelten 🟡
 **Ziel:** Startseite verkauft die Marke; je Sportart eine Erlebniswelt.
-- ⬜ Homepage neu zusammenstellen (Reihenfolge: Hero → Sportwelten → Courts →
+- ✅ Homepage neu zusammengestellt (templates/index.json, dunkel/markenorientiert):
+      Hero → Courts → Sportwelten → Standorte → Trust → Newsletter (lt. Zielbild).
+- ⬜ Original-Reihenfolge optional: Hero → Sportwelten → Courts →
   Standorte → Bestseller → Neuheiten → Beratung → Marken → Community → Trust →
   Newsletter); Bestseller/Neuheiten/Marken über Horizon-Standard-Sections.
 - ⬜ Sportwelten-Landingpage-Template (`tischtennis`/`padel`/`pickleball`):
