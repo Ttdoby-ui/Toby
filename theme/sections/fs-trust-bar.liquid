@@ -77,7 +77,7 @@
         <{{ tag }} class="fs-trust__item" {% if tag == 'a' %}href="{{ block.settings.link }}"{% endif %} {{ block.shopify_attributes }}>
           <span class="fs-trust__icon">
             {%- if block.settings.custom_icon != blank -%}
-              {{ block.settings.custom_icon | image_url: width: 96 | image_tag: loading: 'lazy', alt: block.settings.label | escape, widths: '48, 72, 96' }}
+              {{ block.settings.custom_icon | image_url: width: 96 | image_tag: loading: 'lazy', widths: '48, 72, 96', alt: block.settings.label | escape }}
             {%- else -%}
               {%- case block.settings.icon -%}
                 {%- when 'advice' -%}
