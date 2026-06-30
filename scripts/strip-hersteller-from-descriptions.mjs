@@ -130,7 +130,7 @@ async function main() {
     process.exit(1);
   }
   console.log(`Modus: ${DRY_RUN ? 'DRY_RUN (nichts wird geschrieben)' : 'LIVE (Produkte werden aktualisiert)'}`);
-  let scanned = 0, changed = 0, samples = 0;
+  let scanned = 0, changed = 0, samples = 0, failed = 0;
   for await (const p of allProducts()) {
     scanned++;
     const next = stripHersteller(p.descriptionHtml);
@@ -143,12 +143,17 @@ async function main() {
       console.log('NEU (Ende nachher):    ', next.slice(-220).replace(/\s+/g, ' '));
     }
     if (!DRY_RUN) {
-      await updateDescription(p.id, next);
-      await new Promise((r) => setTimeout(r, 120)); // throttle
+      try {
+        await updateDescription(p.id, next);
+      } catch (e) {
+        failed++;
+        console.error(`FEHLER bei ${p.title} (${p.id}): ${String(e).slice(0, 200)}`);
+      }
+      await new Promise((r) => setTimeout(r, 300)); // throttle gegen Rate-Limit
     }
     if (changed >= LIMIT) { console.log(`\nLIMIT ${LIMIT} erreicht – Stop.`); break; }
   }
-  console.log(`\nFertig. Gescannt: ${scanned}, mit Hersteller-Block (geaendert${DRY_RUN ? ' werden wuerden' : ''}): ${changed}.`);
+  console.log(`\nFertig. Gescannt: ${scanned}, mit Hersteller-Block (geaendert${DRY_RUN ? ' werden wuerden' : ''}): ${changed}${DRY_RUN ? '' : `, Fehler: ${failed}`}.`);
 }
 
 // Nur ausfuehren, wenn direkt gestartet (nicht beim Import im Test)
