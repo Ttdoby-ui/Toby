@@ -1,0 +1,206 @@
+{%- comment -%}
+  Rabattstufen-Grafik (Futurespin) — Contra-Stil, reines HTML/CSS.
+  Drei Spalten mit gestreiften Balken: Beläge-Mengenrabatt & Textilien-
+  Mengenrabatt (Markenblau) + VIP-Rabatt (Gold). Werte entsprechen den
+  aktiven Rabatten (Beläge 2/5/10 → 15/20/25 %, Textilien 6/20/30 →
+  20/25/30 %, VIP 15/25/30 %). Overflow-sicher (max-width/box-sizing).
+  Gedacht ganz oben auf der Startseite, über dem Hero-Slider.
+{%- endcomment -%}
+
+<section class="rs color-{{ section.settings.color_scheme }}">
+  <div class="rs__inner">
+    {% if section.settings.heading != blank %}
+      <h2 class="rs__title">{{ section.settings.heading }}</h2>
+    {% endif %}
+
+    <div class="rs__cols">
+      <div class="rs__col">
+        <h3 class="rs__col-title">Beläge-Mengenrabatt</h3>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:92%"><b class="rs__pct">25&nbsp;%</b></span><span class="rs__cond">ab 10 Belägen</span></div>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:74%"><b class="rs__pct">20&nbsp;%</b></span><span class="rs__cond">ab 5 Belägen</span></div>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:56%"><b class="rs__pct">15&nbsp;%</b></span><span class="rs__cond">ab 2 Belägen</span></div>
+      </div>
+
+      <div class="rs__col">
+        <h3 class="rs__col-title">Textilien-Mengenrabatt</h3>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:92%"><b class="rs__pct">30&nbsp;%</b></span><span class="rs__cond">ab 30 Teilen</span></div>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:74%"><b class="rs__pct">25&nbsp;%</b></span><span class="rs__cond">ab 20 Teilen</span></div>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:56%"><b class="rs__pct">20&nbsp;%</b></span><span class="rs__cond">ab 6 Teilen</span></div>
+      </div>
+
+      <div class="rs__col">
+        <h3 class="rs__col-title">VIP-Rabatt</h3>
+        <div class="rs__bar rs--gold"><span class="rs__fill" style="--w:92%"><b class="rs__pct">30&nbsp;%</b></span><span class="rs__cond">VIP&nbsp;3</span></div>
+        <div class="rs__bar rs--gold"><span class="rs__fill" style="--w:74%"><b class="rs__pct">25&nbsp;%</b></span><span class="rs__cond">VIP&nbsp;2</span></div>
+        <div class="rs__bar rs--gold"><span class="rs__fill" style="--w:56%"><b class="rs__pct">15&nbsp;%</b></span><span class="rs__cond">VIP&nbsp;1</span></div>
+      </div>
+    </div>
+
+    <p class="rs__note">
+      Es gilt immer der höchste Rabatt – Rabatte werden nicht gestapelt.
+      <a href="{{ section.settings.link_url }}">{{ section.settings.link_label }}</a>
+    </p>
+  </div>
+</section>
+
+{% stylesheet %}
+  .rs {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    padding: clamp(1rem, 3vw, 2rem) 0;
+  }
+
+  .rs *,
+  .rs *::before,
+  .rs *::after {
+    box-sizing: border-box;
+  }
+
+  .rs__inner {
+    max-width: var(--page-width, 1200px);
+    margin-inline: auto;
+    padding-inline: var(--page-margin, 16px);
+  }
+
+  .rs__title {
+    text-align: center;
+    margin: 0 0 clamp(0.8rem, 2vw, 1.4rem);
+    font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+    line-height: 1.15;
+  }
+
+  .rs__cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(0.8rem, 2vw, 1.6rem);
+  }
+
+  .rs__col {
+    min-width: 0;
+  }
+
+  .rs__col-title {
+    margin: 0 0 0.6rem;
+    font-size: clamp(0.85rem, 1.4vw, 1rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding-bottom: 0.4em;
+    border-bottom: 1px solid rgba(72, 106, 143, 0.35);
+  }
+
+  .rs__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+    min-width: 0;
+  }
+
+  .rs__fill {
+    flex: 0 0 var(--w);
+    max-width: 78%;
+    display: flex;
+    align-items: center;
+    min-height: 2.1em;
+    padding: 0.2em 0.7em;
+    border-radius: 5px;
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+
+  .rs--blue .rs__fill {
+    background-color: #486a8f;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.14) 0 9px,
+      transparent 9px 18px
+    );
+  }
+
+  .rs--gold .rs__fill {
+    background-color: #c19a3e;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.16) 0 9px,
+      transparent 9px 18px
+    );
+  }
+
+  .rs__pct {
+    font-size: clamp(0.9rem, 1.6vw, 1.15rem);
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .rs__cond {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: clamp(0.75rem, 1.3vw, 0.9rem);
+    line-height: 1.2;
+    color: var(--color-foreground);
+  }
+
+  .rs__note {
+    margin: clamp(0.9rem, 2vw, 1.4rem) 0 0;
+    text-align: center;
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+
+  .rs__note a {
+    color: #486a8f;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+  }
+
+  /* Mobil: Spalten untereinander */
+  @media screen and (max-width: 749px) {
+    .rs__cols {
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+    }
+
+    .rs__fill {
+      max-width: 60%;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Rabattstufen",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Überschrift",
+      "default": "Unsere Rabattstufen"
+    },
+    {
+      "type": "text",
+      "id": "link_label",
+      "label": "Link-Text",
+      "default": "Alle Rabattbestimmungen ansehen"
+    },
+    {
+      "type": "text",
+      "id": "link_url",
+      "label": "Link-Ziel (Pfad)",
+      "default": "/pages/rabattbestimmungen"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Farbschema",
+      "default": "scheme-1"
+    }
+  ],
+  "presets": [
+    { "name": "Rabattstufen" }
+  ]
+}
+{% endschema %}
