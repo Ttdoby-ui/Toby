@@ -371,6 +371,21 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
         Definition-ID `gid://shopify/MetafieldDefinition/444121907548`, storefront-lesbar (PUBLIC_READ).
         JSON-Schema: `{ autoplay:bool, interval:int(Sek.), bg_color, text_color, messages:[{text, cta_label, cta_link}] }`.
         Setzen via `metafieldsSet` (ownerId = Shop-GID `gid://shopify/Shop/78096073052`).
+        - ⚠️ **CTA-Links relativ halten** (`/account/login`, `/collections/...`) — NICHT eine komplette,
+          manuell zusammengebaute Kundenkonto-OAuth-URL (`shopify.com/authentication/.../login?...redirect_uri=...`)
+          eintragen: deren `nonce`/`state` laufen ab → „Ungültige redirect_uri". Der VIP-„Anmelden"-Button
+          zeigt daher auf `/account/login` (Shopify baut den OAuth-Flow selbst). 2026-07-01 gefixt (im
+          Metafeld **und** im Fallback-Block `msg_vip` in `header-group.json`).
+
+## Rabattbestimmungen-Seite
+
+- **Seite „Rabattbestimmungen"** (`/pages/rabattbestimmungen`, `gid://shopify/Page/712188756316`, veröffentlicht)
+  fasst VIP-Rabatte (15/25/30 %), Mengenrabatte (Beläge 2/5/10 → 15/20/25 %, Textilien 6/20/30 → 20/25/30 %),
+  „höchster Rabatt gewinnt" (keine Stapelung), Sale-/Gutschein-Ausschluss und B2B-Verweis kundenseitig zusammen.
+  Enthält einen „Jetzt kostenlos registrieren"-Button (`/account/login`). Im **Footer-Menü** verlinkt
+  (`gid://shopify/Menu/233321529692`, neuer PAGE-Punkt; die 5 SHOP_POLICY-Links brauchen beim `menuUpdate` ihre
+  `resourceId`, sonst „shop_policy nicht gefunden"). Seiteninhalt via `pageCreate`/`pageUpdate` (HTML, KEIN Liquid
+  – Pages rendern kein Liquid, daher Links hart als Pfade).
       - **Content-Creator-Anbindung (offen):** Der Content Creator soll genau dieses Metafeld
         lesen/schreiben. Sein Code liegt außerhalb dieser Repo-Scope → Anbindung dort in seiner
         eigenen Cowork-Session umsetzen (gleiches JSON-Schema verwenden).

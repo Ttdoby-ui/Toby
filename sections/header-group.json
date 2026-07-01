@@ -19,7 +19,7 @@
           "settings": {
             "text": "Jetzt kostenlos anmelden und 15 % VIP-Rabatt sichern",
             "cta_label": "Anmelden",
-            "cta_link": "https://shopify.com/authentication/78096073052/login?client_id=cca10ad2-1e59-46ca-94ee-de869cd7c3f3&locale=de&redirect_uri=https%3A%2F%2Fshopify.com%2Fauthentication%2F78096073052%2Foauth%2Fauthorize%3Fclient_id%3Dcca10ad2-1e59-46ca-94ee-de869cd7c3f3%26consent_id%3D%26locale%3Dde%26nonce%3D9a28c418-a8ee-43f4-9a5d-1ffde949dc1c%26redirect_uri%3Dhttps%253A%252F%252Fe7ee88-2.myshopify.com%252Fcustomer_authentication%252Fcallback%253Fsource%253Dcore%26response_type%3Dcode%26scope%3Dopenid%2Bemail%2Bcustomer-account-api%253Afull%26state%3D01K1BWH4B856E5ZC9VARMG3FA3"
+            "cta_link": "/account/login"
           }
         },
         "msg_service": {
