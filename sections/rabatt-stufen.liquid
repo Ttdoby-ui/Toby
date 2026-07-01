@@ -1,14 +1,25 @@
 {%- comment -%}
   Rabattstufen-Grafik (Futurespin) — Contra-Stil, reines HTML/CSS.
   Drei Spalten mit gestreiften Balken: Beläge-Mengenrabatt & Textilien-
-  Mengenrabatt (Markenblau) + VIP-Rabatt (Gold). Werte entsprechen den
-  aktiven Rabatten (Beläge 2/5/10 → 15/20/25 %, Textilien 6/20/30 →
-  20/25/30 %, VIP 15/25/30 %). Overflow-sicher (max-width/box-sizing).
-  Gedacht ganz oben auf der Startseite, über dem Hero-Slider.
+  Mengenrabatt (Markenblau) + VIP-Rabatt (Gold, nur Stufe 1: 15 %).
+  Werte entsprechen den aktiven Rabatten (Beläge 2/5/10 → 15/20/25 %,
+  Textilien 6/20/30 → 20/25/30 %, VIP 1 = 15 %). Logo aus settings.logo.
+  Overflow-sicher (max-width/box-sizing). Ganz oben auf der Startseite,
+  über dem Hero-Slider.
 {%- endcomment -%}
 
 <section class="rs color-{{ section.settings.color_scheme }}">
   <div class="rs__inner">
+    {% if section.settings.show_logo and settings.logo != blank %}
+      <img
+        class="rs__logo"
+        src="{{ settings.logo | image_url: width: 400 }}"
+        alt="{{ shop.name | escape }}"
+        width="200"
+        loading="lazy"
+      >
+    {% endif %}
+
     {% if section.settings.heading != blank %}
       <h2 class="rs__title">{{ section.settings.heading }}</h2>
     {% endif %}
@@ -30,9 +41,8 @@
 
       <div class="rs__col">
         <h3 class="rs__col-title">VIP-Rabatt</h3>
-        <div class="rs__bar rs--gold"><span class="rs__fill" style="--w:92%"><b class="rs__pct">30&nbsp;%</b></span><span class="rs__cond">VIP&nbsp;3</span></div>
-        <div class="rs__bar rs--gold"><span class="rs__fill" style="--w:74%"><b class="rs__pct">25&nbsp;%</b></span><span class="rs__cond">VIP&nbsp;2</span></div>
-        <div class="rs__bar rs--gold"><span class="rs__fill" style="--w:56%"><b class="rs__pct">15&nbsp;%</b></span><span class="rs__cond">VIP&nbsp;1</span></div>
+        <div class="rs__bar rs--gold"><span class="rs__fill" style="--w:64%"><b class="rs__pct">15&nbsp;%</b></span><span class="rs__cond">VIP&nbsp;1</span></div>
+        <p class="rs__subnote">Jetzt kostenlos registrieren und sichern.</p>
       </div>
     </div>
 
@@ -62,6 +72,14 @@
     max-width: var(--page-width, 1200px);
     margin-inline: auto;
     padding-inline: var(--page-margin, 16px);
+  }
+
+  .rs__logo {
+    display: block;
+    height: auto;
+    max-height: 52px;
+    width: auto;
+    margin: 0 auto clamp(0.6rem, 1.5vw, 1rem);
   }
 
   .rs__title {
@@ -143,6 +161,13 @@
     color: var(--color-foreground);
   }
 
+  .rs__subnote {
+    margin: 0.15rem 0 0;
+    font-size: clamp(0.72rem, 1.2vw, 0.85rem);
+    line-height: 1.3;
+    opacity: 0.8;
+  }
+
   .rs__note {
     margin: clamp(0.9rem, 2vw, 1.4rem) 0 0;
     text-align: center;
@@ -174,6 +199,12 @@
   "name": "Rabattstufen",
   "tag": "section",
   "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_logo",
+      "label": "Logo anzeigen",
+      "default": true
+    },
     {
       "type": "text",
       "id": "heading",
