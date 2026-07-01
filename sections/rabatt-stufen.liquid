@@ -1,85 +1,202 @@
 {%- comment -%}
-  Rabatt-Banner (Futurespin) — verlinktes Banner-Bild statt selbstgebauter
-  Grafik. Bild-URL + Link-Ziel über Section-Settings (Default: IMG-5657 /
-  /pages/rabattbestimmungen). Responsiv (width:100%, height:auto),
-  overflow-sicher. Ganz oben auf der Startseite, über dem Hero-Slider.
+  Rabattstufen-Grafik (Futurespin) — Contra-Stil, reines HTML/CSS, kompakt.
+  Drei Spalten mit gestreiften Balken: Beläge-Mengenrabatt & Textilien-
+  Mengenrabatt (Markenblau) + VIP-Rabatt (Gold, nur Stufe 1: 15 %).
+  Werte = aktive Rabatte (Beläge 2/5/10 → 15/20/25 %, Textilien 6/20/30 →
+  20/25/30 %, VIP 1 = 15 %). Kein Logo. Overflow-sicher. Ganz oben auf der
+  Startseite, über dem Hero-Slider. Link zu den Rabattbestimmungen.
 {%- endcomment -%}
 
-<section class="rsb color-{{ section.settings.color_scheme }}">
-  <div class="rsb__inner">
-    {% if section.settings.image_url != blank %}
-      {% if section.settings.link_url != blank %}
-        <a href="{{ section.settings.link_url }}" class="rsb__link" aria-label="{{ section.settings.alt | default: 'Rabattbestimmungen' | escape }}">
-          <img
-            class="rsb__img"
-            src="{{ section.settings.image_url }}"
-            alt="{{ section.settings.alt | default: 'Unsere Rabatte' | escape }}"
-            loading="lazy"
-          >
-        </a>
-      {% else %}
-        <img
-          class="rsb__img"
-          src="{{ section.settings.image_url }}"
-          alt="{{ section.settings.alt | default: 'Unsere Rabatte' | escape }}"
-          loading="lazy"
-        >
-      {% endif %}
+<section class="rs color-{{ section.settings.color_scheme }}">
+  <div class="rs__inner">
+    {% if section.settings.heading != blank %}
+      <h2 class="rs__title">{{ section.settings.heading }}</h2>
     {% endif %}
+
+    <div class="rs__cols">
+      <div class="rs__col">
+        <h3 class="rs__col-title">Beläge-Mengenrabatt</h3>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:92%"><b class="rs__pct">25&nbsp;%</b></span><span class="rs__cond">ab 10 Belägen</span></div>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:74%"><b class="rs__pct">20&nbsp;%</b></span><span class="rs__cond">ab 5 Belägen</span></div>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:56%"><b class="rs__pct">15&nbsp;%</b></span><span class="rs__cond">ab 2 Belägen</span></div>
+      </div>
+
+      <div class="rs__col">
+        <h3 class="rs__col-title">Textilien-Mengenrabatt</h3>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:92%"><b class="rs__pct">30&nbsp;%</b></span><span class="rs__cond">ab 30 Teilen</span></div>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:74%"><b class="rs__pct">25&nbsp;%</b></span><span class="rs__cond">ab 20 Teilen</span></div>
+        <div class="rs__bar rs--blue"><span class="rs__fill" style="--w:56%"><b class="rs__pct">20&nbsp;%</b></span><span class="rs__cond">ab 6 Teilen</span></div>
+      </div>
+
+      <div class="rs__col">
+        <h3 class="rs__col-title">VIP-Rabatt</h3>
+        <div class="rs__bar rs--gold"><span class="rs__fill" style="--w:64%"><b class="rs__pct">15&nbsp;%</b></span><span class="rs__cond">VIP&nbsp;1</span></div>
+        <p class="rs__subnote">Jetzt kostenlos registrieren und sichern.</p>
+      </div>
+    </div>
+
+    <p class="rs__note">
+      Es gilt immer der höchste Rabatt – Rabatte werden nicht gestapelt.
+      <a href="{{ section.settings.link_url }}">{{ section.settings.link_label }}</a>
+    </p>
   </div>
 </section>
 
 {% stylesheet %}
-  .rsb {
+  .rs {
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
     overflow: hidden;
-    padding: clamp(0.6rem, 2vw, 1.4rem) 0;
+    padding: clamp(0.6rem, 1.6vw, 1rem) 0;
   }
 
-  .rsb__inner {
+  .rs *,
+  .rs *::before,
+  .rs *::after {
+    box-sizing: border-box;
+  }
+
+  .rs__inner {
     max-width: var(--page-width, 1200px);
     margin-inline: auto;
     padding-inline: var(--page-margin, 16px);
   }
 
-  .rsb__link {
-    display: block;
+  .rs__title {
+    text-align: center;
+    margin: 0 0 clamp(0.5rem, 1.4vw, 0.9rem);
+    font-size: clamp(1.15rem, 2vw, 1.55rem);
+    line-height: 1.15;
   }
 
-  .rsb__img {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    margin-inline: auto;
-    border-radius: 6px;
+  .rs__cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(0.7rem, 2vw, 1.5rem);
+  }
+
+  .rs__col {
+    min-width: 0;
+  }
+
+  .rs__col-title {
+    margin: 0 0 0.45rem;
+    font-size: clamp(0.8rem, 1.3vw, 0.95rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid rgba(72, 106, 143, 0.35);
+  }
+
+  .rs__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.35rem;
+    min-width: 0;
+  }
+
+  .rs__fill {
+    flex: 0 0 var(--w);
+    max-width: 78%;
+    display: flex;
+    align-items: center;
+    min-height: 1.75em;
+    padding: 0.15em 0.65em;
+    border-radius: 5px;
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+
+  .rs--blue .rs__fill {
+    background-color: #486a8f;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.14) 0 9px,
+      transparent 9px 18px
+    );
+  }
+
+  .rs--gold .rs__fill {
+    background-color: #c19a3e;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.16) 0 9px,
+      transparent 9px 18px
+    );
+  }
+
+  .rs__pct {
+    font-size: clamp(0.85rem, 1.5vw, 1.05rem);
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .rs__cond {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: clamp(0.72rem, 1.2vw, 0.88rem);
+    line-height: 1.2;
+    color: var(--color-foreground);
+  }
+
+  .rs__subnote {
+    margin: 0.15rem 0 0;
+    font-size: clamp(0.7rem, 1.1vw, 0.82rem);
+    line-height: 1.3;
+    opacity: 0.8;
+  }
+
+  .rs__note {
+    margin: clamp(0.6rem, 1.6vw, 1rem) 0 0;
+    text-align: center;
+    font-size: 0.82rem;
+    opacity: 0.85;
+  }
+
+  .rs__note a {
+    color: #486a8f;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+  }
+
+  /* Mobil: Spalten untereinander */
+  @media screen and (max-width: 749px) {
+    .rs__cols {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .rs__fill {
+      max-width: 60%;
+    }
   }
 {% endstylesheet %}
 
 {% schema %}
 {
-  "name": "Rabatt-Banner",
+  "name": "Rabattstufen",
   "tag": "section",
   "settings": [
     {
       "type": "text",
-      "id": "image_url",
-      "label": "Bild-URL",
-      "default": "https://cdn.shopify.com/s/files/1/0780/9607/3052/files/IMG-5657.png?v=1782921084"
+      "id": "heading",
+      "label": "Überschrift",
+      "default": "Unsere Rabattstufen"
+    },
+    {
+      "type": "text",
+      "id": "link_label",
+      "label": "Link-Text",
+      "default": "Alle Rabattbestimmungen ansehen"
     },
     {
       "type": "text",
       "id": "link_url",
       "label": "Link-Ziel (Pfad)",
       "default": "/pages/rabattbestimmungen"
-    },
-    {
-      "type": "text",
-      "id": "alt",
-      "label": "Alt-Text (Barrierefreiheit)",
-      "default": "Unsere Rabatte im Überblick"
     },
     {
       "type": "color_scheme",
@@ -89,7 +206,7 @@
     }
   ],
   "presets": [
-    { "name": "Rabatt-Banner" }
+    { "name": "Rabattstufen" }
   ]
 }
 {% endschema %}
