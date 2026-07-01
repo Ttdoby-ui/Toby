@@ -1,0 +1,152 @@
+{%- comment -%}
+  Inline-Suchfeld (Futurespin) — Desktop
+  Echtes Predictive-Search-Eingabefeld (eigene <predictive-search-component>-
+  Instanz, gleiche Markup wie snippets/search-modal.liquid, ohne Dialog).
+  Wird von sections/mobile-search-bar.liquid gerendert und per kurzem
+  Inline-Skript in den Header verschoben — ZWISCHEN die Logo-Zeile
+  (.header__row--top) und die Kategorien-Zeile (.header__row--bottom) ->
+  Feld sitzt oben zentral, direkt ÜBER der Kategorien-/Kollektionsleiste.
+  Das Skript läuft während des Parsens (vor dem Paint) -> kein Flackern.
+  Kein Eingriff in header.liquid nötig (bleibt update-sicher).
+  Nur Desktop (mobile:hidden); mobil bleibt der Button -> Such-Modal.
+
+  @param {string} [placeholder] - Platzhalter-Text des Suchfelds.
+{%- endcomment -%}
+
+{% render 'predictive-search-styles' %}
+
+<script src="{{ 'predictive-search.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+<div class="fs-dsearch mobile:hidden">
+  <predictive-search-component
+    class="predictive-search fs-dsearch__ps color-custom-popover"
+    style="--product-corner-radius: {{ settings.product_corner_radius | default: 8 | append: 'px' }}; --card-corner-radius: {{ settings.card_corner_radius | default: 8 | append: 'px' }};{% if settings.card_title_case == 'uppercase' %} --title-case: uppercase;{% endif %}"
+    data-section-id="predictive-search"
+    role="search"
+    aria-label="{{ 'content.search_input_label' | t }}"
+  >
+    <form
+      action="{{ routes.search_url }}"
+      method="get"
+      role="search"
+      class="predictive-search-form"
+      ref="form"
+      on:keydown="/onSearchKeyDown"
+    >
+      <div class="predictive-search-form__header">
+        <div class="predictive-search-form__header-inner">
+          <label for="fs-inline-search-input" class="visually-hidden">
+            {{- 'content.search_input_label' | t -}}
+          </label>
+          <input
+            class="search-input"
+            id="fs-inline-search-input"
+            type="search"
+            name="q"
+            role="combobox"
+            aria-expanded="false"
+            aria-owns="fs-inline-search-results"
+            aria-controls="fs-inline-search-results"
+            aria-haspopup="listbox"
+            aria-autocomplete="list"
+            autocomplete="off"
+            placeholder="{{ placeholder | default: 'Suchen …' }}"
+            ref="searchInput"
+            on:input="/search"
+            on:keydown="/onSearchKeyDown"
+          >
+          <input name="options[prefix]" type="hidden" value="last">
+          <span class="svg-wrapper predictive-search__icon">
+            {{ 'icon-search.svg' | inline_asset_content }}
+          </span>
+          <button
+            type="button"
+            class="button-unstyled predictive-search__reset-button"
+            ref="resetButton"
+            hidden
+            on:click="/resetSearch"
+          >
+            {{ 'actions.clear' | t }}
+          </button>
+        </div>
+      </div>
+
+      <div class="predictive-search-form__content-wrapper">
+        <div
+          class="predictive-search-form__content"
+          id="fs-inline-search-results"
+          ref="predictiveSearchResults"
+          on:click="/handleModalClick"
+        ></div>
+
+        <div class="predictive-search-form__footer">
+          <button class="button predictive-search__search-button" ref="viewAllButton">
+            {{ 'content.search_results_view_all' | t }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </predictive-search-component>
+</div>
+
+{%- comment -%} Suchfeld in den Header zwischen Logo- und Kategorien-Zeile schieben (vor dem Paint). {%- endcomment -%}
+<script>
+  (function () {
+    var s = document.currentScript;
+    var bar = s && s.previousElementSibling;
+    if (!bar || !bar.classList || !bar.classList.contains('fs-dsearch')) return;
+    var topRow = document.querySelector('#header-component .header__row--top');
+    if (!topRow || !topRow.parentNode) return;
+    // schon an Ort und Stelle? (idempotent)
+    if (bar.previousElementSibling === topRow) return;
+    topRow.parentNode.insertBefore(bar, topRow.nextSibling);
+  })();
+</script>
+
+{% stylesheet %}
+  .fs-dsearch {
+    display: block;
+    width: 100%;
+    padding: 0.5rem var(--page-margin, 16px) 0.7rem;
+  }
+
+  .fs-dsearch__ps {
+    max-width: 640px;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  /* Eingabefeld deutlich sichtbar */
+  .fs-dsearch .predictive-search-form__header {
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: var(--style-border-radius-inputs, 8px);
+    background: var(--color-background, #fff);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .fs-dsearch .predictive-search-form__header:focus-within {
+    border-color: #486a8f;
+    box-shadow: 0 0 0 1px rgba(72, 106, 143, 0.35);
+  }
+
+  /* Dropdown nur zeigen, wenn fokussiert UND Treffer vorhanden sind
+     (kein leerer Kasten beim Laden / bei leerer Eingabe). */
+  .fs-dsearch .predictive-search-form__content-wrapper {
+    display: none;
+    box-shadow: var(--shadow-popover, 0 8px 24px rgba(0, 0, 0, 0.12));
+    border: 1px solid var(--color-border, #ddd);
+    border-top: 0;
+  }
+
+  .fs-dsearch:focus-within .predictive-search-form__content-wrapper:has([data-search-results]) {
+    display: flex;
+  }
+
+  /* Lupensymbol im Header entfernen — die prominente Leiste ersetzt es (nur Desktop). */
+  @media screen and (min-width: 750px) {
+    #header-group .search-action,
+    .header .search-action {
+      display: none !important;
+    }
+  }
+{% endstylesheet %}

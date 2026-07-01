@@ -1,142 +1,75 @@
 {%- comment -%}
-  Prominente Suchleiste (Futurespin) — echtes Eingabefeld
-  Eingebettete Predictive-Search (gleiche <predictive-search-component> wie die
-  Theme-Such-Modal) direkt unter dem Header — auf ALLEN Geräten. Man tippt
-  direkt ins Feld und bekommt Live-Vorschläge in einem Dropdown.
-  - Mobil (< 750px): vollbreit unter dem Header.
-  - Desktop (>= 750px): oben zentral, breitenbegrenzt + das Header-Lupensymbol
-    (.search-action) wird ausgeblendet, da die Leiste es ersetzt.
-  Fallback: Das <form action="/search"> sendet bei Enter eine normale Suche,
-  falls die Live-Vorschläge (Section-Rendering) mal nicht greifen.
+  Suchleiste (Futurespin)
+  - Mobil (< 750px): Button unter dem Header, öffnet die Predictive-Search-Modal
+    (#search-modal) — wie gehabt.
+  - Desktop (>= 750px): echtes Inline-Suchfeld (snippet fs-inline-search), das sich
+    per Skript in den Header schiebt — direkt ÜBER die Kategorien-/Kollektionsleiste
+    (zwischen Logo-Zeile und Kategorien-Zeile). Das Header-Lupensymbol wird auf
+    Desktop ausgeblendet. Kein Eingriff in header.liquid (update-sicher).
+  In header-group.json direkt unter dem Header eingehängt (fs_mobile_search).
 {%- endcomment -%}
 
-{% render 'predictive-search-styles' %}
-
-<script src="{{ 'predictive-search.js' | asset_url }}" type="module" fetchpriority="low"></script>
-
+{%- comment -%} Mobil: Button -> Such-Modal {%- endcomment -%}
 <div class="fs-msearch color-{{ section.settings.color_scheme }}">
-  <predictive-search-component
-    class="predictive-search fs-msearch__ps color-custom-popover"
-    style="--product-corner-radius: {{ settings.product_corner_radius | default: 8 | append: 'px' }}; --card-corner-radius: {{ settings.card_corner_radius | default: 8 | append: 'px' }};{% if settings.card_title_case == 'uppercase' %} --title-case: uppercase;{% endif %}"
-    data-section-id="predictive-search"
-    role="search"
-    aria-label="{{ 'content.search_input_label' | t }}"
+  <button
+    type="button"
+    class="fs-msearch__bar"
+    on:click="#search-modal/showDialog"
+    aria-label="{{ 'accessibility.open_search_modal' | t }}"
   >
-    <form
-      action="{{ routes.search_url }}"
-      method="get"
-      role="search"
-      class="predictive-search-form"
-      ref="form"
-      on:keydown="/onSearchKeyDown"
-    >
-      <div class="predictive-search-form__header">
-        <div class="predictive-search-form__header-inner">
-          <label for="fs-inline-search-input" class="visually-hidden">
-            {{- 'content.search_input_label' | t -}}
-          </label>
-          <input
-            class="search-input"
-            id="fs-inline-search-input"
-            type="search"
-            name="q"
-            role="combobox"
-            aria-expanded="false"
-            aria-owns="fs-inline-search-results"
-            aria-controls="fs-inline-search-results"
-            aria-haspopup="listbox"
-            aria-autocomplete="list"
-            autocomplete="off"
-            placeholder="{{ section.settings.placeholder }}"
-            ref="searchInput"
-            on:input="/search"
-            on:keydown="/onSearchKeyDown"
-          >
-          <input name="options[prefix]" type="hidden" value="last">
-          <span class="svg-wrapper predictive-search__icon">
-            {{ 'icon-search.svg' | inline_asset_content }}
-          </span>
-          <button
-            type="button"
-            class="button-unstyled predictive-search__reset-button"
-            ref="resetButton"
-            hidden
-            on:click="/resetSearch"
-          >
-            {{ 'actions.clear' | t }}
-          </button>
-        </div>
-      </div>
-
-      <div class="predictive-search-form__content-wrapper">
-        <div
-          class="predictive-search-form__content"
-          id="fs-inline-search-results"
-          ref="predictiveSearchResults"
-          on:click="/handleModalClick"
-        ></div>
-
-        <div class="predictive-search-form__footer">
-          <button class="button predictive-search__search-button" ref="viewAllButton">
-            {{ 'content.search_results_view_all' | t }}
-          </button>
-        </div>
-      </div>
-    </form>
-  </predictive-search-component>
+    <span class="fs-msearch__icon svg-wrapper" aria-hidden="true">
+      {{ 'icon-search.svg' | inline_asset_content }}
+    </span>
+    <span class="fs-msearch__placeholder">{{ section.settings.placeholder }}</span>
+  </button>
 </div>
+
+{%- comment -%} Desktop: echtes Inline-Suchfeld, schiebt sich in den Header über die Kategorien {%- endcomment -%}
+{% render 'fs-inline-search', placeholder: section.settings.placeholder %}
 
 {% stylesheet %}
   .fs-msearch {
-    display: block;
-    padding: 0.55rem var(--page-margin, 16px);
-  }
-
-  .fs-msearch__ps {
-    width: 100%;
-  }
-
-  /* Eingabefeld in der Leiste deutlich sichtbar machen */
-  .fs-msearch .predictive-search-form__header {
-    border: 1px solid var(--color-border, #ddd);
-    border-radius: var(--style-border-radius-inputs, 8px);
-    background: var(--color-background, #fff);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  .fs-msearch .predictive-search-form__header:focus-within {
-    border-color: #486a8f;
-    box-shadow: 0 0 0 1px rgba(72, 106, 143, 0.35);
-  }
-
-  /* Dropdown nur zeigen, wenn fokussiert UND Treffer vorhanden sind
-     (kein leerer Kasten beim Laden / bei leerer Eingabe). */
-  .fs-msearch .predictive-search-form__content-wrapper {
     display: none;
-    box-shadow: var(--shadow-popover, 0 8px 24px rgba(0, 0, 0, 0.12));
-    border: 1px solid var(--color-border, #ddd);
-    border-top: 0;
   }
 
-  .fs-msearch:focus-within .predictive-search-form__content-wrapper:has([data-search-results]) {
-    display: flex;
-  }
-
-  /* Desktop: prominent + oben zentral, Breite begrenzt */
-  @media screen and (min-width: 750px) {
+  @media screen and (max-width: 749px) {
     .fs-msearch {
-      padding: 0.7rem var(--page-margin, 16px);
+      display: block;
+      padding: 0.5rem var(--page-margin, 16px);
     }
 
-    .fs-msearch__ps {
-      max-width: 640px;
-      margin-inline: auto;
+    .fs-msearch__bar {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--color-border, #ddd);
+      border-radius: var(--style-border-radius-inputs, 8px);
+      background: var(--color-background, #fff);
+      color: var(--color-foreground, #555);
+      font: inherit;
+      font-size: 0.95rem;
+      line-height: 1.2;
+      text-align: left;
+      cursor: pointer;
     }
 
-    /* Lupensymbol im Header entfernen — die prominente Leiste ersetzt es. */
-    #header-group .search-action,
-    .header .search-action {
-      display: none !important;
+    .fs-msearch__icon {
+      display: inline-flex;
+      width: 1.1rem;
+      height: 1.1rem;
+      flex: 0 0 auto;
+      opacity: 0.7;
+    }
+
+    .fs-msearch__icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .fs-msearch__placeholder {
+      opacity: 0.7;
     }
   }
 {% endstylesheet %}
@@ -148,7 +81,7 @@
   "settings": [
     {
       "type": "paragraph",
-      "content": "Echtes Suchfeld unter dem Header — auf allen Geräten. Direkt lostippen, Live-Vorschläge erscheinen im Dropdown. Auf Desktop zentriert und ersetzt das Header-Lupensymbol. Am besten direkt unter dem Header platzieren."
+      "content": "Mobil: Such-Button unter dem Header. Desktop: echtes Inline-Suchfeld, das sich über die Kategorienleiste in den Header schiebt (ersetzt dort das Lupensymbol). Am besten direkt unter dem Header platzieren."
     },
     {
       "type": "text",
