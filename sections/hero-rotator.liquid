@@ -11,7 +11,7 @@
   data-interval="{{ section.settings.interval | default: 5 | times: 1000 }}"
 >
   {%- assign s = section.settings -%}
-  {%- assign idx = '1,2,3' | split: ',' -%}
+  {%- assign idx = '1,2' | split: ',' -%}
   {%- for i in idx -%}
     {%- assign dkey = 'b' | append: i | append: '_desktop' -%}
     {%- assign mkey = 'b' | append: i | append: '_mobile' -%}
@@ -84,11 +84,7 @@
     { "type": "header", "content": "Banner 2" },
     { "type": "text", "id": "b2_desktop", "label": "Banner 2 – Desktop-Bild-URL" },
     { "type": "text", "id": "b2_mobile", "label": "Banner 2 – Mobil-Bild-URL" },
-    { "type": "url", "id": "b2_link", "label": "Banner 2 – Link" },
-    { "type": "header", "content": "Banner 3" },
-    { "type": "text", "id": "b3_desktop", "label": "Banner 3 – Desktop-Bild-URL", "default": "https://cdn.shopify.com/s/files/1/0780/9607/3052/files/IMG-5657.png?v=1782921084" },
-    { "type": "text", "id": "b3_mobile", "label": "Banner 3 – Mobil-Bild-URL" },
-    { "type": "text", "id": "b3_link", "label": "Banner 3 – Link (Pfad)", "default": "/pages/rabattbestimmungen" }
+    { "type": "url", "id": "b2_link", "label": "Banner 2 – Link" }
   ],
   "presets": [ { "name": "Hero-Rotator" } ]
 }
