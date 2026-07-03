@@ -4,6 +4,37 @@
 > Neue Erkenntnisse und Irrwege immer hier eintragen, damit Fehler nicht
 > wiederholt werden. Abschnitt „Irrwege" = bereits erprobte Sackgassen.
 
+## Rechtliches / Compliance (Stand 2026-07-03, technischer Check – keine Rechtsberatung)
+
+- **Shop-Policies** (Impressum/AGB/Widerruf/Datenschutz/Versand/Kontakt) existieren alle und sind im
+  **Footer** verlinkt (`gid://shopify/Menu/233321529692`). Storefront-Pfade: `/policies/legal-notice`,
+  `/policies/terms-of-service`, `/policies/refund-policy`, `/policies/privacy-policy`,
+  `/policies/shipping-policy`. **AGB-Link im Konfigurator** war fälschlich `/pages/agb` → auf
+  `/policies/terms-of-service` korrigiert (2026-07-03).
+- ⚠️ **Policies per API NICHT änderbar:** `shopPolicyUpdate` existiert, aber mein MCP-Token hat **keinen**
+  `write_legal_policies`-Scope → „Access denied". Policy-Texte müssen im **Admin → Einstellungen →
+  Richtlinien/Rechtliches** geändert werden (oder Scope freigeben).
+- **Offene Rechts-Punkte (2026-07-03), im Admin zu erledigen:**
+  1. **Impressum**: EU-OS-Plattform-Link ist veraltet (Plattform seit 20.07.2025 offline) → entfernen, nur
+     §36-VSBG-Satz behalten. **Telefon + E-Mail fehlen** im Impressum (§5 TMG) → ergänzen
+     (09195/9230019, online@futurespin.de). **Handelsregister-Nr. fehlt** (HRA der KG + HRB der
+     Komplementär-GmbH + Amtsgericht) → ergänzen (Daten liegen nur beim User). Fertiger korrigierter
+     Impressum-Text wurde dem User geliefert.
+  2. **Widerrufsrecht**: Telefon-Typo **09295 → 09195** korrigieren.
+  3. **Retouren-Pauschale 4,50 €** (Versand-/Widerruf-Policy) vs. gesetzlicher Widerruf: beim 14-Tage-Widerruf
+     dürfen nur die *unmittelbaren Rücksendekosten* auferlegt werden, keine zusätzliche Bearbeitungspauschale →
+     anwaltlich prüfen/klarstellen (die 4,50 € gelten für das freiwillige 30-Tage-Rückgaberecht).
+  4. **Grundpreis (PAngV)**: nach Gewicht/Volumen angebotene Produkte (Kleber/Versiegelung/Reiniger, z. B.
+     „andro Free Seal 25g") brauchen einen **Grundpreis (€/kg bzw. €/l)** → per Variante
+     `unitPriceMeasurement` setzen (Skript/Workflow möglich; Netto-Füllmenge steht meist im Titel).
+  5. **Cookie-Consent-Banner (TTDSG §25/DSGVO)**: aktives Consent-Banner verifizieren (Judge.me, Inbox,
+     Pixel setzen Cookies) – Shopify „Customer Privacy"/Consent-Banner oder App.
+- **Bereits behoben (Theme):** PDP zeigt jetzt „Inkl. Steuern … Versand …" (`show_tax_info: true` im
+  Haupt-Preisblock von `product.json`) – PAngV-Pflichtangabe. **Offen:** gleiche Angabe auf **Kollektions-
+  Kacheln** (Filter-Panel) + Empfehlungs-Kacheln fehlt noch.
+- `taxesIncluded: true` (Preise inkl. MwSt.), `taxShipping: false`, Währung EUR. **GPSR**-Herstellerangaben
+  laufen über den `hersteller-info`-Block (siehe unten) – befüllt lassen.
+
 ## Shopify Theme-Regeln
 
 - **Alle Änderungen zuerst im Entwurf-Horizon Theme** (ID: `gid://shopify/OnlineStoreTheme/200401420636`, UNPUBLISHED)
