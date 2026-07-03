@@ -1455,14 +1455,27 @@ window.ProductBadges = {};
       return;
     }
 
+    // Jede Konfigurator-Zeile erhält Marker-Properties:
+    //   sichtbar  → macht die BESTELLPOSITION selbst-beschreibend (Packzettel
+    //               liest die Zeilen, nicht die freischwebende Warenkorb-Notiz)
+    //   _kfg/_rolle (versteckt) → Filter, um die Notiz später NUR aus den
+    //               tatsächlich hinzugefügten Zeilen zu bauen.
+    // Zusätzlich hängt die volle Konfiguration als verstecktes Property an der
+    // HOLZ-Zeile → klebt an einer echten Bestellposition, kann nicht verwaisen.
+    function withProps(role, obj) {
+      var p = { '_kfg': '1', '_rolle': role };
+      for (var k in obj) { if (obj.hasOwnProperty(k)) p[k] = obj[k]; }
+      return p;
+    }
+
     var items = [];
-    if (S.holz) items.push({ id: S.holz.variant.id, quantity: 1 });
-    if (S.vorhand) items.push({ id: S.vorhand.variant.id, quantity: 1, properties: { 'Position': 'Vorhand' } });
-    if (S.rueckhand) items.push({ id: S.rueckhand.variant.id, quantity: 1, properties: { 'Position': 'Rückhand' } });
-    if (S.kantenband) items.push({ id: S.kantenband.variant.id, quantity: 1 });
+    if (S.holz) items.push({ id: S.holz.variant.id, quantity: 1, properties: withProps('holz', { 'Schläger-Baustein': KonfigT.row_holz, '_Schlägerkonfiguration': buildConfigText() }) });
+    if (S.vorhand) items.push({ id: S.vorhand.variant.id, quantity: 1, properties: withProps('vorhand', { 'Schläger-Baustein': KonfigT.row_vorhand }) });
+    if (S.rueckhand) items.push({ id: S.rueckhand.variant.id, quantity: 1, properties: withProps('rueckhand', { 'Schläger-Baustein': KonfigT.row_rueckhand }) });
+    if (S.kantenband) items.push({ id: S.kantenband.variant.id, quantity: 1, properties: withProps('kantenband', { 'Schläger-Baustein': KonfigT.row_kantenband }) });
     // Klebeservice wird immer automatisch hinzugefügt
-    items.push({ id: KLEBE_ID, quantity: 1, properties: { 'Service': 'Klebeservice' } });
-    if (S.versiegelung && VERSIEGELUNG_ID) items.push({ id: +VERSIEGELUNG_ID, quantity: 1, properties: { 'Service': 'Schlägerversiegelung' } });
+    items.push({ id: KLEBE_ID, quantity: 1, properties: withProps('klebeservice', { 'Service': 'Klebeservice' }) });
+    if (S.versiegelung && VERSIEGELUNG_ID) items.push({ id: +VERSIEGELUNG_ID, quantity: 1, properties: withProps('versiegelung', { 'Service': 'Schlägerversiegelung' }) });
 
     // Failsafe: enforce black rubber rule
     var selectedRubbers = [S.vorhand, S.rueckhand].filter(Boolean);
@@ -1483,10 +1496,12 @@ window.ProductBadges = {};
         });
         return r.json();
       })
-      .then(function() {
+      .then(function(addRes) {
         atcBtn.textContent = KonfigT.in_cart;
         atcBtn.classList.add('is-ok');
-        setOrderNote();
+        // Notiz/Attribute aus den TATSÄCHLICH hinzugefügten Zeilen bauen,
+        // nicht aus der Bildschirm-Auswahl.
+        writeConfigNote(addRes && addRes.items ? addRes.items : []);
         document.dispatchEvent(new CustomEvent('cart:update', {
           bubbles: true,
           detail: { data: { source: 'konfigurator' } },
@@ -1501,15 +1516,19 @@ window.ProductBadges = {};
   }
 
   /* ---- Packzettel-Notiz ---- */
-  function setOrderNote() {
-    function selName(sel) {
-      if (!sel) return '–';
-      var n = sel.product.title;
-      if (sel.variant.title && sel.variant.title !== 'Default Title') n += ' (' + sel.variant.title + ')';
-      return n;
-    }
+  // Anzeigename aus einer Konfigurator-Auswahl (S.*).
+  function selName(sel) {
+    if (!sel) return '–';
+    var n = sel.product.title;
+    if (sel.variant.title && sel.variant.title !== 'Default Title') n += ' (' + sel.variant.title + ')';
+    return n;
+  }
 
-    var lines = [
+  // Voller Konfigurationstext (aus der aktuellen Auswahl) – wird als verstecktes
+  // Property an die HOLZ-Zeile gehängt, damit die Konfiguration an einer echten
+  // Bestellposition klebt.
+  function buildConfigText() {
+    return [
       KonfigT.note_header,
       KonfigT.note_holz      + selName(S.holz),
       KonfigT.note_vorhand   + selName(S.vorhand),
@@ -1518,15 +1537,51 @@ window.ProductBadges = {};
       KonfigT.note_klebeservice + KonfigT.note_klebeservice_val,
       KonfigT.note_versiegelung + (S.versiegelung && VERSIEGELUNG_ID ? KonfigT.yes : KonfigT.no),
       KonfigT.note_footer,
+    ].join('\n');
+  }
+
+  // Packzettel-Notiz + Warenkorb-Attribute NUR aus den tatsächlich in den
+  // Warenkorb gelegten Zeilen bauen (Antwort von /cart/add.js, gefiltert über
+  // _kfg/_rolle). So kann die Notiz keine Bausteine mehr behaupten, die gar
+  // nicht im Warenkorb liegen.
+  function writeConfigNote(added) {
+    var byRole = {};
+    (added || []).forEach(function(it) {
+      var p = it.properties || {};
+      if (!p._kfg || !p._rolle || byRole[p._rolle]) return;
+      byRole[p._rolle] = it;
+    });
+    function nm(it) {
+      if (!it) return null;
+      var base = it.product_title || it.title || '';
+      var vt = it.variant_title && it.variant_title !== 'Default Title' ? it.variant_title : '';
+      return vt ? base + ' (' + vt + ')' : base;
+    }
+    var holz = byRole.holz, vor = byRole.vorhand, rue = byRole.rueckhand,
+        kan = byRole.kantenband, kle = byRole.klebeservice, ver = byRole.versiegelung;
+
+    // Kein Konfigurator-Baustein im Warenkorb → Notiz NICHT anfassen
+    // (verhindert veraltete Packzettel wie bei #9260).
+    if (!holz && !vor && !rue && !kan) return;
+
+    var lines = [
+      KonfigT.note_header,
+      KonfigT.note_holz      + (nm(holz) || KonfigT.note_none),
+      KonfigT.note_vorhand   + (nm(vor)  || KonfigT.note_none),
+      KonfigT.note_rueckhand + (nm(rue)  || KonfigT.note_none),
+      KonfigT.note_kantenband + (nm(kan) || KonfigT.note_none),
+      KonfigT.note_klebeservice + (kle ? KonfigT.note_klebeservice_val : KonfigT.no),
+      KonfigT.note_versiegelung + (ver ? KonfigT.yes : KonfigT.no),
+      KonfigT.note_footer,
     ];
 
     var attrs = {};
-    attrs[KonfigT.attr_holz]          = selName(S.holz);
-    attrs[KonfigT.attr_vorhand]       = selName(S.vorhand);
-    attrs[KonfigT.attr_rueckhand]     = selName(S.rueckhand);
-    attrs[KonfigT.attr_klebeservice]  = KonfigT.yes;
-    if (S.kantenband) attrs[KonfigT.attr_kantenband] = selName(S.kantenband);
-    if (S.versiegelung && VERSIEGELUNG_ID) attrs[KonfigT.attr_versiegelung] = KonfigT.yes;
+    attrs[KonfigT.attr_holz]         = nm(holz) || '';
+    attrs[KonfigT.attr_vorhand]      = nm(vor)  || '';
+    attrs[KonfigT.attr_rueckhand]    = nm(rue)  || '';
+    attrs[KonfigT.attr_klebeservice] = kle ? KonfigT.yes : '';
+    attrs[KonfigT.attr_kantenband]   = nm(kan) || '';
+    attrs[KonfigT.attr_versiegelung] = ver ? KonfigT.yes : '';
 
     fetch('/cart/update.js', {
       method: 'POST',
