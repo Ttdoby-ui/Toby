@@ -203,6 +203,8 @@
   .fp-card__price--vip{color:#486A8F;font-weight:700;}
   .fp-card__price--sale{color:#486A8F;font-weight:700;}
   .fp-card__price .b2b-net-note{display:block;font-size:.62em;font-weight:400;color:#777;margin-top:.1em;}
+  /* PAngV: „inkl. MwSt." nur bei B2C-Preisen (B2B zeigt eigenes „zzgl. MwSt.") */
+  .fp-card__price:not(:has(.b2b-net-note))::after{content:"inkl. MwSt., zzgl. Versand";display:block;font-size:.62em;font-weight:400;color:#777;margin-top:.1em;letter-spacing:0;}
   .fp-card .jdgm-preview-badge{display:block;margin:.15em 0 .35em;line-height:1;}
   .fp-card .jdgm-preview-badge:empty{margin:0;}
   .fp-card__dots{display:flex;align-items:center;gap:.3em;flex-wrap:wrap;margin:.1em 0 .4em;}
