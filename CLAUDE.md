@@ -48,6 +48,13 @@
     Theme-Dateien schreiben. Großes base64 NICHT als einen Riesen-Blob abtippen (Fremdzeichen-Korruption
     → „ungültige Zeichen") → **eine Datei pro Mutation**, base64 in ≤9000er-Chunks lesen und konkatenieren.
     Workflow `push-theme-files.yml` existiert, ist aber mangels `write_themes` aktuell nicht nutzbar.
+    - ✅ **Bester Weg für GROSSE Dateien (2026-07-03, verifiziert):** Statt base64 abzutippen die Datei erst
+      auf den Branch committen/pushen und dann `themeFilesUpsert` mit **`body: {type: URL, value: <raw-URL>}`**
+      aufrufen – Shopify holt den Inhalt selbst. Raw-URL am **Commit-SHA** (nicht Branch-Name, wegen `/` im
+      Namen): `https://raw.githubusercontent.com/ttdoby-ui/toby/<SHA>/<pfad>`. Das Repo ist raw-öffentlich
+      erreichbar (mit WebFetch vorab testen). Die Mutation gibt `upsertedThemeFiles: []` **ohne** userErrors
+      zurück (Fetch läuft async) → Erfolg per Read-back (`theme.files(filenames:[...])`) prüfen. Umgeht die
+      base64-Transkriptionsfehler bei >~40 KB komplett.
   - `assets/filter-panel-helpers.js`, `assets/filter-panel.css` – Helfer/Style.
 - **Konsequenz:** Kachel-Änderungen müssen **dort** rein, nicht (nur) in `price.liquid`.
   `price.liquid` greift weiter auf der **Produktdetailseite**.
@@ -161,6 +168,24 @@
   `produktbeschreibung_full` (in `templates/product.json`, Textblock `{{ closest.product.description }}`),
   NICHT mehr in der rechten Spalte. (Diese CSS-Datei ist inzwischen Sammelstelle für Header-/Drawer-/
   Beschreibungs-CSS – auch das Mobil-Drawer-Styling: Trennlinien + Chevron statt „+", %SALE% rot.)
+
+## Schlägerkonfigurator (`sections/konfigurator.liquid`)
+
+- 6-Schritt-Konfigurator (Holz → Vorhand → Rückhand → Kantenband → Versiegelung → Zusammenfassung), rein
+  client-seitig. `addToCart()` legt alle Bausteine in **einem** `/cart/add.js`-Batch an; Klebeservice wird
+  **immer** automatisch mitgelegt (Variant-ID Section-Setting, Default `57810488852828`).
+- ⚠️ **Packzettel-Notiz vs. Warenkorb (Bug #9260, gefixt 2026-07-03):** Früher schrieb `setOrderNote()` die
+  Notiz + „Schlägerbau"-Attribute aus der **Bildschirm-Auswahl** (`S.*`) als **Warenkorb-Notiz/Attribute** –
+  entkoppelt von den echten Zeilen. Da Warenkorb-Notiz/Attribute ein Bearbeiten/Leeren des Warenkorbs
+  überleben, konnte der Packzettel 2 Beläge behaupten, obwohl nur 1 bestellt wurde (die 2 Zeilen kamen ohne
+  Line-Item-Properties über die Produktseiten rein, nicht über den Konfigurator).
+  - **Fix:** Jede Konfigurator-Zeile trägt jetzt Marker-Properties: sichtbar `Schläger-Baustein`/`Service`
+    (Bestellposition ist selbst-beschreibend) + versteckt `_kfg`/`_rolle` (Filter). Die volle Konfiguration
+    hängt zusätzlich als verstecktes `_Schlägerkonfiguration` an der **Holz-Zeile**. Notiz/Attribute werden in
+    `writeConfigNote(addRes.items)` aus den **tatsächlich hinzugefügten** Zeilen (Antwort von `/cart/add.js`)
+    gebaut – nie mehr aus `S.*`. Ohne Konfigurator-Zeile im Warenkorb bleibt die Notiz unangetastet.
+  - **Merke:** Bestellpositionen (Line Items) sind die Wahrheit, die Warenkorb-Notiz ist es nicht. Bei
+    „Notiz sagt X, Bestellung enthält Y" die Line-Item-`customAttributes` prüfen.
 
 ## Shopify Functions (JavaScript) — korrekter Aufbau
 
