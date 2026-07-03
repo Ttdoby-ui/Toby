@@ -36,9 +36,13 @@
      L/KG umstellen (aktuell bewusst 100er-Konvention der Vorgänger übernommen).
   5. **Cookie-Consent-Banner (TTDSG §25/DSGVO)**: aktives Consent-Banner verifizieren (Judge.me, Inbox,
      Pixel setzen Cookies) – Shopify „Customer Privacy"/Consent-Banner oder App.
-- **Bereits behoben (Theme):** PDP zeigt jetzt „Inkl. Steuern … Versand …" (`show_tax_info: true` im
-  Haupt-Preisblock von `product.json`) – PAngV-Pflichtangabe. **Offen:** gleiche Angabe auf **Kollektions-
-  Kacheln** (Filter-Panel) + Empfehlungs-Kacheln fehlt noch.
+- **Bereits behoben (Theme):** PDP zeigt „Inkl. Steuern … Versand …" (`show_tax_info: true` im
+  Haupt-Preisblock von `product.json`). **Kollektions-Kacheln (Filter-Panel)** zeigen unter dem B2C-Preis
+  **„inkl. MwSt., zzgl. Versand"** – per CSS `.fp-card__price:not(:has(.b2b-net-note))::after` im
+  `{% style %}`-Block von `sections/filter-panel.liquid` (nur B2C; B2B behält sein `.b2b-net-note` „zzgl. MwSt.").
+  ⚠️ Noch **offen (optional):** native Horizon-Kacheln (Empfehlungen `product.json` `price_gLWgA6`,
+  Homepage-`product-list`, Topseller via `price.liquid`) zeigen den Hinweis noch nicht – dort ggf.
+  `show_tax_info:true` bzw. Note ergänzen.
 - `taxesIncluded: true` (Preise inkl. MwSt.), `taxShipping: false`, Währung EUR. **GPSR**-Herstellerangaben
   laufen über den `hersteller-info`-Block (siehe unten) – befüllt lassen.
 
