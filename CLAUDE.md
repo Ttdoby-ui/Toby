@@ -412,6 +412,15 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   (`gid://shopify/Menu/233321529692`, neuer PAGE-Punkt; die 5 SHOP_POLICY-Links brauchen beim `menuUpdate` ihre
   `resourceId`, sonst „shop_policy nicht gefunden"). Seiteninhalt via `pageCreate`/`pageUpdate` (HTML, KEIN Liquid
   – Pages rendern kein Liquid, daher Links hart als Pfade).
+  - 🎨 **Grafisch aufbereitet (2026-07-03):** Seiten-Body ist jetzt gestyltes HTML mit **inline `<style>`** +
+    Inline-SVG-Icons (Markenblau `#486A8F`, VIP-Gold `#C19A3E`, alles gescopt unter `.rbx`): runder VIP-15‑%-Badge,
+    gestreifte Staffel-Balken (wie die Homepage-Grafik `rabatt-stufen`), hervorgehobene Sammelbesteller-Callout-Box
+    (Mail-Icon → `online@futurespin.de`), Versandkostenfrei-Pill (69 €), Check-Listen für Kombinierbarkeit,
+    gestrichelte B2B-Box. Quelle liegt reproduzierbar im Repo: **`docs/pages/rabattbestimmungen.html`**
+    (bei Änderung dort editieren, Body per `pageUpdate` setzen). ⚠️ Attribute im HTML mit **einfachen Quotes**
+    halten (kein `"`) → problemlos als JSON-String übergebbar; Shopify normalisiert sie beim Speichern zu `"`.
+    Inline-SVG `viewBox` wird beim Speichern lowercased (`viewbox`), der Browser-HTML-Parser korrigiert das aber
+    für Foreign-Content automatisch zurück → Icons skalieren korrekt.
       - **Content-Creator-Anbindung (offen):** Der Content Creator soll genau dieses Metafeld
         lesen/schreiben. Sein Code liegt außerhalb dieser Repo-Scope → Anbindung dort in seiner
         eigenen Cowork-Session umsetzen (gleiches JSON-Schema verwenden).
