@@ -24,9 +24,16 @@
   3. **Retouren-Pauschale 4,50 €** (Versand-/Widerruf-Policy) vs. gesetzlicher Widerruf: beim 14-Tage-Widerruf
      dürfen nur die *unmittelbaren Rücksendekosten* auferlegt werden, keine zusätzliche Bearbeitungspauschale →
      anwaltlich prüfen/klarstellen (die 4,50 € gelten für das freiwillige 30-Tage-Rückgaberecht).
-  4. **Grundpreis (PAngV)**: nach Gewicht/Volumen angebotene Produkte (Kleber/Versiegelung/Reiniger, z. B.
-     „andro Free Seal 25g") brauchen einen **Grundpreis (€/kg bzw. €/l)** → per Variante
-     `unitPriceMeasurement` setzen (Skript/Workflow möglich; Netto-Füllmenge steht meist im Titel).
+  4. **Grundpreis (PAngV)** – ✅ **weitgehend erledigt (2026-07-03):** Für alle ml/g-Verbrauchsartikel in
+     **Pflege & Montage** (Kleber/Reiniger/Spray/Versiegelung) ist der Grundpreis gesetzt (`unitPriceMeasurement`
+     + `showUnitPrice:true` via `productVariantsBulkUpdate`; **Konvention: referenceValue 100, Einheit ML bzw. G**
+     → „€/100 ml" bzw. „€/100 g", konsistent mit den ~23 zuvor schon gesetzten Produkten → Vergleichbarkeit).
+     Füllmenge aus dem Titel geparst (z. B. „andro Free Seal 25g" → 25 G). **3 Produkte konnten NICHT automatisch
+     gesetzt werden** (keine Füllmenge im Titel) → **manuell** im Admin nachtragen: „Revolution No. 3 Cleaner",
+     „Nittaku Finezip", „Stiga Attach Powerglue". ⚠️ **Anzeige:** Grundpreis erscheint über den nativen
+     Preisblock (PDP); auf den **Filter-Panel-Kacheln** (Beläge/Hölzer) wird er nicht gerendert – Pflege-Kollektion
+     nutzt aber die native Kachel. Wer >250 ml/g streng per 1 L/1 kg auszeichnen will, kann `referenceUnit` auf
+     L/KG umstellen (aktuell bewusst 100er-Konvention der Vorgänger übernommen).
   5. **Cookie-Consent-Banner (TTDSG §25/DSGVO)**: aktives Consent-Banner verifizieren (Judge.me, Inbox,
      Pixel setzen Cookies) – Shopify „Customer Privacy"/Consent-Banner oder App.
 - **Bereits behoben (Theme):** PDP zeigt jetzt „Inkl. Steuern … Versand …" (`show_tax_info: true` im
