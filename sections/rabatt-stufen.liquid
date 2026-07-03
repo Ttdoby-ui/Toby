@@ -5,6 +5,7 @@
   Werte = aktive Rabatte (Beläge 2/5/10 → 15/20/25 %, Textilien 6/20/30 →
   20/25/30 %, VIP 1 = 15 %). Kein Logo. Overflow-sicher. Ganz oben auf der
   Startseite, über dem Hero-Slider. Link zu den Rabattbestimmungen.
+  Zusätzlich ein zentrierter Versandkostenfrei-Badge (ab 69 € Bestellwert).
 {%- endcomment -%}
 
 <section class="rs color-{{ section.settings.color_scheme }}">
@@ -34,6 +35,10 @@
         <p class="rs__subnote">Jetzt kostenlos registrieren und sichern.</p>
       </div>
     </div>
+
+    <p class="rs__ship">
+      <span class="rs__ship-badge">Versandkostenfrei ab 69&nbsp;€ Bestellwert</span>
+    </p>
 
     <p class="rs__note">
       Es gilt immer der höchste Rabatt – Rabatte werden nicht gestapelt.
@@ -147,6 +152,29 @@
     font-size: clamp(0.7rem, 1.1vw, 0.82rem);
     line-height: 1.3;
     opacity: 0.8;
+  }
+
+  .rs__ship {
+    margin: clamp(0.8rem, 1.8vw, 1.15rem) 0 0;
+    text-align: center;
+  }
+
+  .rs__ship-badge {
+    display: inline-block;
+    max-width: 100%;
+    padding: 0.4em 1.1em;
+    border-radius: 999px;
+    background-color: #486a8f;
+    color: #fff;
+    font-size: clamp(0.8rem, 1.3vw, 0.95rem);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+  }
+
+  .rs__ship-badge::before {
+    content: "🚚";
+    margin-inline-end: 0.5em;
   }
 
   .rs__note {
