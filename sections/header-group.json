@@ -37,12 +37,21 @@
             "cta_label": "Konfigurator",
             "cta_link": "/collections/konfigurierte-schlager"
           }
+        },
+        "msg_versand": {
+          "type": "message",
+          "settings": {
+            "text": "Ab 69 € versandkostenfrei shoppen!",
+            "cta_label": "",
+            "cta_link": ""
+          }
         }
       },
       "block_order": [
         "msg_vip",
         "msg_service",
-        "msg_config"
+        "msg_config",
+        "msg_versand"
       ],
       "name": "Announcement-Ticker",
       "settings": {

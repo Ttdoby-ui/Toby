@@ -388,6 +388,10 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
         Definition-ID `gid://shopify/MetafieldDefinition/444121907548`, storefront-lesbar (PUBLIC_READ).
         JSON-Schema: `{ autoplay:bool, interval:int(Sek.), bg_color, text_color, messages:[{text, cta_label, cta_link}] }`.
         Setzen via `metafieldsSet` (ownerId = Shop-GID `gid://shopify/Shop/78096073052`).
+        - **Aktuelle Botschaften (2026-07-03):** VIP-Anmelden, Fachhandel/Versand, Konfigurator und neu
+          **„Ab 69 € versandkostenfrei shoppen!"** (ohne CTA). Der 69‑€‑Hinweis wurde aus der Homepage
+          (Pull-Quote `section_Nr8Nwb` in `templates/index.json`) entfernt und in den Ticker verschoben;
+          Fallback-Block `msg_versand` liegt zusätzlich in `header-group.json`.
         - ⚠️ **CTA-Links relativ halten** (`/account/login`, `/collections/...`) — NICHT eine komplette,
           manuell zusammengebaute Kundenkonto-OAuth-URL (`shopify.com/authentication/.../login?...redirect_uri=...`)
           eintragen: deren `nonce`/`state` laufen ab → „Ungültige redirect_uri". Der VIP-„Anmelden"-Button
@@ -397,8 +401,13 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 ## Rabattbestimmungen-Seite
 
 - **Seite „Rabattbestimmungen"** (`/pages/rabattbestimmungen`, `gid://shopify/Page/712188756316`, veröffentlicht)
-  fasst VIP-Rabatte (15/25/30 %), Mengenrabatte (Beläge 2/5/10 → 15/20/25 %, Textilien 6/20/30 → 20/25/30 %),
+  fasst VIP-Rabatt, Mengenrabatte (Beläge 2/5/10 → 15/20/25 %, Textilien 6/20/30 → 20/25/30 %),
   „höchster Rabatt gewinnt" (keine Stapelung), Sale-/Gutschein-Ausschluss und B2B-Verweis kundenseitig zusammen.
+  - ⚠️ **Öffentlich nur VIP 15 % zeigen (2026-07-03):** Auf User-Wunsch werden VIP 2 (25 %) und VIP 3 (30 %)
+    kundenseitig NICHT mehr gelistet (weder hier noch in der Homepage-Grafik `rabatt-stufen`, die schon vorher
+    nur Stufe 1 zeigte). Stattdessen ein **Sammelbesteller-Hinweis** (h3): Sammelbesteller/Vereine erhalten auf
+    Anfrage bessere Konditionen per **E-Mail an online@futurespin.de**. Die Staffeln 25/30 % existieren technisch
+    weiter (native VIP-Rabatte), werden nur nicht mehr beworben.
   Enthält einen „Jetzt kostenlos registrieren"-Button (`/account/login`). Im **Footer-Menü** verlinkt
   (`gid://shopify/Menu/233321529692`, neuer PAGE-Punkt; die 5 SHOP_POLICY-Links brauchen beim `menuUpdate` ihre
   `resourceId`, sonst „shop_policy nicht gefunden"). Seiteninhalt via `pageCreate`/`pageUpdate` (HTML, KEIN Liquid
