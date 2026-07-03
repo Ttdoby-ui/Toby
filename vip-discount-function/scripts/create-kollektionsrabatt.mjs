@@ -172,7 +172,11 @@ async function createDiscount({ storeDomain, token, title, functionId, config, s
       startsAt: startsAt || new Date().toISOString(),
       combinesWith: {
         orderDiscounts: true,
-        productDiscounts: false,
+        // true, damit dieser Function-Rabatt mit anderen automatischen
+        // Produktrabatten (v. a. den nativen VIP-Rabatten) im selben Warenkorb
+        // kombiniert – sonst verliert bei gemischten Warenkoerben ein Artikel
+        // seinen Rabatt (Shopify wendet sonst nur EINEN Produktrabatt an).
+        productDiscounts: true,
         shippingDiscounts: true,
       },
       metafields: [

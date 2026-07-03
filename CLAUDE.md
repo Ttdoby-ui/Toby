@@ -277,6 +277,23 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   `vip-discount-function/extensions/kollektionsrabatt/README.md`.
 - **Funktionen sind nicht Theme-gebunden:** ein angelegter Rabatt ist sofort live, es gibt
   kein Entwurf/Live wie beim Theme. Zum Testen `starts_at` in die Zukunft oder Test-Kollektion.
+- ⚠️ **Kombinierbarkeit `combinesWith.productDiscounts` (WICHTIG, 2026-07-03):** Shopify wendet pro
+  Bestellung nur EINEN automatischen Produktrabatt an, WENN die Rabatte nicht als „kombinierbar mit
+  Produktrabatten" markiert sind. Symptom: Belag (Function-Rabatt) **und** z. B. Ball (nativer VIP)
+  zusammen im Warenkorb → ein Artikel verliert seinen Rabatt. **Fix:** bei ALLEN beteiligten
+  Automatik-Rabatten `combinesWith.productDiscounts = true` setzen. Das ist **kein** Stapeln auf
+  demselben Produkt (Beläge/Textilien sind ja aus der VIP-Kollektion ausgeschlossen → jeder Artikel
+  hat nur einen Rabatt); es erlaubt nur, dass **verschiedene** Artikel im selben Warenkorb ihren
+  jeweiligen Rabatt behalten.
+  - **VIP1/2/3** (`DiscountAutomaticBasic`, IDs `2340297605468/671004/736540`) → per MCP
+    `discountAutomaticBasicUpdate` gesetzt (erledigt).
+  - **Belaege + Textilien Mengenrabatt** (`DiscountAutomaticApp`, `2341460803932`/`2341602459996`) →
+    lassen sich **nur von der besitzenden App** ändern (`discountAutomaticAppUpdate` mit fremdem Token →
+    „Rabatt existiert nicht"). Wege: (a) in Shopify-Admin je Rabatt unter **Kombinationen →
+    Produktrabatte** aktivieren, ODER (b) Workflow „Rabatte kombinierbar machen"
+    (`.github/workflows/set-combines-with.yml` + `vip-discount-function/scripts/set-combines-with.mjs`,
+    App-Client-Credentials wie beim Anlegen). **Neue Function-Rabatte** künftig direkt mit
+    `combinesWith.productDiscounts=true` anlegen (siehe `create-kollektionsrabatt.mjs`).
 
 ## Mobile-UX-Verbesserungen (Checkliste)
 
