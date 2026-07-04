@@ -374,6 +374,9 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   Workflow „POS-Abrundung anlegen" / `scripts/create-pos-abrundung.mjs`, `discountClasses: [ORDER]`). Tests
   in `src/run.test.js` (8/8). Der `create-pos-abrundung`-Workflow liegt (wie die anderen Rabatt-Workflows)
   auch auf `main`, damit er per `workflow_dispatch` auslösbar ist; er checkt den Feature-Branch aus.
+  ✅ **LIVE seit 2026-07-04:** Rabatt „POS-Abrundung" `gid://shopify/DiscountAutomaticNode/2351948497244`
+  (ACTIVE), Function-ID `019f2f08-f99b-734d-a491-c74f16fe2706`. Deploy + kollektionsrabatt-POS-Guard sind
+  damit ebenfalls live (Function war im Store auffindbar).
 - ⚠️ **Kombinierbarkeit `combinesWith.productDiscounts` (WICHTIG, 2026-07-03):** Shopify wendet pro
   Bestellung nur EINEN automatischen Produktrabatt an, WENN die Rabatte nicht als „kombinierbar mit
   Produktrabatten" markiert sind. Symptom: Belag (Function-Rabatt) **und** z. B. Ball (nativer VIP)
