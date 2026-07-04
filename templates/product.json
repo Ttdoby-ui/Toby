@@ -267,10 +267,19 @@
               "name": "Produkt-Schema (SEO)",
               "settings": {},
               "blocks": {}
+            },
+            "judgeme_preview_badge": {
+              "type": "shopify://apps/judge-me-reviews/blocks/preview_badge/61ccd3b1-a9f2-4160-9fe9-4fec8413e5d8",
+              "settings": {}
+            },
+            "judgeme_review_widget": {
+              "type": "shopify://apps/judge-me-reviews/blocks/review_widget/61ccd3b1-a9f2-4160-9fe9-4fec8413e5d8",
+              "settings": {}
             }
           },
           "block_order": [
             "group_icgrde",
+            "judgeme_preview_badge",
             "product_inventory_ampel",
             "divider_VJhene",
             "variant_picker_R3rGDr",
@@ -278,7 +287,8 @@
             "produkt_werte_block",
             "produkt_faq_block",
             "hersteller_info_block",
-            "produkt_schema_block"
+            "produkt_schema_block",
+            "judgeme_review_widget"
           ]
         }
       },
