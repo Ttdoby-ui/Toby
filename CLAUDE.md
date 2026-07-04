@@ -353,6 +353,17 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   im POS auch die für Beläge/Textilien **gebündelte VIP-Logik** ab (im Laden i. d. R. gewollt).
   **Muss deployt werden** (`shopify app deploy` vom PC – GitHub-Action geht mangels App-Management-Token
   nicht), sonst greift die Änderung nicht.
+- **POS-Abrundung auf 10 Cent (2026-07-04):** Zweite Function `pos-abrundung`
+  (`extensions/pos-abrundung/`, Order-Discount) rundet **nur im POS** (`retailLocation` gesetzt) den
+  Warenkorb-Betrag auf die nächste glatte 10-Cent-Stufe **ab** (24,97 € → 24,90 €). Online: nichts.
+  Stufe fix 10 Cent (`STEP_CENTS` in `src/index.js`). Basis ist die **Brutto-Zwischensumme** (Preise inkl.
+  MwSt, POS i. d. R. ohne Versand) → Endbetrag landet glatt. ⚠️ Function kennt die **Zahlart nicht** →
+  rundet **alle** POS-Zahlarten (Bar + Karte); „nur Bar" geht mit einer Rabatt-Function nicht. Kommt im POS
+  **nach** dieser Function noch ein Rabatt (manueller Kassenrabatt), kann der Endbetrag leicht abweichen.
+  **Ablauf:** `npm install` im Extension-Ordner → `shopify app deploy` vom PC → Rabatt anlegen (Admin oder
+  Workflow „POS-Abrundung anlegen" / `scripts/create-pos-abrundung.mjs`, `discountClasses: [ORDER]`). Tests
+  in `src/run.test.js` (8/8). ⚠️ Der `create-pos-abrundung`-Workflow muss auf `main` liegen, um per
+  `workflow_dispatch` auslösbar zu sein (aktuell nur auf dem Feature-Branch).
 - ⚠️ **Kombinierbarkeit `combinesWith.productDiscounts` (WICHTIG, 2026-07-03):** Shopify wendet pro
   Bestellung nur EINEN automatischen Produktrabatt an, WENN die Rabatte nicht als „kombinierbar mit
   Produktrabatten" markiert sind. Symptom: Belag (Function-Rabatt) **und** z. B. Ball (nativer VIP)
