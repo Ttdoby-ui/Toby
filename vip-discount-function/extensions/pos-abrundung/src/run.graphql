@@ -1,0 +1,18 @@
+query Input {
+  cart {
+    # Gesetzt, wenn der Checkout im Ladengeschaeft (Shopify POS) stattfindet.
+    # ACHTUNG: Feld liegt auf Cart, NICHT auf der Input-Root (gegen
+    # schema.graphql verifiziert, 2026-07-04) -> Abrundung greift NUR im POS.
+    retailLocation {
+      id
+    }
+    cost {
+      subtotalAmount {
+        amount
+      }
+    }
+  }
+  discount {
+    discountClasses
+  }
+}

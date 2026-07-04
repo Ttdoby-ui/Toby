@@ -344,19 +344,29 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   `vip-discount-function/extensions/kollektionsrabatt/README.md`.
 - **Funktionen sind nicht Theme-gebunden:** ein angelegter Rabatt ist sofort live, es gibt
   kein Entwurf/Live wie beim Theme. Zum Testen `starts_at` in die Zukunft oder Test-Kollektion.
-- ❌ **IRRWEG POS-Sonderlogik über `retailLocation` (2026-07-04):** Ziel war „Mengenrabatt nur online,
-  nicht im POS" bzw. „Endbetrag im POS auf 10 Cent abrunden". Der Shopify-Changelog nennt ein Feld
-  **`retailLocation`** („POS-specific Function logic", 2025-07) – das existiert aber am **Discount-Function-
-  Input NICHT** (Target `cart.lines.discounts.generate.run`, api_version `2025-10`). `shopify app deploy`
-  scheitert mit **„Field 'retailLocation' doesn't exist on type 'Input'"** – und blockiert dann den
-  **gesamten** Deploy (auch die anderen Extensions der App!). → Wieder entfernt (`retailLocation` aus
-  `run.graphql` + Guard aus `index.js`), Extension `pos-abrundung` samt Skript/Workflow gelöscht.
-  **Merke:** Discount-Functions gelten in **allen** Kanälen (Online **und** POS), und ihr Input hat **kein**
-  Kanal-/POS-Feld → **POS-spezifische Rabatt-Logik ist per Discount-Function aktuell NICHT machbar**.
-  (Der Changelog-Feldname gilt offenbar für andere Function-Typen, nicht Discount.) Alternativen für „nur
-  im Laden": nativer Kassen-Rabatt/-Override im POS oder Shopify-Bargeld-Rundung – nicht per Function.
-  ⚠️ Vor erneutem Versuch mit einem neuen Function-Feld: **Feld erst gegen das echte Input-Schema prüfen**
-  (`shopify app function schema`), nicht blind aus dem Changelog übernehmen.
+- ✅ **POS-Ausschluss über `cart.retailLocation` (2026-07-04, nach Irrweg gelöst):** Function-Rabatte
+  gelten automatisch in **allen** Kanälen (Online **und** POS), es gibt keinen Kanal-Schalter am Rabatt.
+  POS-Erkennung geht aber in der Function: Das Feld **`retailLocation: Location`** liegt auf dem Typ
+  **`Cart`** – also `cart { retailLocation { id } }` in der Input-Query. ❌ **Irrweg:** auf der
+  **Input-Root** platziert (wie Changelog/GitHub-Discussion nahelegen) → Deploy scheitert mit „Field
+  'retailLocation' doesn't exist on type 'Input'" und blockiert den **gesamten** App-Deploy (alle
+  Extensions!). Verifiziert per **`shopify app function schema`** (erzeugt `schema.graphql` im
+  Extension-Ordner; `Select-String -Pattern "retail"`): `Cart.retailLocation` existiert in api_version
+  `2025-10`, Input-Root hat es NICHT. **Merke:** Neue Function-Felder IMMER erst gegen `schema.graphql`
+  prüfen, nie blind aus Changelog/Foren übernehmen. Umgesetzt: `kollektionsrabatt` gibt bei gesetztem
+  `cart.retailLocation` `NO_DISCOUNT` zurück (Mengenrabatt Beläge/Textilien inkl. gebündelter VIP-Logik
+  nur noch online; im Laden i. d. R. gewollt). **Deploy vom PC nötig**, sonst greift es nicht.
+- **POS-Abrundung auf 10 Cent (2026-07-04):** Zweite Function `pos-abrundung`
+  (`extensions/pos-abrundung/`, Order-Discount) rundet **nur im POS** (`cart.retailLocation` gesetzt) den
+  Warenkorb-Betrag auf die nächste glatte 10-Cent-Stufe **ab** (24,97 € → 24,90 €). Online: nichts.
+  Stufe fix 10 Cent (`STEP_CENTS` in `src/index.js`). Basis ist die **Brutto-Zwischensumme** (Preise inkl.
+  MwSt, POS i. d. R. ohne Versand) → Endbetrag landet glatt. ⚠️ Function kennt die **Zahlart nicht** →
+  rundet **alle** POS-Zahlarten (Bar + Karte); „nur Bar" geht mit einer Rabatt-Function nicht. Kommt im POS
+  **nach** dieser Function noch ein Rabatt (manueller Kassenrabatt), kann der Endbetrag leicht abweichen.
+  **Ablauf:** `npm install` im Extension-Ordner → `shopify app deploy` vom PC → Rabatt anlegen (Admin oder
+  Workflow „POS-Abrundung anlegen" / `scripts/create-pos-abrundung.mjs`, `discountClasses: [ORDER]`). Tests
+  in `src/run.test.js` (8/8). ⚠️ Der `create-pos-abrundung`-Workflow muss auf `main` liegen, um per
+  `workflow_dispatch` auslösbar zu sein (aktuell nur auf dem Feature-Branch).
 - ⚠️ **Kombinierbarkeit `combinesWith.productDiscounts` (WICHTIG, 2026-07-03):** Shopify wendet pro
   Bestellung nur EINEN automatischen Produktrabatt an, WENN die Rabatte nicht als „kombinierbar mit
   Produktrabatten" markiert sind. Symptom: Belag (Function-Rabatt) **und** z. B. Ball (nativer VIP)

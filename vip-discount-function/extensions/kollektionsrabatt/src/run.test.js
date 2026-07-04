@@ -17,12 +17,13 @@ const DEFAULT_CONFIG = {
   ],
 };
 
-const makeInput = ({ config = DEFAULT_CONFIG, lines = [], vipTags = [] } = {}) => ({
+const makeInput = ({ config = DEFAULT_CONFIG, lines = [], vipTags = [], retailLocation = null } = {}) => ({
   discount: {
     discountClasses: ["PRODUCT"],
     metafield: config == null ? null : { jsonValue: config },
   },
   cart: {
+    retailLocation,
     buyerIdentity: {
       customer: {
         hasTags: (DEFAULT_CONFIG.vipTags ?? []).map((tag) => ({
@@ -71,6 +72,22 @@ function otherLine(id = "other-1", quantity = 1) {
 }
 
 describe("Kollektionsrabatt (Mengenstaffel)", () => {
+  it("kein Rabatt im POS (cart.retailLocation gesetzt)", () => {
+    const result = run(
+      makeInput({
+        lines: collectionLines(10),
+        vipTags: ["VIP3"],
+        retailLocation: { id: "gid://shopify/Location/1" },
+      })
+    );
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("Rabatt im Online-Store (cart.retailLocation null)", () => {
+    const result = run(makeInput({ lines: collectionLines(10) }));
+    assert.ok(candidates(result).length > 0);
+  });
+
   it("kein Rabatt ohne Konfiguration", () => {
     const result = run(makeInput({ config: null, lines: collectionLines(5) }));
     assert.equal(opsCount(result), 0);

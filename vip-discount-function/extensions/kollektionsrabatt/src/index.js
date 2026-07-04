@@ -42,6 +42,15 @@
 const NO_DISCOUNT = { operations: [] };
 
 export function run(input) {
+  // POS/stationaerer Verkauf: Diese Function (Belaege- & Textilien-Mengenrabatt
+  // inkl. der fuer diese Kollektionen gebuendelten VIP-Logik) greift NUR im
+  // Online-Store. Ist `cart.retailLocation` gesetzt (Feld liegt auf Cart,
+  // NICHT auf der Input-Root!), findet der Checkout im Ladengeschaeft
+  // (Shopify POS) statt -> kein Rabatt.
+  if (input?.cart?.retailLocation) {
+    return NO_DISCOUNT;
+  }
+
   const config = input?.discount?.metafield?.jsonValue;
   if (!config || !Array.isArray(config.tiers)) {
     return NO_DISCOUNT;
