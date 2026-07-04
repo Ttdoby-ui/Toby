@@ -71,6 +71,22 @@ function otherLine(id = "other-1", quantity = 1) {
 }
 
 describe("Kollektionsrabatt (Mengenstaffel)", () => {
+  it("kein Rabatt im POS (retailLocation gesetzt)", () => {
+    const result = run({
+      ...makeInput({ lines: collectionLines(10), vipTags: ["VIP3"] }),
+      retailLocation: { id: "gid://shopify/Location/1" },
+    });
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("Rabatt im Online-Store (retailLocation null)", () => {
+    const result = run({
+      ...makeInput({ lines: collectionLines(10) }),
+      retailLocation: null,
+    });
+    assert.ok(candidates(result).length > 0);
+  });
+
   it("kein Rabatt ohne Konfiguration", () => {
     const result = run(makeInput({ config: null, lines: collectionLines(5) }));
     assert.equal(opsCount(result), 0);

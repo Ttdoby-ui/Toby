@@ -344,6 +344,15 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   `vip-discount-function/extensions/kollektionsrabatt/README.md`.
 - **Funktionen sind nicht Theme-gebunden:** ein angelegter Rabatt ist sofort live, es gibt
   kein Entwurf/Live wie beim Theme. Zum Testen `starts_at` in die Zukunft oder Test-Kollektion.
+- ⚠️ **POS-Ausschluss (2026-07-04):** Function-Rabatte gelten laut Shopify **automatisch in ALLEN
+  Kanälen** (Online-Store **und** POS) – es gibt **keinen** Kanal-Schalter am Rabatt. Um den
+  Belaege-/Textilien-Mengenrabatt **nur online** zu fahren, prüft die Function jetzt das Feld
+  **`retailLocation`** (ab API-Version 2025-07, hier `2025-10`): ist es gesetzt = Checkout im
+  Ladengeschäft (POS) → `return NO_DISCOUNT`. Umgesetzt in `src/run.graphql` (`retailLocation { id }`)
+  + `src/index.js` (Guard oben in `run()`). ⚠️ Betrifft **beide** Rabatte (gleiche Function) und schaltet
+  im POS auch die für Beläge/Textilien **gebündelte VIP-Logik** ab (im Laden i. d. R. gewollt).
+  **Muss deployt werden** (`shopify app deploy` vom PC – GitHub-Action geht mangels App-Management-Token
+  nicht), sonst greift die Änderung nicht.
 - ⚠️ **Kombinierbarkeit `combinesWith.productDiscounts` (WICHTIG, 2026-07-03):** Shopify wendet pro
   Bestellung nur EINEN automatischen Produktrabatt an, WENN die Rabatte nicht als „kombinierbar mit
   Produktrabatten" markiert sind. Symptom: Belag (Function-Rabatt) **und** z. B. Ball (nativer VIP)
