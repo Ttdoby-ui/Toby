@@ -380,6 +380,17 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       `assets/filter-panel-main.js`; nach jedem Render/Filter wird `jdgm.batchRenderBadges()`
       angestoßen (mit Poll, falls Judge.me noch lädt), sonst bleiben die clientseitig
       gebauten Kacheln ohne Sterne. Markenfarbe für Judge.me-Widgets: `#486A8F`.
+      - ⚠️ **Judge.me PDP-Widget geht bei Horizon-Updates/Rotation VERLOREN (2026-07-04 verifiziert):**
+        Der App-Embed `judgeme_core` bleibt in `settings_data.json` aktiv (Script lädt), ABER die
+        Judge.me-**Blöcke in `templates/product.json`** (Sterne-Preview-Badge + Review-Widget) werden
+        beim product.json-Reset gelöscht → auf der PDP erscheint **nichts** (kein Anker zum Rendern).
+        Aktuell fehlen sie im Live- UND Backup-Theme. **Wiederherstellen:** Theme-Editor → Produktvorlage →
+        Block „Judge.me Preview Badge/Sterne" unter dem Preis + Sektion „Judge.me Review Widget" hinzufügen
+        (App-Extension-UUID `61ccd3b1-a9f2-4160-9fe9-4fec8413e5d8`; Block-Handles nicht sicher bekannt →
+        Editor ist der zuverlässige Weg). **Nach jedem Horizon-Update erneut prüfen/hinzufügen.**
+      - ℹ️ **Aktuell (Stand 2026-07-04) keine Bewertungen vorhanden:** weder `reviews.*`- noch `judgeme.*`-
+        Metafelder an den Produkten gesetzt → selbst mit platziertem Widget nur „Noch keine Bewertungen",
+        Kachel-Sterne bleiben leer. Reviews via Judge.me-Anfrage-Mails sammeln oder importieren.
 - [x] 🟡 **Suchleiste prominenter** — ERLEDIGT: Section `sections/mobile-search-bar.liquid` (Typ/Handle bleibt
       `mobile-search-bar`), via `header-group.json` unter dem Header global eingehängt.
       - **Mobil (< 750px):** Button unter dem Header, öffnet die Predictive-Search-Modal (`#search-modal`) — wie gehabt.
