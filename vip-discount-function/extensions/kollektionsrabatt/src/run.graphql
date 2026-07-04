@@ -1,9 +1,4 @@
 query Input($collectionIds: [ID!], $vipTags: [String!]) {
-  # Gesetzt, wenn der Checkout im Ladengeschaeft (Shopify POS) stattfindet.
-  # Ab API-Version 2025-07 verfuegbar -> dient dem Ausschluss des Rabatts im POS.
-  retailLocation {
-    id
-  }
   cart {
     buyerIdentity {
       customer {
