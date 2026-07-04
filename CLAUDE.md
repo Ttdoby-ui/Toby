@@ -277,6 +277,13 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 
 ### Rabatt anlegen (verifiziert – greift im Warenkorb)
 
+- ⚠️ **App-Rabatte im Admin NICHT anklickbar (2026-07-04, mehrfach passiert – MERKEN):** Klickt man im
+  Shopify-Admin einen Function-Rabatt dieser App an (oder will über „Rabatt erstellen → App-Funktion"
+  einen neuen anlegen), springt der Browser **sofort zur Homepage futurespin.de** – KEINE Einstellmaske.
+  Grund: Die App „VIP Beläge Discount" hat **keine Admin-UI-Extension**; Shopify leitet auf ihre
+  `application_url` (= futurespin.de) um. **Anlegen/Ändern dieser Rabatte geht daher NUR per API**
+  (Workflows mit App-Client-Credentials: „Kollektionsrabatt anlegen", „POS-Abrundung anlegen",
+  „Rabatte kombinierbar machen"; Staffel-Konfig via `metafieldsSet`). Nie über den Admin-Editor versuchen.
 - `discountAutomaticAppCreate` muss von der **besitzenden App** (hier „VIP Beläge
   Discount") kommen. Fremder Token (z. B. der Assistent-App) → Fehler
   „Funktion … nicht in der aktuellen App". Mein MCP kann ihn daher NICHT anlegen.
@@ -365,8 +372,8 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   **nach** dieser Function noch ein Rabatt (manueller Kassenrabatt), kann der Endbetrag leicht abweichen.
   **Ablauf:** `npm install` im Extension-Ordner → `shopify app deploy` vom PC → Rabatt anlegen (Admin oder
   Workflow „POS-Abrundung anlegen" / `scripts/create-pos-abrundung.mjs`, `discountClasses: [ORDER]`). Tests
-  in `src/run.test.js` (8/8). ⚠️ Der `create-pos-abrundung`-Workflow muss auf `main` liegen, um per
-  `workflow_dispatch` auslösbar zu sein (aktuell nur auf dem Feature-Branch).
+  in `src/run.test.js` (8/8). Der `create-pos-abrundung`-Workflow liegt (wie die anderen Rabatt-Workflows)
+  auch auf `main`, damit er per `workflow_dispatch` auslösbar ist; er checkt den Feature-Branch aus.
 - ⚠️ **Kombinierbarkeit `combinesWith.productDiscounts` (WICHTIG, 2026-07-03):** Shopify wendet pro
   Bestellung nur EINEN automatischen Produktrabatt an, WENN die Rabatte nicht als „kombinierbar mit
   Produktrabatten" markiert sind. Symptom: Belag (Function-Rabatt) **und** z. B. Ball (nativer VIP)
