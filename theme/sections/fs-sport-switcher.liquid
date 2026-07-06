@@ -3,22 +3,68 @@
   Design System · Section: Sportart-Umschalter (fs-sport-switcher)
   ----------------------------------------------------------------------------
   Schlanke Leiste mit Aufklapp-Dropdown zum Wechseln zwischen den Sportwelten.
-  Wird global in der Header-Gruppe angezeigt. Rein CSS (details/summary),
-  kein zusätzliches JavaScript. Die aktive Welt wird anhand der URL erkannt.
+  Wird global in der Header-Gruppe angezeigt.
+
+  Aktive Welt-Erkennung (wie bei der Kategorie-Leiste):
+    1. Welt-Seite (/pages/welt-tischtennis …) oder
+    2. eine aktive Unterkategorie der Sportart (z. B. /collections/holzer).
+  Grundlage ist das Menü (Top-Ebene mit Unterpunkten).
+
+  Persistenz: Die zuletzt gewählte Sportart wird per localStorage gemerkt und
+  bleibt auch auf neutralen Seiten (Startseite, Warenkorb, Suche) sichtbar –
+  bis eine andere Sportart gewählt wird. Dropdown selbst ist CSS-only
+  (details/summary); das kleine Skript aktualisiert nur das Label.
   ============================================================================
 {%- endcomment -%}
 
 {%- liquid
   assign accent = section.settings.accent_color | default: '#486A8F'
   assign uid = section.id | replace: '_', '' | replace: '-', ''
-  assign current_label = section.settings.default_label | default: 'Sportwelt wählen'
+  assign default_label = section.settings.default_label | default: 'Sportwelt wählen'
   assign path = request.path
-  for block in section.blocks
-    assign lnk = block.settings.link | default: ''
-    if lnk != blank and lnk != '/'
-      if path contains lnk
-        assign current_label = block.settings.label
+  assign menu = linklists[section.settings.menu]
+
+  comment
+    1) Sportwelt über die Welt-Seite erkennen.
+  endcomment
+  assign current_world = null
+  for link in menu.links
+    if link.links.size > 0 and link.url != '/' and link.url != blank
+      if path == link.url or path contains link.url
+        assign current_world = link.url
       endif
+    endif
+  endfor
+
+  comment
+    2) Sonst über eine aktive Unterkategorie (Kollektionsseite) erkennen.
+  endcomment
+  unless current_world
+    for link in menu.links
+      if link.links.size > 0
+        for sub in link.links
+          if sub.url != blank and sub.url != '/'
+            assign sub_prefix = sub.url | append: '/'
+            if path == sub.url or path contains sub_prefix
+              assign current_world = link.url
+            endif
+          endif
+        endfor
+      endif
+    endfor
+  endunless
+
+  comment
+    Passenden Block (Sportart) zur erkannten Welt finden → Label + Link.
+    current_sport_link bleibt leer, wenn die aktuelle Seite keiner Sportart
+    zugeordnet ist (z. B. Courts, Standorte) – dann greift die Persistenz.
+  endcomment
+  assign current_label = default_label
+  assign current_sport_link = ''
+  for block in section.blocks
+    if current_world and block.settings.link == current_world
+      assign current_label = block.settings.label
+      assign current_sport_link = block.settings.link
     endif
   endfor
 -%}
@@ -60,13 +106,13 @@
   @media (prefers-reduced-motion: reduce) { .fs-sw2__caret { transition: none; } }
 </style>
 
-<div class="fs-sw2 fs-sw2--{{ uid }}"{% if section.settings.align == 'left' %} style="--fs-sw2-justify:flex-start;"{% endif %}>
+<div id="fs-sw2-{{ uid }}" class="fs-sw2 fs-sw2--{{ uid }}" data-current-link="{{ current_sport_link }}"{% if section.settings.align == 'left' %} style="--fs-sw2-justify:flex-start;"{% endif %}>
   <div class="fs-sw2__inner">
     {%- if section.settings.label_text != blank -%}<span class="fs-sw2__label">{{ section.settings.label_text }}</span>{%- endif -%}
     <details class="fs-sw2__dd">
       <summary class="fs-sw2__summary">
         <span class="fs-sw2__dot"></span>
-        <span>{{ current_label }}</span>
+        <span class="fs-sw2__current">{{ current_label }}</span>
         <svg class="fs-sw2__caret" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </summary>
       <div class="fs-sw2__menu">
@@ -74,11 +120,11 @@
           {%- liquid
             assign lnk = block.settings.link | default: ''
             assign is_current = false
-            if lnk != blank and lnk != '/' and path contains lnk
+            if current_sport_link != '' and lnk == current_sport_link
               assign is_current = true
             endif
           -%}
-          <a class="fs-sw2__item" href="{{ lnk | default: '#' }}"{% if is_current %} aria-current="page"{% endif %}>
+          <a class="fs-sw2__item" href="{{ lnk | default: '#' }}" data-sport-link="{{ lnk }}" data-sport-label="{{ block.settings.label | escape }}"{% if is_current %} aria-current="page"{% endif %}>
             <span class="fs-sw2__ico">
               {%- case block.settings.icon -%}
                 {%- when 'padel' -%}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="9" r="6" stroke="currentColor" stroke-width="2"/><path d="M9 14l-3 7M12 15v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -95,12 +141,63 @@
   </div>
 </div>
 
+<script>
+  (function () {
+    var root = document.getElementById('fs-sw2-{{ uid }}');
+    if (!root) return;
+    var KEY = 'fs-sport-world';
+    var labelEl = root.querySelector('.fs-sw2__current');
+    var items = root.querySelectorAll('.fs-sw2__item');
+    var serverLink = root.getAttribute('data-current-link') || '';
+
+    function save(link, label) {
+      try { localStorage.setItem(KEY, JSON.stringify({ link: link, label: label })); } catch (e) {}
+    }
+    function markActive(link) {
+      items.forEach(function (a) {
+        if (a.getAttribute('data-sport-link') === link) { a.setAttribute('aria-current', 'page'); }
+        else { a.removeAttribute('aria-current'); }
+      });
+    }
+
+    if (serverLink) {
+      // Aktuelle Seite gehört zu einer Sportart → als zuletzt gewählt merken.
+      items.forEach(function (a) {
+        if (a.getAttribute('data-sport-link') === serverLink) {
+          save(serverLink, a.getAttribute('data-sport-label'));
+        }
+      });
+    } else {
+      // Neutrale Seite → zuletzt gewählte Sportart wiederherstellen.
+      var raw = null;
+      try { raw = localStorage.getItem(KEY); } catch (e) {}
+      if (raw) {
+        try {
+          var s = JSON.parse(raw);
+          if (s && s.label && s.link) {
+            if (labelEl) { labelEl.textContent = s.label; }
+            markActive(s.link);
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Auswahl im Dropdown sofort merken (Navigation bestätigt sie danach ohnehin).
+    items.forEach(function (a) {
+      a.addEventListener('click', function () {
+        save(a.getAttribute('data-sport-link'), a.getAttribute('data-sport-label'));
+      });
+    });
+  })();
+</script>
+
 {% schema %}
 {
   "name": "Sportart-Umschalter",
   "tag": "section",
   "class": "fs-section",
   "settings": [
+    { "type": "link_list", "id": "menu", "label": "Menü (zur Sport-Erkennung)", "default": "main-menu" },
     { "type": "text", "id": "label_text", "label": "Label davor", "default": "Sportwelt:" },
     { "type": "text", "id": "default_label", "label": "Standard-Text (keine Welt aktiv)", "default": "Sportwelt wählen" },
     {
