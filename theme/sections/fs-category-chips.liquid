@@ -1,0 +1,94 @@
+{%- comment -%}
+  ============================================================================
+  Design System · Section: Kategorie-Leiste (fs-category-chips)
+  ----------------------------------------------------------------------------
+  Kontextabhängige, horizontal scrollbare Kategorie-Leiste unter dem Header.
+
+  - Auf einer Sportwelt (/pages/welt-*): zeigt automatisch die Unterkategorien
+    der aktuellen Sportart aus dem Menü (z. B. Tischtennis → Beläge, Hölzer …)
+    plus optional einen Sale-Chip.
+  - Sonst (Root/Chooser etc.): zeigt die Top-Ebene des Menüs.
+
+  Das aktuelle Sport-Menü wird über den URL-Pfad erkannt (Top-Menüpunkt, dessen
+  Link im Pfad enthalten ist und der Unterpunkte hat). Rein Liquid/CSS.
+  ============================================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign accent = section.settings.accent_color | default: '#486A8F'
+  assign uid = section.id | replace: '_', '' | replace: '-', ''
+  assign menu = linklists[section.settings.menu]
+  assign current = null
+  for link in menu.links
+    if link.url != '/' and link.url != blank and link.links.size > 0
+      if request.path contains link.url
+        assign current = link
+      endif
+    endif
+  endfor
+-%}
+
+{%- style -%}
+  .fs-chips--{{ uid }} { --fs-chips-accent: {{ accent }}; }
+  @media (max-width: {{ section.settings.desktop_hide_below | default: 990 }}px) { }
+{%- endstyle -%}
+
+<style>
+  .fs-chips { border-block: 1px solid rgba(128,128,128,.14); background: var(--fs-chips-bg, transparent); }
+  {%- unless section.settings.show_on_desktop -%}
+  @media (min-width: 990px) { .fs-chips--{{ uid }} { display: none; } }
+  {%- endunless -%}
+  .fs-chips__scroll {
+    display: flex; gap: clamp(1rem, 4vw, 1.75rem); align-items: center;
+    max-width: var(--page-width, 1400px); margin-inline: auto;
+    padding: .7rem var(--page-margin, 1rem);
+    overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .fs-chips__scroll::-webkit-scrollbar { display: none; }
+  .fs-chips__item {
+    flex: none; text-decoration: none; color: inherit; font-weight: 600;
+    font-size: .95rem; white-space: nowrap; padding-bottom: .3rem;
+    border-bottom: 2px solid transparent; line-height: 1.2;
+  }
+  .fs-chips__item:hover { color: var(--fs-chips-accent); }
+  .fs-chips__item.is-active { color: var(--fs-chips-accent); border-bottom-color: var(--fs-chips-accent); }
+  .fs-chips__item--sale { color: var(--fs-chips-accent); }
+  .fs-chips__item:focus-visible { outline: 3px solid var(--fs-chips-accent); outline-offset: 3px; border-radius: 4px; }
+</style>
+
+<nav class="fs-chips fs-chips--{{ uid }}" aria-label="{{ section.settings.aria_label | default: 'Kategorien' }}">
+  <div class="fs-chips__scroll">
+    {%- if current -%}
+      {%- if section.settings.show_sale and section.settings.sale_url != blank -%}
+        <a class="fs-chips__item fs-chips__item--sale" href="{{ section.settings.sale_url }}">{{ section.settings.sale_label | default: 'Sale' }}</a>
+      {%- endif -%}
+      {%- for sub in current.links -%}
+        <a class="fs-chips__item{% if sub.current or request.path == sub.url %} is-active{% endif %}" href="{{ sub.url }}">{{ sub.title }}</a>
+      {%- endfor -%}
+    {%- else -%}
+      {%- for link in menu.links -%}
+        <a class="fs-chips__item{% if link.current %} is-active{% endif %}" href="{{ link.url }}">{{ link.title }}</a>
+      {%- endfor -%}
+    {%- endif -%}
+  </div>
+</nav>
+
+{% schema %}
+{
+  "name": "Kategorie-Leiste",
+  "tag": "section",
+  "class": "fs-section",
+  "settings": [
+    { "type": "link_list", "id": "menu", "label": "Menü", "default": "main-menu" },
+    { "type": "checkbox", "id": "show_on_desktop", "label": "Auch auf Desktop zeigen", "default": false },
+    { "type": "header", "content": "Sale-Chip (auf Sportwelten)" },
+    { "type": "checkbox", "id": "show_sale", "label": "Sale-Chip zeigen", "default": true },
+    { "type": "text", "id": "sale_label", "label": "Sale – Text", "default": "Sale" },
+    { "type": "url", "id": "sale_url", "label": "Sale – Link" },
+    { "type": "header", "content": "Farbe" },
+    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#486A8F" },
+    { "type": "text", "id": "aria_label", "label": "ARIA-Label", "default": "Kategorien" }
+  ],
+  "presets": [ { "name": "Kategorie-Leiste" } ]
+}
+{% endschema %}
