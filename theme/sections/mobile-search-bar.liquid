@@ -1,0 +1,156 @@
+{%- comment -%}
+  Mobile Suchleiste (Futurespin) – sport-gescopte Suche
+  ---------------------------------------------------------------------------
+  Sichtbare Suchleiste unter dem Header — NUR auf Smartphones (< 750px).
+  In einer Sportwelt (bzw. mit gemerkter Sportart) sucht sie NUR innerhalb
+  dieser Sportart: Das Formular geht auf die Suchergebnis-Seite und setzt
+  den Tag-Filter der Sportart (filter.p.tag=<sport>) sowie type=product.
+
+  Sport-Erkennung:
+  - Serverseitig über den Pfad einer Welt-Seite (/pages/welt-*).
+  - Sonst über den localStorage-Key „fs-sport-world" (vom Sportart-Umschalter),
+    sodass die Suche auch auf neutralen Seiten zur gewählten Sportart passt.
+
+  Hinweis: Die strikte Einschränkung wirkt auf der Ergebnisseite. Voraussetzung
+  ist, dass in „Search & Discovery" ein Tag-Filter für die Suche aktiv ist und
+  die Produkte den jeweiligen Sport-Tag tragen (padel / pickleball / tischtennis).
+{%- endcomment -%}
+
+{%- liquid
+  assign sport_tag = ''
+  if request.path contains '/pages/welt-tischtennis'
+    assign sport_tag = 'tischtennis'
+  elsif request.path contains '/pages/welt-padel'
+    assign sport_tag = 'padel'
+  elsif request.path contains '/pages/welt-pickleball'
+    assign sport_tag = 'pickleball'
+  endif
+-%}
+
+<div class="fs-msearch color-{{ section.settings.color_scheme }}">
+  <form class="fs-msearch__bar" action="{{ routes.search_url }}" method="get" role="search" data-fs-msearch>
+    <input type="hidden" name="type" value="product">
+    <input type="hidden" name="options[prefix]" value="last">
+    <input type="hidden" name="filter.p.tag" value="{{ sport_tag }}" data-fs-sport-filter{% if sport_tag == blank %} disabled{% endif %}>
+    <span class="fs-msearch__icon svg-wrapper" aria-hidden="true">
+      {{ 'icon-search.svg' | inline_asset_content }}
+    </span>
+    <input
+      class="fs-msearch__input"
+      type="search"
+      name="q"
+      enterkeyhint="search"
+      autocomplete="off"
+      placeholder="{{ section.settings.placeholder }}"
+      aria-label="{{ section.settings.placeholder }}"
+    >
+  </form>
+</div>
+
+<script>
+  (function () {
+    var form = document.querySelector('[data-fs-msearch]');
+    if (!form) return;
+    var filter = form.querySelector('[data-fs-sport-filter]');
+    if (!filter) return;
+    // Server hat auf einer Welt-Seite bereits einen Tag gesetzt → nichts tun.
+    if (filter.value) return;
+    var MAP = {
+      '/pages/welt-tischtennis': 'tischtennis',
+      '/pages/welt-padel': 'padel',
+      '/pages/welt-pickleball': 'pickleball'
+    };
+    try {
+      var raw = localStorage.getItem('fs-sport-world');
+      if (raw) {
+        var s = JSON.parse(raw);
+        var t = s && s.link ? MAP[s.link] : '';
+        if (t) { filter.value = t; filter.disabled = false; }
+      }
+    } catch (e) {}
+  })();
+</script>
+
+{% stylesheet %}
+  .fs-msearch {
+    display: none;
+  }
+
+  @media screen and (max-width: 749px) {
+    .fs-msearch {
+      display: block;
+      padding: 0.5rem var(--page-margin, 16px);
+    }
+
+    .fs-msearch__bar {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      width: 100%;
+      margin: 0;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--color-border, #ddd);
+      border-radius: var(--style-border-radius-inputs, 8px);
+      background: var(--color-background, #fff);
+      color: var(--color-foreground, #555);
+    }
+
+    .fs-msearch__icon {
+      display: inline-flex;
+      width: 1.1rem;
+      height: 1.1rem;
+      flex: 0 0 auto;
+      opacity: 0.7;
+    }
+
+    .fs-msearch__icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .fs-msearch__input {
+      flex: 1 1 auto;
+      min-width: 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      font-size: 0.95rem;
+      line-height: 1.2;
+    }
+
+    .fs-msearch__input::placeholder {
+      color: inherit;
+      opacity: 0.7;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Mobile Suchleiste",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Sichtbare Suchleiste unter dem Header — nur auf Smartphones. In einer Sportwelt sucht sie nur innerhalb dieser Sportart (Tag-Filter). Am besten direkt unter dem Header platzieren."
+    },
+    {
+      "type": "text",
+      "id": "placeholder",
+      "label": "Platzhalter-Text",
+      "default": "Belag, Holz, Marke …"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Farbschema",
+      "default": "scheme-1"
+    }
+  ],
+  "presets": [
+    { "name": "Mobile Suchleiste" }
+  ]
+}
+{% endschema %}
