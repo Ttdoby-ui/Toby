@@ -21,6 +21,23 @@
   assign path = request.path
   assign menu = linklists[section.settings.menu]
 
+  comment
+    Robustheit: Falls das konfigurierte Menü die Sportwelten nicht enthält
+    (z. B. weil der Theme-Editor das Menü-Setting normalisiert/entfernt hat),
+    automatisch auf die Futurespin-Hauptnavigation ausweichen.
+  endcomment
+  assign has_worlds = false
+  for link in menu.links
+    for block in section.blocks
+      if block.settings.link != blank and block.settings.link == link.url
+        assign has_worlds = true
+      endif
+    endfor
+  endfor
+  unless has_worlds
+    assign menu = linklists['futurespin-hauptnav']
+  endunless
+
   assign current_world = null
   for link in menu.links
     if link.links.size > 0 and link.url != '/' and link.url != blank
