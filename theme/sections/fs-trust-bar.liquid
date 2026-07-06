@@ -17,7 +17,7 @@
 -%}
 
 {%- style -%}
-  .fs-trust--{{ uid }} { --fs-t-accent: {{ accent }}; }
+  .fs-trust--{{ uid }} { --fs-t-accent: var(--fs-sport-accent, {{ accent }}); }
 {%- endstyle -%}
 
 <style>

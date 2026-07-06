@@ -23,7 +23,7 @@
 -%}
 
 {%- style -%}
-  .fs-loc--{{ uid }} { --fs-loc-accent: {{ accent }}; --fs-loc-cols: {{ cols }}; }
+  .fs-loc--{{ uid }} { --fs-loc-accent: var(--fs-sport-accent, {{ accent }}); --fs-loc-cols: {{ cols }}; }
 {%- endstyle -%}
 
 <style>

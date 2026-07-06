@@ -14,7 +14,7 @@
 -%}
 
 {%- style -%}
-  .fs-nl--{{ uid }} { --fs-nl-accent: {{ accent }}; }
+  .fs-nl--{{ uid }} { --fs-nl-accent: var(--fs-sport-accent, {{ accent }}); }
 {%- endstyle -%}
 
 <style>

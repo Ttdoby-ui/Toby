@@ -18,7 +18,7 @@
 -%}
 
 {%- style -%}
-  .fs-strip--{{ uid }} { --fs-strip-accent: {{ accent }}; --fs-strip-cols: {{ cols }}; }
+  .fs-strip--{{ uid }} { --fs-strip-accent: var(--fs-sport-accent, {{ accent }}); --fs-strip-cols: {{ cols }}; }
 {%- endstyle -%}
 
 <style>

@@ -70,7 +70,7 @@
 -%}
 
 {%- style -%}
-  .fs-sw2--{{ uid }} { --fs-sw2-accent: {{ accent }}; }
+  .fs-sw2--{{ uid }} { --fs-sw2-accent: var(--fs-sport-accent, {{ accent }}); }
 {%- endstyle -%}
 
 <style>

@@ -30,7 +30,7 @@
 -%}
 
 {%- style -%}
-  .fs-hero--{{ uid }} { --fs-hero-accent: {{ accent }}; --fs-hero-overlay: {{ overlay }}; }
+  .fs-hero--{{ uid }} { --fs-hero-accent: var(--fs-sport-accent, {{ accent }}); --fs-hero-overlay: {{ overlay }}; }
 {%- endstyle -%}
 
 <style>

@@ -23,7 +23,7 @@
 -%}
 
 {%- style -%}
-  .fs-courts--{{ uid }} { --fs-c-accent: {{ accent }}; --fs-c-cols: {{ cols }}; }
+  .fs-courts--{{ uid }} { --fs-c-accent: var(--fs-sport-accent, {{ accent }}); --fs-c-cols: {{ cols }}; }
 {%- endstyle -%}
 
 <style>

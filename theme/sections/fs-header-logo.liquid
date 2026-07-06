@@ -62,9 +62,11 @@
   endunless
 
   assign current_sport_link = ''
+  assign current_accent = ''
   for block in section.blocks
     if current_world and block.settings.link == current_world
       assign current_sport_link = block.settings.link
+      assign current_accent = block.settings.accent | default: '#486A8F'
     endif
   endfor
 
@@ -91,13 +93,24 @@
   @media screen and (min-width: 750px) {
     .header-logo.fs-hl-swapped .header-logo__image { height: {{ h_desktop }}px !important; max-width: 320px; }
   }
+
+  /* Sport-Farbdesign: Ankündigungsbanner & Warenkorb-Bubble folgen der Sportart.
+     Fallback = Marken-Blau, wenn keine Sportart aktiv ist. */
+  .fs-ticker { --ticker-bg: var(--fs-sport-accent, #486A8F) !important; }
+  #header-component, .header, .header__row, .header__inline-menu {
+    --cart-bubble-background: var(--fs-sport-accent, #486A8F) !important;
+    --cart-bubble-text: #ffffff !important;
+  }
+  {%- if current_sport_link != '' and current_accent != blank -%}
+  :root { --fs-sport-accent: {{ current_accent }}; }
+  {%- endif -%}
 </style>
 
 <div id="fs-hl-{{ uid }}" data-fs-headerlogo data-current-link="{{ current_sport_link }}" hidden>
   {%- for block in section.blocks -%}
     {%- assign logo_url = block.settings.image | image_url: width: 700 -%}
     {%- if block.settings.link != blank and logo_url != blank -%}
-      <span data-link="{{ block.settings.link }}" data-logo="{{ logo_url }}" data-alt="{{ block.settings.alt | default: block.settings.link | escape }}"></span>
+      <span data-link="{{ block.settings.link }}" data-logo="{{ logo_url }}" data-alt="{{ block.settings.alt | default: block.settings.link | escape }}" data-accent="{{ block.settings.accent | default: '#486A8F' }}"></span>
     {%- endif -%}
   {%- endfor -%}
 </div>
@@ -110,20 +123,26 @@
     var map = {};
     root.querySelectorAll('[data-link]').forEach(function (s) {
       var l = s.getAttribute('data-link');
-      if (l) { map[l] = { logo: s.getAttribute('data-logo'), alt: s.getAttribute('data-alt') }; }
+      if (l) { map[l] = { logo: s.getAttribute('data-logo'), alt: s.getAttribute('data-alt'), accent: s.getAttribute('data-accent') }; }
     });
 
     function apply(link) {
       if (!link || !map[link]) return false;
+      // Sport-Akzentfarbe global setzen (auch auf neutralen Seiten wie Warenkorb/Suche).
+      if (map[link].accent) {
+        document.documentElement.style.setProperty('--fs-sport-accent', map[link].accent);
+      }
       var a = document.querySelector('.header-logo');
-      if (!a) return false;
-      var img = a.querySelector('.header-logo__image');
-      if (!img) return false;
-      img.setAttribute('src', map[link].logo);
-      img.removeAttribute('srcset');
-      img.removeAttribute('width');
-      if (map[link].alt) { img.setAttribute('alt', map[link].alt); }
-      a.classList.add('fs-hl-swapped');
+      if (a) {
+        var img = a.querySelector('.header-logo__image');
+        if (img) {
+          img.setAttribute('src', map[link].logo);
+          img.removeAttribute('srcset');
+          img.removeAttribute('width');
+          if (map[link].alt) { img.setAttribute('alt', map[link].alt); }
+          a.classList.add('fs-hl-swapped');
+        }
+      }
       return true;
     }
 
@@ -161,8 +180,9 @@
       "name": "Sport-Logo",
       "settings": [
         { "type": "url", "id": "link", "label": "Link zur Welt-Seite" },
-        { "type": "image_picker", "id": "image", "label": "Logo (für dunklen Hintergrund)" },
-        { "type": "text", "id": "alt", "label": "Alternativtext" }
+        { "type": "image_picker", "id": "image", "label": "Logo" },
+        { "type": "text", "id": "alt", "label": "Alternativtext" },
+        { "type": "color", "id": "accent", "label": "Akzentfarbe (Sportwelt)", "default": "#486A8F" }
       ]
     }
   ],
