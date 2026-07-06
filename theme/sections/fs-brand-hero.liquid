@@ -17,6 +17,10 @@
   assign accent = section.settings.accent_color | default: '#486A8F'
   assign uid = section.id | replace: '_', '' | replace: '-', ''
   assign overlay = section.settings.overlay_opacity | default: 40 | divided_by: 100.0
+  assign logo_class = 'fs-hero__logo'
+  if section.settings.logo_blend
+    assign logo_class = 'fs-hero__logo fs-hero__logo--blend'
+  endif
 -%}
 
 {%- style -%}
@@ -49,6 +53,12 @@
 
   .fs-hero--light { color: #fff; }
   .fs-hero--dark  { color: #14181c; }
+
+  .fs-hero__logowrap { margin-bottom: .3rem; }
+  .fs-hero__logo { width: auto; height: auto; display: block; max-width: min(var(--fs-hero-logo-w, 340px), 72vw); }
+  .fs-hero--center .fs-hero__logo { margin-inline: auto; }
+  /* Blendet den schwarzen Logo-Hintergrund auf dunklem Hero aus (Screen-Blend). */
+  .fs-hero__logo--blend { mix-blend-mode: screen; }
 
   .fs-hero__eyebrow {
     font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: .82rem;
@@ -103,6 +113,20 @@
 
   <div class="fs-hero__inner">
     <div class="fs-hero__content">
+      {%- if section.settings.logo != blank -%}
+        <div class="fs-hero__logowrap" style="--fs-hero-logo-w: {{ section.settings.logo_max_width | default: 340 }}px;">
+          {{
+            section.settings.logo
+            | image_url: width: 800
+            | image_tag:
+              loading: 'eager',
+              class: logo_class,
+              widths: '200, 320, 480, 640, 800',
+              sizes: '(max-width: 600px) 60vw, 340px',
+              alt: section.settings.logo_alt | default: section.settings.eyebrow | escape
+          }}
+        </div>
+      {%- endif -%}
       {%- if section.settings.eyebrow != blank -%}
         <span class="fs-hero__eyebrow">{{ section.settings.eyebrow }}</span>
       {%- endif -%}
@@ -132,6 +156,11 @@
   "tag": "section",
   "class": "section fs-section fs-section--full",
   "settings": [
+    { "type": "header", "content": "Logo (optional)" },
+    { "type": "image_picker", "id": "logo", "label": "Logo-Bild", "info": "Sport-spezifisches Logo, oben im Hero. Bei dunklem Hero „Schwarzen Hintergrund ausblenden“ aktiviert lassen." },
+    { "type": "text", "id": "logo_alt", "label": "Logo – Alternativtext" },
+    { "type": "range", "id": "logo_max_width", "label": "Logo – max. Breite", "min": 120, "max": 560, "step": 20, "unit": "px", "default": 340 },
+    { "type": "checkbox", "id": "logo_blend", "label": "Schwarzen Hintergrund ausblenden (Blend)", "default": true },
     { "type": "header", "content": "Inhalt" },
     { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The Home of Racket Sports" },
     { "type": "text", "id": "heading", "label": "Headline", "default": "Spiel. Leidenschaft. Community." },
