@@ -1,170 +1,50 @@
 {
   "sections": {
-    "fs_hero": {
-      "type": "fs-brand-hero",
-      "settings": {
-        "eyebrow": "PLAY. SHOP. IMPROVE.",
-        "heading": "Dein Sport. Deine Community. Dein Erfolg.",
-        "text": "<p>Futurespin ist dein Racket Sports Hub. Shop, Courts, Beratung, Academy und Events – alles an einem Ort.</p>",
-        "cta1_label": "Courts buchen",
-        "cta1_link": "/pages/courts",
-        "cta2_label": "Standorte entdecken",
-        "cta2_link": "/pages/standorte",
-        "height": "large",
-        "text_align": "left",
-        "text_color": "light",
-        "overlay_opacity": 45
-      }
-    },
-    "fs_courts": {
-      "type": "fs-courts-booking",
-      "settings": {
-        "layout": "playtomic",
-        "eyebrow": "Spiele, wann du willst.",
-        "heading": "Auf unseren Courts.",
-        "intro": "<p>Buche Padel, Pickleball oder Tischtennistische an unserem Standort – schnell, einfach und jederzeit.</p>",
-        "image": "shopify://shop_images/IMG-5627.png",
-        "padel_url": "#",
-        "padel_label": "Padel buchen",
-        "pickleball_url": "#",
-        "pickleball_label": "Pickleball buchen",
-        "tabletennis_url": "#",
-        "tabletennis_label": "Tischtennis buchen",
-        "standort_url": "/pages/standorte",
-        "standort_label": "Standort wählen",
-        "playtomic_url": "#",
-        "playtomic_label": "Jetzt auf Playtomic buchen",
-        "background": "anthracite",
-        "note": "Offizielle Buchungsplattform von Futurespin · Playtomic"
-      }
-    },
-    "fs_sportworlds": {
-      "type": "fs-sport-worlds",
+    "fs_chooser": {
+      "type": "fs-sport-landing",
       "blocks": {
         "tt": {
-          "type": "sport",
+          "type": "world",
           "settings": {
             "image": "shopify://shop_images/IMG-5629.png",
-            "eyebrow": "Sportart",
+            "eyebrow": "Sportwelt",
             "title": "Tischtennis",
-            "text": "Produkte, Beratung & Know-how.",
-            "cta_label": "Entdecken",
-            "link": "/pages/tischtennis"
+            "text": "Schläger, Beläge, Hölzer, Tische & Zubehör.",
+            "cta_label": "Welt betreten",
+            "link": "/pages/welt-tischtennis"
           }
         },
         "padel": {
-          "type": "sport",
+          "type": "world",
           "settings": {
             "image": "shopify://shop_images/IMG-5630.png",
-            "eyebrow": "Sportart",
+            "eyebrow": "Sportwelt",
             "title": "Padel",
-            "text": "Ausrüstung, Guides & Inspiration.",
-            "cta_label": "Entdecken",
-            "link": "/collections/padel"
+            "text": "Schläger, Bälle & Equipment für den Court.",
+            "cta_label": "Welt betreten",
+            "link": "/pages/welt-padel"
           }
         },
         "pickleball": {
-          "type": "sport",
+          "type": "world",
           "settings": {
             "image": "shopify://shop_images/IMG-5631.png",
-            "eyebrow": "Sportart",
+            "eyebrow": "Sportwelt",
             "title": "Pickleball",
-            "text": "Paddles, Gear & Community.",
-            "cta_label": "Entdecken",
-            "link": "/collections/pickleball"
+            "text": "Paddles, Bälle & Zubehör für Einsteiger und Profis.",
+            "cta_label": "Welt betreten",
+            "link": "/pages/welt-pickleball"
           }
         }
       },
       "block_order": ["tt", "padel", "pickleball"],
       "settings": {
-        "eyebrow": "",
-        "heading": "Finde deinen Sport.",
-        "intro": "<p>Entdecke unsere Welten und alles, was du für dein Spiel brauchst.</p>",
-        "text_align": "center",
-        "columns_desktop": 3,
-        "background": "anthracite"
-      }
-    },
-    "fs_locations": {
-      "type": "fs-locations",
-      "blocks": {
-        "adelsdorf": {
-          "type": "location",
-          "settings": {
-            "image": "shopify://shop_images/IMG-5628.png",
-            "name": "Futurespin Adelsdorf",
-            "street": "Weppersdorf 6a",
-            "zip": "91325",
-            "city": "Adelsdorf",
-            "country": "DE",
-            "hours": "Mo–Fr: 15:30–18:30\nSa: 10:00–13:00",
-            "click_collect": true,
-            "has_tabletennis": true,
-            "has_padel": false,
-            "has_pickleball": false,
-            "landing_url": "/pages/standorte",
-            "landing_label": "Standort entdecken",
-            "add_schema": true
-          }
-        },
-        "weiterer": {
-          "type": "location",
-          "settings": {
-            "name": "Weiterer Standort (in Planung)",
-            "country": "DE",
-            "click_collect": true,
-            "has_padel": true,
-            "has_pickleball": true,
-            "has_tabletennis": true,
-            "landing_url": "/pages/standorte",
-            "landing_label": "Standort entdecken",
-            "add_schema": false
-          }
-        }
-      },
-      "block_order": ["adelsdorf", "weiterer"],
-      "settings": {
-        "layout": "split",
-        "eyebrow": "Omnichannel",
-        "heading": "Unsere Standorte.",
-        "intro": "<p>Erlebe Racket Sports live – in unseren Stores, Hallen und auf unseren Courts.</p>",
-        "button_label": "Alle Standorte ansehen",
-        "button_link": "/pages/standorte",
-        "columns_desktop": 2,
-        "background": "anthracite"
-      }
-    },
-    "fs_trust": {
-      "type": "fs-trust-bar",
-      "blocks": {
-        "courts": { "type": "item", "settings": { "icon": "court", "label": "Eigene Courts", "sub": "Top-Anlagen an allen Standorten" } },
-        "advice": { "type": "item", "settings": { "icon": "advice", "label": "Persönliche Beratung", "sub": "Von Spielern für Spieler" } },
-        "shipping": { "type": "item", "settings": { "icon": "shipping", "label": "Schneller Versand", "sub": "Ab 69 € kostenlos in DE" } },
-        "collect": { "type": "item", "settings": { "icon": "collect", "label": "Click & Collect", "sub": "Online bestellen, im Store abholen" } },
-        "secure": { "type": "item", "settings": { "icon": "secure", "label": "Sichere Zahlung", "sub": "SSL-verschlüsselt und sicher" } }
-      },
-      "block_order": ["courts", "advice", "shipping", "collect", "secure"],
-      "settings": {
-        "background": "anthracite"
-      }
-    },
-    "fs_newsletter": {
-      "type": "fs-newsletter",
-      "settings": {
-        "heading": "Bleib auf dem Laufenden.",
-        "text": "<p>News, Events, Tipps und exklusive Angebote.</p>",
-        "placeholder": "E-Mail-Adresse eingeben",
-        "button_label": "Anmelden",
-        "background": "anthracite"
+        "eyebrow": "The Home of Racket Sports",
+        "heading": "Wähle deine Sportwelt.",
+        "intro": "<p>Tischtennis, Padel oder Pickleball – entdecke deine Welt bei Futurespin.</p>",
+        "accent_color": "#486A8F"
       }
     }
   },
-  "order": [
-    "fs_hero",
-    "fs_courts",
-    "fs_sportworlds",
-    "fs_locations",
-    "fs_trust",
-    "fs_newsletter"
-  ]
+  "order": ["fs_chooser"]
 }
