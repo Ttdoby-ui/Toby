@@ -3,11 +3,6 @@
     "fs_hero": {
       "type": "fs-brand-hero",
       "settings": {
-        "logo": "shopify://shop_images/fs-logo-pickleball.png",
-        "logo_alt": "futurespin Pickleball",
-        "logo_max_width": 360,
-        "logo_blend": false,
-        "logo_plate": true,
         "eyebrow": "Pickleball",
         "heading": "Deine Pickleball-Welt.",
         "text": "<p>Paddles, Bälle & Zubehör für Einsteiger und Profis – plus Beratung und eigene Pickleball Courts.</p>",
