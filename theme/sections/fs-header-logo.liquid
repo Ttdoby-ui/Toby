@@ -1,0 +1,151 @@
+{%- comment -%}
+  ============================================================================
+  Design System · Section: Header-Logo-Tausch (fs-header-logo)
+  ----------------------------------------------------------------------------
+  Tauscht das globale Header-Logo pro Sportwelt gegen ein sport-spezifisches
+  Logo aus. Läuft in der Header-Gruppe, rendert selbst NICHTS Sichtbares –
+  nur Daten + ein kleines Skript, das das Core-Logo (.header-logo__image)
+  ersetzt und mit einem dezenten dunklen „Badge“ hinterlegt (damit die für
+  dunklen Hintergrund gestalteten Logos auf dem hellen Header lesbar bleiben).
+
+  Erkennung wie bei Switcher/Kategorie-Leiste:
+    1. Welt-Seite (/pages/welt-*) oder
+    2. eine aktive Unterkategorie der Sportart (Kollektionsseite).
+  Persistenz: liest denselben localStorage-Key wie der Sportart-Umschalter,
+  damit das Logo auch auf neutralen Seiten zur gewählten Sportart passt.
+  ============================================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign uid = section.id | replace: '_', '' | replace: '-', ''
+  assign path = request.path
+  assign menu = linklists[section.settings.menu]
+
+  assign current_world = null
+  for link in menu.links
+    if link.links.size > 0 and link.url != '/' and link.url != blank
+      if path == link.url or path contains link.url
+        assign current_world = link.url
+      endif
+    endif
+  endfor
+  unless current_world
+    for link in menu.links
+      if link.links.size > 0
+        for sub in link.links
+          if sub.url != blank and sub.url != '/'
+            assign sub_prefix = sub.url | append: '/'
+            if path == sub.url or path contains sub_prefix
+              assign current_world = link.url
+            endif
+          endif
+        endfor
+      endif
+    endfor
+  endunless
+
+  assign current_sport_link = ''
+  for block in section.blocks
+    if current_world and block.settings.link == current_world
+      assign current_sport_link = block.settings.link
+    endif
+  endfor
+
+  assign badge_color = section.settings.badge_color | default: '#000000'
+  assign badge_radius = section.settings.badge_radius | default: 12
+  assign h_mobile = section.settings.logo_height_mobile | default: 26
+  assign h_desktop = section.settings.logo_height | default: 38
+-%}
+
+<style>
+  .header-logo.fs-hl-swapped {
+    background: {{ badge_color }};
+    border-radius: {{ badge_radius }}px;
+    padding: 5px 11px;
+  }
+  .header-logo.fs-hl-swapped .header-logo__image {
+    width: auto !important;
+    height: {{ h_mobile }}px !important;
+    max-width: 60vw;
+    object-fit: contain;
+  }
+  @media screen and (min-width: 750px) {
+    .header-logo.fs-hl-swapped .header-logo__image { height: {{ h_desktop }}px !important; max-width: 320px; }
+  }
+</style>
+
+<div id="fs-hl-{{ uid }}" data-fs-headerlogo data-current-link="{{ current_sport_link }}" hidden>
+  {%- for block in section.blocks -%}
+    {%- assign logo_url = block.settings.image | image_url: width: 700 -%}
+    {%- if block.settings.link != blank and logo_url != blank -%}
+      <span data-link="{{ block.settings.link }}" data-logo="{{ logo_url }}" data-alt="{{ block.settings.alt | default: block.settings.link | escape }}"></span>
+    {%- endif -%}
+  {%- endfor -%}
+</div>
+
+<script>
+  (function () {
+    var root = document.getElementById('fs-hl-{{ uid }}');
+    if (!root) return;
+    var KEY = 'fs-sport-world';
+    var map = {};
+    root.querySelectorAll('[data-link]').forEach(function (s) {
+      var l = s.getAttribute('data-link');
+      if (l) { map[l] = { logo: s.getAttribute('data-logo'), alt: s.getAttribute('data-alt') }; }
+    });
+
+    function apply(link) {
+      if (!link || !map[link]) return false;
+      var a = document.querySelector('.header-logo');
+      if (!a) return false;
+      var img = a.querySelector('.header-logo__image');
+      if (!img) return false;
+      img.setAttribute('src', map[link].logo);
+      img.removeAttribute('srcset');
+      img.removeAttribute('width');
+      if (map[link].alt) { img.setAttribute('alt', map[link].alt); }
+      a.classList.add('fs-hl-swapped');
+      return true;
+    }
+
+    var serverLink = root.getAttribute('data-current-link') || '';
+    if (serverLink) {
+      apply(serverLink);
+    } else {
+      // Neutrale Seite: zuletzt gewählte Sportart (vom Umschalter gemerkt) übernehmen.
+      var raw = null;
+      try { raw = localStorage.getItem(KEY); } catch (e) {}
+      if (raw) {
+        try { var s = JSON.parse(raw); if (s && s.link) { apply(s.link); } } catch (e) {}
+      }
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Header-Logo-Tausch",
+  "tag": "section",
+  "class": "fs-section fs-header-logo",
+  "settings": [
+    { "type": "link_list", "id": "menu", "label": "Menü (zur Sport-Erkennung)", "default": "main-menu" },
+    { "type": "header", "content": "Darstellung" },
+    { "type": "color", "id": "badge_color", "label": "Badge-Hintergrund (Logo-Hintergrund)", "default": "#000000" },
+    { "type": "range", "id": "badge_radius", "label": "Badge-Rundung", "min": 0, "max": 28, "step": 2, "unit": "px", "default": 12 },
+    { "type": "range", "id": "logo_height_mobile", "label": "Logo-Höhe (mobil)", "min": 16, "max": 48, "step": 2, "unit": "px", "default": 26 },
+    { "type": "range", "id": "logo_height", "label": "Logo-Höhe (Desktop)", "min": 20, "max": 64, "step": 2, "unit": "px", "default": 38 }
+  ],
+  "blocks": [
+    {
+      "type": "logo",
+      "name": "Sport-Logo",
+      "settings": [
+        { "type": "url", "id": "link", "label": "Link zur Welt-Seite" },
+        { "type": "image_picker", "id": "image", "label": "Logo (für dunklen Hintergrund)" },
+        { "type": "text", "id": "alt", "label": "Alternativtext" }
+      ]
+    }
+  ],
+  "presets": [ { "name": "Header-Logo-Tausch" } ]
+}
+{% endschema %}
