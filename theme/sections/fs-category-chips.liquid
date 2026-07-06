@@ -18,14 +18,38 @@
   assign accent = section.settings.accent_color | default: '#486A8F'
   assign uid = section.id | replace: '_', '' | replace: '-', ''
   assign menu = linklists[section.settings.menu]
+  assign path = request.path
   assign current = null
+
+  comment
+    1) Aktuelle Sportwelt über die Welt-Seite erkennen (z. B. /pages/welt-tischtennis).
+  endcomment
   for link in menu.links
-    if link.url != '/' and link.url != blank and link.links.size > 0
-      if request.path contains link.url
+    if link.links.size > 0 and link.url != '/' and link.url != blank
+      if path == link.url or path contains link.url
         assign current = link
       endif
     endif
   endfor
+
+  comment
+    2) Sonst über eine aktive Unterkategorie erkennen – so bleibt die Sport-Leiste
+    auch auf Kollektionsseiten (z. B. /collections/hoelzer) und darunter erhalten.
+  endcomment
+  unless current
+    for link in menu.links
+      if link.links.size > 0
+        for sub in link.links
+          if sub.url != '/' and sub.url != blank
+            assign sub_prefix = sub.url | append: '/'
+            if path == sub.url or path contains sub_prefix
+              assign current = link
+            endif
+          endif
+        endfor
+      endif
+    endfor
+  endunless
 -%}
 
 {%- style -%}
