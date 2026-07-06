@@ -1,0 +1,147 @@
+{%- comment -%}
+  ============================================================================
+  Design System · Section: Sportwelt-Auswahl / Chooser (fs-sport-landing)
+  ----------------------------------------------------------------------------
+  Vorgeschaltete Landingpage: Besucher wählen ihre Sportwelt (Tischtennis,
+  Padel, Pickleball – beliebig erweiterbar). Jede Welt ist ein Block mit Bild,
+  Titel, Untertitel und Link zur jeweiligen Welt-Seite. Vollflächige, ruhige
+  Panels mit Hover-Zoom.
+  ============================================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign accent = section.settings.accent_color | default: '#486A8F'
+  assign uid = section.id | replace: '_', '' | replace: '-', ''
+  assign count = section.blocks.size | at_least: 1
+-%}
+
+{%- style -%}
+  .fs-land--{{ uid }} { --fs-land-accent: {{ accent }}; --fs-land-cols: {{ count }}; }
+{%- endstyle -%}
+
+<style>
+  .fs-land { background: #0c1117; color: #fff; }
+  .fs-land__head { text-align: center; max-width: 46rem; margin-inline: auto; padding: clamp(2rem, 5vw, 3.5rem) var(--page-margin, 2rem) clamp(1rem, 3vw, 2rem); }
+  .fs-land__eyebrow { display:inline-block; font-weight:600; letter-spacing:.14em; text-transform:uppercase; font-size:.82rem; color:var(--fs-land-accent); margin:0 0 .6rem; }
+  .fs-land__title { font-size: clamp(1.9rem, 5vw, 3.2rem); line-height: 1.03; margin: 0; letter-spacing: -.02em; }
+  .fs-land__intro { margin: .9rem 0 0; font-size: 1.05rem; line-height: 1.6; opacity: .82; }
+
+  .fs-land__grid { display: grid; grid-template-columns: 1fr; gap: 2px; }
+  @media (min-width: 800px) {
+    .fs-land__grid { grid-template-columns: repeat(var(--fs-land-cols, 3), 1fr); min-height: 78svh; }
+  }
+
+  .fs-land__panel {
+    position: relative; overflow: hidden; isolation: isolate; text-decoration: none; color: #fff;
+    min-height: 20rem; display: flex; align-items: flex-end;
+  }
+  .fs-land__media, .fs-land__media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+  .fs-land__media img { transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+  .fs-land__panel:hover .fs-land__media img { transform: scale(1.06); }
+  .fs-land__media--empty { z-index: -2; background: radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--fs-land-accent) 55%, #000) 0%, #0b0f14 65%); }
+  .fs-land__scrim { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(8,12,18,.15) 0%, rgba(8,12,18,.55) 55%, rgba(8,12,18,.9) 100%); }
+
+  .fs-land__body { padding: clamp(1.5rem, 3vw, 2.5rem); display: flex; flex-direction: column; gap: .5rem; width: 100%; }
+  .fs-land__eyebrow2 { font-size: .78rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+  .fs-land__panel-title { font-size: clamp(1.6rem, 3vw, 2.4rem); line-height: 1.05; margin: 0; }
+  .fs-land__panel-text { margin: .1rem 0 0; font-size: 1rem; line-height: 1.5; opacity: .9; max-width: 30ch; }
+  .fs-land__cta {
+    margin-top: 1rem; display: inline-flex; align-items: center; gap: .5rem; align-self: flex-start;
+    padding: .7rem 1.3rem; border-radius: 999px; font-weight: 600; font-size: .95rem;
+    background: var(--fs-land-accent); color: #fff; border: 1.5px solid var(--fs-land-accent);
+    transition: transform .15s ease, filter .15s ease;
+  }
+  .fs-land__panel:hover .fs-land__cta { filter: brightness(1.1); transform: translateY(-2px); }
+  .fs-land__cta svg { width: 1.05em; height: 1.05em; }
+  .fs-land__panel:focus-visible { outline: 3px solid var(--fs-land-accent); outline-offset: -4px; }
+  .fs-land__badge { position: absolute; top: 1rem; left: 1rem; z-index: 1; font-size:.72rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:.35rem .6rem; border-radius:999px; background: var(--fs-land-accent); color:#fff; line-height:1; }
+  .fs-land__badge--soon { background: rgba(255,255,255,.9); color:#14181c; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fs-land__media img, .fs-land__cta { transition: none; }
+    .fs-land__panel:hover .fs-land__media img { transform: none; }
+  }
+</style>
+
+<div class="fs-land fs-land--{{ uid }}" style="padding-block-end: {{ section.settings['padding-block-end'] | default: 0 }}px;">
+  {%- if section.settings.eyebrow != blank or section.settings.heading != blank or section.settings.intro != blank -%}
+    <header class="fs-land__head">
+      {%- if section.settings.eyebrow != blank -%}<span class="fs-land__eyebrow">{{ section.settings.eyebrow }}</span>{%- endif -%}
+      {%- if section.settings.heading != blank -%}<h1 class="fs-land__title">{{ section.settings.heading }}</h1>{%- endif -%}
+      {%- if section.settings.intro != blank -%}<div class="fs-land__intro">{{ section.settings.intro }}</div>{%- endif -%}
+    </header>
+  {%- endif -%}
+
+  <div class="fs-land__grid">
+    {%- for block in section.blocks -%}
+      {%- liquid
+        assign is_soon = block.settings.coming_soon
+        assign tag = 'a'
+        if is_soon or block.settings.link == blank
+          assign tag = 'div'
+        endif
+      -%}
+      <{{ tag }} class="fs-land__panel" {% if tag == 'a' %}href="{{ block.settings.link }}"{% endif %} aria-label="{{ block.settings.title | escape }}" {{ block.shopify_attributes }}>
+        <div class="fs-land__media{% if block.settings.image == blank %} fs-land__media--empty{% endif %}">
+          {%- if block.settings.image != blank -%}
+            {{ block.settings.image | image_url: width: 1200 | image_tag: loading: 'lazy', sizes: '(min-width: 800px) 34vw, 100vw', widths: '500, 800, 1100, 1400', alt: block.settings.title | escape }}
+          {%- endif -%}
+        </div>
+        <div class="fs-land__scrim"></div>
+        {%- if block.settings.badge != blank -%}<span class="fs-land__badge{% if is_soon %} fs-land__badge--soon{% endif %}">{{ block.settings.badge }}</span>{%- endif -%}
+        <div class="fs-land__body">
+          {%- if block.settings.eyebrow != blank -%}<span class="fs-land__eyebrow2">{{ block.settings.eyebrow }}</span>{%- endif -%}
+          {%- if block.settings.title != blank -%}<h2 class="fs-land__panel-title">{{ block.settings.title }}</h2>{%- endif -%}
+          {%- if block.settings.text != blank -%}<p class="fs-land__panel-text">{{ block.settings.text }}</p>{%- endif -%}
+          {%- if is_soon == false -%}
+            <span class="fs-land__cta">{{ block.settings.cta_label | default: 'Welt betreten' }}
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          {%- endif -%}
+        </div>
+      </{{ tag }}>
+    {%- endfor -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Sportwelt-Auswahl",
+  "tag": "section",
+  "class": "section fs-section fs-section--full",
+  "settings": [
+    { "type": "header", "content": "Kopfbereich" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The Home of Racket Sports" },
+    { "type": "text", "id": "heading", "label": "Überschrift", "default": "Wähle deine Sportwelt." },
+    { "type": "richtext", "id": "intro", "label": "Einleitungstext", "default": "<p>Tischtennis, Padel oder Pickleball – entdecke deine Welt bei Futurespin.</p>" },
+    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#486A8F" },
+    { "type": "range", "id": "padding-block-end", "label": "Abstand unten", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 0 }
+  ],
+  "blocks": [
+    {
+      "type": "world",
+      "name": "Sportwelt",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Bild" },
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Sportwelt" },
+        { "type": "text", "id": "title", "label": "Titel", "default": "Tischtennis" },
+        { "type": "text", "id": "text", "label": "Kurztext", "default": "Schläger, Beläge, Tische & mehr." },
+        { "type": "text", "id": "cta_label", "label": "CTA-Text", "default": "Welt betreten" },
+        { "type": "url", "id": "link", "label": "Link zur Welt-Seite" },
+        { "type": "text", "id": "badge", "label": "Badge (optional)" },
+        { "type": "checkbox", "id": "coming_soon", "label": "Bald verfügbar (deaktiviert Link)", "default": false }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sportwelt-Auswahl",
+      "blocks": [
+        { "type": "world", "settings": { "title": "Tischtennis", "text": "Schläger, Beläge, Hölzer, Tische & Zubehör." } },
+        { "type": "world", "settings": { "title": "Padel", "text": "Schläger, Bälle & Equipment für den Court." } },
+        { "type": "world", "settings": { "title": "Pickleball", "text": "Paddles, Bälle & Zubehör." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

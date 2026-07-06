@@ -1,0 +1,145 @@
+{%- comment -%}
+  ============================================================================
+  Design System · Section: Sportart-Umschalter (fs-sport-switcher)
+  ----------------------------------------------------------------------------
+  Schlanke Leiste mit Aufklapp-Dropdown zum Wechseln zwischen den Sportwelten.
+  Wird global in der Header-Gruppe angezeigt. Rein CSS (details/summary),
+  kein zusätzliches JavaScript. Die aktive Welt wird anhand der URL erkannt.
+  ============================================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign accent = section.settings.accent_color | default: '#486A8F'
+  assign uid = section.id | replace: '_', '' | replace: '-', ''
+  assign current_label = section.settings.default_label | default: 'Sportwelt wählen'
+  assign path = request.path
+  for block in section.blocks
+    assign lnk = block.settings.link | default: ''
+    if lnk != blank and lnk != '/'
+      if path contains lnk
+        assign current_label = block.settings.label
+      endif
+    endif
+  endfor
+-%}
+
+{%- style -%}
+  .fs-sw2--{{ uid }} { --fs-sw2-accent: {{ accent }}; }
+{%- endstyle -%}
+
+<style>
+  .fs-sw2 { border-block: 1px solid rgba(128,128,128,.16); background: var(--fs-sw2-bg, transparent); }
+  .fs-sw2__inner { max-width: var(--page-width, 1400px); margin-inline: auto; padding: .5rem var(--page-margin, 2rem); display: flex; align-items: center; gap: .75rem; justify-content: var(--fs-sw2-justify, center); }
+  .fs-sw2__label { font-size: .85rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .7; }
+
+  .fs-sw2__dd { position: relative; }
+  .fs-sw2__summary {
+    list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: .5rem;
+    padding: .5rem .9rem; border-radius: 999px; border: 1px solid rgba(128,128,128,.35);
+    font-weight: 600; font-size: .95rem; user-select: none;
+  }
+  .fs-sw2__summary::-webkit-details-marker { display: none; }
+  .fs-sw2__summary .fs-sw2__dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--fs-sw2-accent); }
+  .fs-sw2__summary .fs-sw2__caret { width: 1rem; height: 1rem; transition: transform .15s ease; }
+  .fs-sw2__dd[open] .fs-sw2__caret { transform: rotate(180deg); }
+  .fs-sw2__summary:focus-visible { outline: 3px solid var(--fs-sw2-accent); outline-offset: 2px; }
+
+  .fs-sw2__menu {
+    position: absolute; z-index: 40; top: calc(100% + .4rem); left: 50%; transform: translateX(-50%);
+    min-width: 15rem; padding: .4rem; border-radius: 14px;
+    background: var(--fs-sw2-menu-bg, #14181c); color: #fff;
+    border: 1px solid rgba(255,255,255,.12); box-shadow: 0 16px 40px rgba(8,12,18,.35);
+    display: grid; gap: 2px;
+  }
+  .fs-sw2__item { display: flex; align-items: center; gap: .6rem; padding: .6rem .7rem; border-radius: 9px; text-decoration: none; color: inherit; font-weight: 600; }
+  .fs-sw2__item:hover { background: rgba(255,255,255,.08); }
+  .fs-sw2__item[aria-current="page"] { background: color-mix(in srgb, var(--fs-sw2-accent) 30%, transparent); }
+  .fs-sw2__item .fs-sw2__ico { width: 1.4rem; height: 1.4rem; color: var(--fs-sw2-accent); flex: none; }
+  .fs-sw2__item .fs-sw2__sub { display: block; font-weight: 400; font-size: .8rem; opacity: .7; }
+
+  @media (prefers-reduced-motion: reduce) { .fs-sw2__caret { transition: none; } }
+</style>
+
+<div class="fs-sw2 fs-sw2--{{ uid }}"{% if section.settings.align == 'left' %} style="--fs-sw2-justify:flex-start;"{% endif %}>
+  <div class="fs-sw2__inner">
+    {%- if section.settings.label_text != blank -%}<span class="fs-sw2__label">{{ section.settings.label_text }}</span>{%- endif -%}
+    <details class="fs-sw2__dd">
+      <summary class="fs-sw2__summary">
+        <span class="fs-sw2__dot"></span>
+        <span>{{ current_label }}</span>
+        <svg class="fs-sw2__caret" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="fs-sw2__menu">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign lnk = block.settings.link | default: ''
+            assign is_current = false
+            if lnk != blank and lnk != '/' and path contains lnk
+              assign is_current = true
+            endif
+          -%}
+          <a class="fs-sw2__item" href="{{ lnk | default: '#' }}"{% if is_current %} aria-current="page"{% endif %}>
+            <span class="fs-sw2__ico">
+              {%- case block.settings.icon -%}
+                {%- when 'padel' -%}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="9" r="6" stroke="currentColor" stroke-width="2"/><path d="M9 14l-3 7M12 15v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                {%- when 'pickleball' -%}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="6" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="7" r="1" fill="currentColor"/><circle cx="14" cy="7" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><path d="M12 14v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                {%- when 'tabletennis' -%}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13h16M6 13c0-4 3-7 7-7s5 2 5 4-2 3-4 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 13l1 7M16 13l-1 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                {%- else -%}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>
+              {%- endcase -%}
+            </span>
+            <span>{{ block.settings.label }}{%- if block.settings.sub != blank -%}<span class="fs-sw2__sub">{{ block.settings.sub }}</span>{%- endif -%}</span>
+          </a>
+        {%- endfor -%}
+      </div>
+    </details>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Sportart-Umschalter",
+  "tag": "section",
+  "class": "fs-section",
+  "settings": [
+    { "type": "text", "id": "label_text", "label": "Label davor", "default": "Sportwelt:" },
+    { "type": "text", "id": "default_label", "label": "Standard-Text (keine Welt aktiv)", "default": "Sportwelt wählen" },
+    {
+      "type": "select", "id": "align", "label": "Ausrichtung",
+      "options": [ { "value": "center", "label": "Zentriert" }, { "value": "left", "label": "Links" } ],
+      "default": "center"
+    },
+    { "type": "color", "id": "accent_color", "label": "Akzentfarbe (Futurespin-Blau)", "default": "#486A8F" }
+  ],
+  "blocks": [
+    {
+      "type": "world",
+      "name": "Sportwelt",
+      "settings": [
+        {
+          "type": "select", "id": "icon", "label": "Icon",
+          "options": [
+            { "value": "tabletennis", "label": "Tischtennis" },
+            { "value": "padel", "label": "Padel" },
+            { "value": "pickleball", "label": "Pickleball" },
+            { "value": "none", "label": "Keins" }
+          ],
+          "default": "tabletennis"
+        },
+        { "type": "text", "id": "label", "label": "Titel", "default": "Tischtennis" },
+        { "type": "text", "id": "sub", "label": "Untertext (optional)" },
+        { "type": "url", "id": "link", "label": "Link zur Welt-Seite" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Sportart-Umschalter",
+      "blocks": [
+        { "type": "world", "settings": { "icon": "tabletennis", "label": "Tischtennis" } },
+        { "type": "world", "settings": { "icon": "padel", "label": "Padel" } },
+        { "type": "world", "settings": { "icon": "pickleball", "label": "Pickleball" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
