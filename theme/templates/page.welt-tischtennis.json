@@ -17,17 +17,31 @@
         "overlay_opacity": 55
       }
     },
-    "fs_strip": {
+    "fs_strip_top": {
       "type": "fs-collection-strip",
       "settings": {
-        "eyebrow": "Sortiment",
-        "heading": "Beliebt im Tischtennis",
-        "collection": "bestseller",
-        "max_products": 8,
-        "show_view_all": true,
-        "view_all_label": "Alle Produkte",
-        "columns_desktop": 4,
-        "background": "anthracite"
+        "eyebrow": "Sortiment", "heading": "Unsere Topseller",
+        "collection": "bestseller", "max_products": 8,
+        "show_view_all": true, "view_all_label": "Alle ansehen",
+        "columns_desktop": 4, "background": "anthracite"
+      }
+    },
+    "fs_strip_freizeit": {
+      "type": "fs-collection-strip",
+      "settings": {
+        "eyebrow": "Für zwischendurch", "heading": "Freizeit & Fun",
+        "collection": "hobby-freizeit", "max_products": 8,
+        "show_view_all": true, "view_all_label": "Alle ansehen",
+        "columns_desktop": 4, "background": "anthracite"
+      }
+    },
+    "fs_strip_sale": {
+      "type": "fs-collection-strip",
+      "settings": {
+        "eyebrow": "Angebote", "heading": "Sale",
+        "collection": "sale-1", "max_products": 8,
+        "show_view_all": true, "view_all_label": "Zum Sale",
+        "columns_desktop": 4, "background": "anthracite"
       }
     },
     "fs_courts": {
@@ -35,11 +49,9 @@
       "settings": {
         "layout": "playtomic",
         "eyebrow": "Spiele, wann du willst.",
-        "heading": "Auf unseren Courts.",
-        "intro": "<p>Buche Padel, Pickleball oder Tischtennistische an unserem Standort – schnell, einfach und jederzeit.</p>",
+        "heading": "Buche deinen Tischtennistisch.",
+        "intro": "<p>Reserviere einen Tischtennistisch an unserem Standort – schnell und jederzeit über Playtomic.</p>",
         "image": "shopify://shop_images/IMG-5627.png",
-        "padel_url": "#", "padel_label": "Padel buchen",
-        "pickleball_url": "#", "pickleball_label": "Pickleball buchen",
         "tabletennis_url": "#", "tabletennis_label": "Tischtennis buchen",
         "standort_url": "/pages/standorte", "standort_label": "Standort wählen",
         "playtomic_url": "#", "playtomic_label": "Jetzt auf Playtomic buchen",
@@ -64,10 +76,8 @@
       },
       "block_order": ["adelsdorf"],
       "settings": {
-        "layout": "split",
-        "eyebrow": "Omnichannel",
-        "heading": "Unsere Standorte.",
-        "intro": "<p>Erlebe Racket Sports live – in unseren Stores, Hallen und auf unseren Courts.</p>",
+        "layout": "split", "eyebrow": "Omnichannel", "heading": "Unsere Standorte.",
+        "intro": "<p>Erlebe Tischtennis live – in unserem Store, der Halle und auf unseren Courts.</p>",
         "button_label": "Alle Standorte ansehen", "button_link": "/pages/standorte",
         "background": "anthracite"
       }
@@ -93,5 +103,5 @@
       }
     }
   },
-  "order": ["fs_hero", "fs_strip", "fs_courts", "fs_locations", "fs_trust", "fs_newsletter"]
+  "order": ["fs_hero", "fs_strip_top", "fs_strip_freizeit", "fs_strip_sale", "fs_courts", "fs_locations", "fs_trust", "fs_newsletter"]
 }

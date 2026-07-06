@@ -17,17 +17,31 @@
         "overlay_opacity": 55
       }
     },
-    "fs_strip": {
+    "fs_strip_schlaeger": {
       "type": "fs-collection-strip",
       "settings": {
-        "eyebrow": "Sortiment",
-        "heading": "Beliebt im Padel",
-        "collection": "padel",
-        "max_products": 8,
-        "show_view_all": true,
-        "view_all_label": "Alle Padel-Artikel",
-        "columns_desktop": 4,
-        "background": "anthracite"
+        "eyebrow": "Sortiment", "heading": "Padel-Schläger",
+        "collection": "padel-schlaeger", "max_products": 8,
+        "show_view_all": true, "view_all_label": "Alle Schläger",
+        "columns_desktop": 4, "background": "anthracite"
+      }
+    },
+    "fs_strip_baelle": {
+      "type": "fs-collection-strip",
+      "settings": {
+        "eyebrow": "Sortiment", "heading": "Padel-Bälle",
+        "collection": "padel-baelle", "max_products": 8,
+        "show_view_all": true, "view_all_label": "Alle Bälle",
+        "columns_desktop": 4, "background": "anthracite"
+      }
+    },
+    "fs_strip_alle": {
+      "type": "fs-collection-strip",
+      "settings": {
+        "eyebrow": "Entdecken", "heading": "Alle Padel-Artikel",
+        "collection": "padel", "max_products": 8,
+        "show_view_all": true, "view_all_label": "Alle ansehen",
+        "columns_desktop": 4, "background": "anthracite"
       }
     },
     "fs_courts": {
@@ -39,8 +53,6 @@
         "intro": "<p>Buche deinen Padel Court an unserem Standort – schnell, einfach und jederzeit über Playtomic.</p>",
         "image": "shopify://shop_images/IMG-5627.png",
         "padel_url": "#", "padel_label": "Padel buchen",
-        "pickleball_url": "#", "pickleball_label": "Pickleball buchen",
-        "tabletennis_url": "#", "tabletennis_label": "Tischtennis buchen",
         "standort_url": "/pages/standorte", "standort_label": "Standort wählen",
         "playtomic_url": "#", "playtomic_label": "Jetzt auf Playtomic buchen",
         "background": "anthracite",
@@ -64,9 +76,7 @@
       },
       "block_order": ["adelsdorf"],
       "settings": {
-        "layout": "split",
-        "eyebrow": "Omnichannel",
-        "heading": "Unsere Standorte.",
+        "layout": "split", "eyebrow": "Omnichannel", "heading": "Unsere Standorte.",
         "intro": "<p>Erlebe Padel live – in unseren Stores und auf unseren Courts.</p>",
         "button_label": "Alle Standorte ansehen", "button_link": "/pages/standorte",
         "background": "anthracite"
@@ -93,5 +103,5 @@
       }
     }
   },
-  "order": ["fs_hero", "fs_strip", "fs_courts", "fs_locations", "fs_trust", "fs_newsletter"]
+  "order": ["fs_hero", "fs_strip_schlaeger", "fs_strip_baelle", "fs_strip_alle", "fs_courts", "fs_locations", "fs_trust", "fs_newsletter"]
 }
