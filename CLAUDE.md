@@ -108,6 +108,15 @@
   alle 400+ Kacheln+Bilder+Badges auf einmal.)
 - Diese Theme-Dateien lagen ursprünglich NICHT im Repo – Änderungen daran ins Repo
   spiegeln. (Rapid-Search-App ist installiert, aber auf Kollektionsseiten deaktiviert.)
+- **Rundes „NEU"-Badge auf den Kacheln (2026-07-07):** Neues Asset `assets/fs-new-badge.js` legt oben
+  rechts aufs Produktbild ein rundes „NEU"-Kreis-Badge (Futurespin-Blau `#486A8F`), wenn das Produkt
+  **≤ 60 Tage veröffentlicht** ist (`published_at`). Ohne Eingriff in die minifizierte `filter-panel-main.js`:
+  liest die neuen IDs aus `#fp-catalog-data`, injiziert CSS, taggt Kacheln (per `jdgm-preview-badge[data-id]`)
+  und beobachtet das Grid per MutationObserver (robust bei Lazy-Load/Filter/Reset). `filter-panel.liquid`
+  gibt dafür zusätzlich **`published`** (`published_at`) im JSON aus und lädt das Asset. Repo-Mirror:
+  `theme-horizon/{assets/fs-new-badge.js,sections/filter-panel.liquid}`. ⚠️ Theme-Änderung → nur im
+  **Entwurf-Horizon**, wird bei der nächsten Rotation live. **Offen:** native Kacheln/PDP (nicht Filter-Panel)
+  haben das Badge noch nicht.
 
 ## Shopify App-Entwicklung (Dev Dashboard)
 
