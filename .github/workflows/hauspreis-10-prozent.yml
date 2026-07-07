@@ -1,0 +1,55 @@
+name: Hauspreis 10% umstellen
+
+# Setzt aktive Artikel dauerhaft auf Hauspreis (-10 %, abgerundet auf x,90),
+# UVP als Vergleichspreis, Tag "Hauspreis". Ausgenommen: Vereinsbedarf, schon
+# reduzierte Varianten, Artikel unter MIN_PRICE. IMMER zuerst mit dry_run=true
+# laufen lassen und den Report + Rollback-Artefakt pruefen!
+#
+# Rollback: Artefakt "hauspreis-rollback" (variantId, alterPreis) herunterladen.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Trockenlauf (nichts schreiben, nur Report + Rollback-Datei)"
+        type: boolean
+        default: true
+      min_price:
+        description: "Nur Artikel ab diesem Preis (EUR)"
+        required: false
+        default: "10"
+      discount_pct:
+        description: "Prozent Nachlass"
+        required: false
+        default: "10"
+      limit:
+        description: "Max. Produkte verarbeiten (leer = alle) – zum Testen"
+        required: false
+        default: ""
+
+jobs:
+  hauspreis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Hauspreis umstellen
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          MIN_PRICE: ${{ inputs.min_price }}
+          DISCOUNT_PCT: ${{ inputs.discount_pct }}
+          LIMIT: ${{ inputs.limit }}
+        run: node scripts/hauspreis-10-prozent.mjs
+      - name: Rollback-Datei als Artefakt sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hauspreis-rollback
+          path: hauspreis-rollback.json
+          if-no-files-found: warn
