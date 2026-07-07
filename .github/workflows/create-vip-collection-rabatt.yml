@@ -1,0 +1,63 @@
+name: VIP-Kollektionsrabatt anlegen (UVP-Basis)
+
+# Legt den VIP-Rabatt für die "VIP"-Smart-Collection als Function-Rabatt an
+# (dieselbe Function wie der Kollektionsrabatt, aber VIP-ONLY = keine
+# Mengenstaffel). Vorteil: Der VIP-% wird auf die UVP (Vergleichspreis)
+# gerechnet und nie unter den Angebotspreis gezogen -> kein Doppelrabatt auf
+# reduzierten Artikeln. Ersetzt die nativen VIP1/2/3-Rabatte (die danach
+# deaktiviert werden müssen).
+#
+# Unter "Actions" -> "VIP-Kollektionsrabatt anlegen (UVP-Basis)" -> "Run workflow".
+#
+# Benötigte Secrets:
+#   VIP_DISCOUNT_SHOPIFY_API_KEY     Client-ID der App "VIP Beläge Discount"
+#   VIP_DISCOUNT_SHOPIFY_API_SECRET  Client-Secret der App
+#   SHOPIFY_STORE_DOMAIN             (optional) z. B. e7ee88-2.myshopify.com
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: "Anzeigename des Rabatts"
+        required: true
+        default: "VIP-Rabatt (UVP-Basis)"
+      collection_id:
+        description: "Kollektion (GID oder numerische ID) – Default: VIP-Smart-Collection"
+        required: true
+        default: "664158142812"
+      function_id:
+        description: "Function-ID (leer = automatisch über den Titel ermitteln)"
+        required: false
+        default: ""
+      starts_at:
+        description: "Startzeitpunkt ISO (leer = sofort)"
+        required: false
+        default: ""
+
+jobs:
+  create:
+    name: VIP-Rabatt erstellen
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: VIP-Rabatt anlegen (VIP-only)
+        working-directory: vip-discount-function
+        env:
+          STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN || 'e7ee88-2.myshopify.com' }}
+          CLIENT_ID: ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_KEY }}
+          CLIENT_SECRET: ${{ secrets.VIP_DISCOUNT_SHOPIFY_API_SECRET }}
+          TITLE: ${{ inputs.title }}
+          COLLECTION_ID: ${{ inputs.collection_id }}
+          FUNCTION_ID: ${{ inputs.function_id }}
+          VIP_ONLY: "true"
+          STARTS_AT: ${{ inputs.starts_at }}
+        run: node scripts/create-kollektionsrabatt.mjs
