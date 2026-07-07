@@ -239,6 +239,22 @@
   - **Merke:** Bestellpositionen (Line Items) sind die Wahrheit, die Warenkorb-Notiz ist es nicht. Bei
     „Notiz sagt X, Bestellung enthält Y" die Line-Item-`customAttributes` prüfen.
 
+## Versand: „B2B Versand" nur für Händler (Delivery Customization Function)
+
+- **Problem:** Die Versandmethode **„B2B Versand"** (8,21 €, Allgemeines Profil, Zone Deutschland) hatte keine
+  Bedingung und wurde ALLEN Kunden im Checkout gezeigt. Native Versandbedingungen können nur Gewicht/Preis,
+  keine Kundengruppen.
+- **Lösung (2026-07-07):** Delivery-Customization-Function **`hide-b2b-versand`** in der bestehenden App
+  „VIP Beläge Discount" (`vip-discount-function/extensions/hide-b2b-versand/`, Target
+  `purchase.delivery-customization.run`). Blendet jede Versandoption mit **„B2B" im Titel** aus, wenn der Kunde
+  **keinen** B2B-Tag trägt. **B2B-Tags (live verifiziert): `B2B1`/`B2B2`/`B2B3`/`Händler`** (`hasAnyTag` in
+  `src/run.graphql`). Gäste = B2C. Tische-Profil unberührt (kein „B2B" im Titel). Tests 7/7.
+- **Aktivierung:** Function ≠ aktiv → braucht eine **Zustellungsanpassung**. Admin → Versand und Zustellung →
+  Zustellungsanpassungen → „Anpassung hinzufügen" → „B2B-Versand nur für Händler". Oder per
+  `deliveryCustomizationCreate(functionHandle: "hide-b2b-versand", enabled: true)`.
+- **Deploy:** `npm install` im Extension-Ordner → `shopify app deploy` vom PC (gehört zur bestehenden App,
+  kein neues App-Anlegen nötig). Tag-Liste ändern → nur `src/run.graphql` anpassen + neu deployen.
+
 ## Shopify Functions (JavaScript) — korrekter Aufbau
 
 So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
