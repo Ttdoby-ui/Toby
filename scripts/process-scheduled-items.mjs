@@ -14,17 +14,24 @@
  *   - badge_emoji (optional)        – emoji / short text shown on the sale badge, e.g. 🔥
  *   - badge_color (optional)        – hex color for the sale badge background, e.g. #E53E3E
  *
- * Per-variant metafield (set by script, removed on expiry):
- *   custom.pre_sale_price           – original price stored on the variant itself
+ * HAUSPREIS-FEST (2026-07-08): Der Angebotspreis übersteuert den Hauspreis. compareAtPrice wird auf die
+ * ECHTE UVP gesetzt (vorhandener Vergleichspreis, sonst der aktuelle Preis) – nicht auf den Hauspreis.
+ * Das Badge nutzt die vom Theme (price.liquid) gelesenen Felder custom.price_badge_text/color und enthält
+ * den Rabatt in % zur UVP, z. B. "Sale -30%". Beim Ablauf wird EXAKT der Vorzustand wiederhergestellt
+ * (inkl. Hauspreis: Preis reduziert, Vergleichspreis = UVP, Badge "Hauspreis").
+ *
+ * Per-variant Sicherungs-Metafelder (gesetzt beim Start, entfernt beim Ablauf):
+ *   custom.pre_sale_price / pre_sale_compare / pre_sale_badge_text / pre_sale_badge_color
  *
  * Lifecycle:
  *   - Not yet started (start_date > today): skip
  *   - Active:
  *       if collection: adds parent products of all variants to the collection (idempotent)
- *       if discount_type: per variant saves custom.pre_sale_price, applies sale price + compareAtPrice
+ *       if discount_type: sichert Vorzustand, setzt Preis=Angebot, Vergleichspreis=UVP,
+ *                         price_badge_text="<Label> -X%"
  *   - Expired:
  *       if collection: removes parent products from collection
- *       if discount_type: per variant restores custom.pre_sale_price, clears compareAtPrice + badge metafields
+ *       if discount_type: stellt Preis/Vergleichspreis/Badge aus den pre_sale_* Feldern wieder her
  *       then deletes entry
  *
  * scheduled_sale_member fields:
@@ -85,60 +92,66 @@ async function deleteMetaobject(id) {
   if (errs.length) console.warn(`    Warning deleting metaobject ${id}:`, errs);
 }
 
-async function setBadgeMetafields(variantId, emoji, color) {
-  const metafields = [];
-  if (emoji) {
-    metafields.push({
-      ownerId: variantId,
-      namespace: 'custom',
-      key: 'sale_badge_emoji',
-      type: 'single_line_text_field',
-      value: emoji,
-    });
-  }
-  if (color) {
-    metafields.push({
-      ownerId: variantId,
-      namespace: 'custom',
-      key: 'sale_badge_color',
-      type: 'color',
-      value: color,
-    });
-  }
+async function metafieldsSet(metafields) {
   if (!metafields.length) return;
-
   const data = await gql(
     `mutation($metafields: [MetafieldsSetInput!]!) {
-      metafieldsSet(metafields: $metafields) {
-        metafields { key }
-        userErrors { field message }
-      }
+      metafieldsSet(metafields: $metafields) { metafields { key } userErrors { field message } }
     }`,
     { metafields }
   );
   const errs = data.metafieldsSet.userErrors;
-  if (errs.length) console.warn(`    Warning setting badge metafields:`, errs);
-  else console.log(`    Badge metafields set (emoji: ${emoji || '—'}, color: ${color || '—'})`);
+  if (errs.length) console.warn(`    Warning setting metafields:`, errs);
 }
 
-async function removeSaleMetafields(variantId) {
-  const metafields = [
-    { ownerId: variantId, namespace: 'custom', key: 'sale_badge_emoji' },
-    { ownerId: variantId, namespace: 'custom', key: 'sale_badge_color' },
-    { ownerId: variantId, namespace: 'custom', key: 'pre_sale_price' },
-  ];
+/**
+ * Sichert den Zustand VOR dem Sale (Preis, Vergleichspreis, Badge), damit beim
+ * Ablauf exakt dorthin zurückgesetzt wird – inkl. Hauspreis (Preis reduziert,
+ * Vergleichspreis = UVP, Badge "Hauspreis").
+ */
+async function savePreSaleState(variantId, price, compareAt, badgeText, badgeColor) {
+  await metafieldsSet([
+    { ownerId: variantId, namespace: 'custom', key: 'pre_sale_price',        type: 'single_line_text_field', value: String(price) },
+    { ownerId: variantId, namespace: 'custom', key: 'pre_sale_compare',      type: 'single_line_text_field', value: compareAt ? String(compareAt) : '' },
+    { ownerId: variantId, namespace: 'custom', key: 'pre_sale_badge_text',   type: 'single_line_text_field', value: badgeText || '' },
+    { ownerId: variantId, namespace: 'custom', key: 'pre_sale_badge_color',  type: 'single_line_text_field', value: badgeColor || '' },
+  ]);
+}
+
+/** Setzt das Preis-Badge, das die PDP rendert (price.liquid liest genau diese Felder). */
+async function setPriceBadge(variantId, text, color) {
+  const mf = [{ ownerId: variantId, namespace: 'custom', key: 'price_badge_text', type: 'single_line_text_field', value: text }];
+  if (color) mf.push({ ownerId: variantId, namespace: 'custom', key: 'price_badge_color', type: 'color', value: color });
+  await metafieldsSet(mf);
+}
+
+/** Stellt das Badge auf den gesicherten Vorzustand zurück (oder löscht es). */
+async function restorePriceBadge(variantId, text, color) {
+  if (text) {
+    await setPriceBadge(variantId, text, color);
+  } else {
+    await metafieldsDelete(variantId, ['price_badge_text', 'price_badge_color']);
+  }
+}
+
+async function metafieldsDelete(variantId, keys) {
+  const metafields = keys.map(key => ({ ownerId: variantId, namespace: 'custom', key }));
   const data = await gql(
     `mutation($metafields: [MetafieldIdentifierInput!]!) {
-      metafieldsDelete(metafields: $metafields) {
-        deletedMetafields { key }
-        userErrors { field message }
-      }
+      metafieldsDelete(metafields: $metafields) { deletedMetafields { key } userErrors { field message } }
     }`,
     { metafields }
   );
   const errs = data.metafieldsDelete.userErrors;
-  if (errs.length) console.warn(`    Warning removing sale metafields:`, errs);
-  else console.log(`    Sale metafields removed`);
+  if (errs.length) console.warn(`    Warning removing metafields:`, errs);
+}
+
+/** Entfernt alle pre_sale_* Sicherungs-Metafelder (+ Alt-Felder sale_badge_*). */
+async function removeSaleMetafields(variantId) {
+  await metafieldsDelete(variantId, [
+    'pre_sale_price', 'pre_sale_compare', 'pre_sale_badge_text', 'pre_sale_badge_color',
+    'sale_badge_emoji', 'sale_badge_color',
+  ]);
 }
 
 async function processScheduledSales() {
@@ -204,7 +217,12 @@ async function processScheduledSales() {
           productVariant(id: $id) {
             id price compareAtPrice
             product { id }
-            preSaleMeta: metafield(namespace: "custom", key: "pre_sale_price") { value }
+            preSaleMeta:     metafield(namespace: "custom", key: "pre_sale_price") { value }
+            preCompareMeta:  metafield(namespace: "custom", key: "pre_sale_compare") { value }
+            preBadgeText:    metafield(namespace: "custom", key: "pre_sale_badge_text") { value }
+            preBadgeColor:   metafield(namespace: "custom", key: "pre_sale_badge_color") { value }
+            curBadgeText:    metafield(namespace: "custom", key: "price_badge_text") { value }
+            curBadgeColor:   metafield(namespace: "custom", key: "price_badge_color") { value }
           }
         }`,
         { id: variantId }
@@ -250,60 +268,68 @@ async function processScheduledSales() {
       }
     }
 
-    // ── Price discount ─────────────────────────────────────────────────────
+    // ── Price discount (Hauspreis-fest) ────────────────────────────────────
     if (discountType) {
       for (const variant of variantData) {
-        const { id: variantId, price: currentPrice, product, preSaleMeta } = variant;
+        const { id: variantId, price: currentPrice, compareAtPrice, product,
+                preSaleMeta, preCompareMeta, preBadgeText, preBadgeColor,
+                curBadgeText, curBadgeColor } = variant;
         const productId = product.id;
         const shortId   = variantId.split('/').pop();
 
         if (expired) {
-          const restorePrice = preSaleMeta?.value || currentPrice;
-          console.log(`    [${shortId}] Preis wiederherstellen: ${restorePrice}${!preSaleMeta ? ' (Fallback — pre_sale_price fehlte)' : ''}`);
+          // Zurück auf den Vorzustand – inkl. Hauspreis (Preis reduziert, Vergleichspreis = UVP, Badge "Hauspreis").
+          const restorePrice   = preSaleMeta?.value || currentPrice;
+          const restoreCompare = preCompareMeta?.value ? preCompareMeta.value : null;
+          console.log(`    [${shortId}] Wiederherstellen: Preis ${restorePrice}${restoreCompare ? `, Vergleichspreis ${restoreCompare}` : ''}${!preSaleMeta ? ' (Fallback — pre_sale_price fehlte)' : ''}`);
           const upd = await gql(
             `mutation($pid: ID!, $variants: [ProductVariantsBulkInput!]!) {
-              productVariantsBulkUpdate(productId: $pid, variants: $variants) {
-                userErrors { field message }
-              }
+              productVariantsBulkUpdate(productId: $pid, variants: $variants) { userErrors { field message } }
             }`,
-            { pid: productId, variants: [{ id: variantId, price: restorePrice, compareAtPrice: null }] }
+            { pid: productId, variants: [{ id: variantId, price: restorePrice, compareAtPrice: restoreCompare }] }
           );
           const errs = upd.productVariantsBulkUpdate.userErrors;
           if (errs.length) { console.error(`    [${shortId}] Restore fehlgeschlagen:`, errs); allOk = false; }
-          else await removeSaleMetafields(variantId);
+          else {
+            await restorePriceBadge(variantId, preBadgeText?.value, preBadgeColor?.value);
+            await removeSaleMetafields(variantId);
+          }
         } else {
           if (preSaleMeta) {
             console.log(`    [${shortId}] Sale bereits aktiv (${currentPrice}), übersprungen`);
             continue;
           }
           const currentPriceNum = parseFloat(currentPrice);
+          const compareNum      = parseFloat(compareAtPrice);
+          // UVP = vorhandener Vergleichspreis (z. B. Hauspreis-UVP), sonst der aktuelle Preis.
+          const uvp = (Number.isFinite(compareNum) && compareNum > currentPriceNum) ? compareNum : currentPriceNum;
           const newSalePrice = discountType === 'fixed'
             ? parseFloat(salePrice).toFixed(2)
-            : (currentPriceNum * (1 - parseFloat(discountPct) / 100)).toFixed(2);
-
-          // Originalpreis als Varianten-Metafeld sichern, bevor der Sale angewendet wird
-          const saveMeta = await gql(
-            `mutation($metafields: [MetafieldsSetInput!]!) {
-              metafieldsSet(metafields: $metafields) { userErrors { field message } }
-            }`,
-            { metafields: [{ ownerId: variantId, namespace: 'custom', key: 'pre_sale_price', type: 'single_line_text_field', value: currentPrice }] }
-          );
-          if (saveMeta.metafieldsSet.userErrors.length) {
-            console.warn(`    [${shortId}] Warning saving pre_sale_price:`, saveMeta.metafieldsSet.userErrors);
+            : (uvp * (1 - parseFloat(discountPct) / 100)).toFixed(2);
+          const salePriceNum = parseFloat(newSalePrice);
+          if (!(salePriceNum > 0) || salePriceNum >= uvp) {
+            console.warn(`    [${shortId}] Angebotspreis ${newSalePrice} nicht < UVP ${uvp} — übersprungen`);
+            continue;
           }
+
+          // Vorzustand sichern (Preis, Vergleichspreis, bisheriges Badge – z. B. Hauspreis).
+          await savePreSaleState(variantId, currentPrice, compareAtPrice, curBadgeText?.value, curBadgeColor?.value);
 
           const upd = await gql(
             `mutation($pid: ID!, $variants: [ProductVariantsBulkInput!]!) {
-              productVariantsBulkUpdate(productId: $pid, variants: $variants) {
-                userErrors { field message }
-              }
+              productVariantsBulkUpdate(productId: $pid, variants: $variants) { userErrors { field message } }
             }`,
-            { pid: productId, variants: [{ id: variantId, price: newSalePrice, compareAtPrice: currentPrice }] }
+            { pid: productId, variants: [{ id: variantId, price: newSalePrice, compareAtPrice: uvp.toFixed(2) }] }
           );
           const errs = upd.productVariantsBulkUpdate.userErrors;
           if (errs.length) { console.error(`    [${shortId}] Preisupdate fehlgeschlagen:`, errs); allOk = false; continue; }
-          await setBadgeMetafields(variantId, badgeEmoji, badgeColor);
-          console.log(`    [${shortId}] ${currentPrice} → ${newSalePrice} (compareAt: ${currentPrice})`);
+
+          // Badge = Angebots-Label + Rabatt in % gegenüber UVP (z. B. "Sale -30%") -> die PDP rendert es
+          // über price.liquid (custom.price_badge_text/color). Übersteuert das Hauspreis-Badge.
+          const pct = Math.round((uvp - salePriceNum) / uvp * 100);
+          const label = (badgeEmoji ? badgeEmoji + ' ' : '') + '-' + pct + '%';
+          await setPriceBadge(variantId, label, badgeColor);
+          console.log(`    [${shortId}] ${currentPrice} → ${newSalePrice} (UVP ${uvp.toFixed(2)}, -${pct}%, Badge "${label}")`);
         }
       }
     }
