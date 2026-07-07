@@ -27,6 +27,16 @@
   endif
   assign plate_color = section.settings.logo_plate_color | default: '#ffffff'
   assign plate_radius = section.settings.logo_plate_radius | default: 12
+  assign empty_bg = section.settings.empty_bg | default: 'dark'
+
+  comment
+    Kein Bild/Video hinterlegt → Marken-Verlauf. „dark“ = klassischer dunkler
+    Verlauf, „light“ = heller, luftiger Verlauf in der Sport-Akzentfarbe.
+  endcomment
+  assign is_empty = false
+  if section.settings.image == blank and section.settings.video == blank and section.settings.video_url == blank
+    assign is_empty = true
+  endif
 -%}
 
 {%- style -%}
@@ -43,7 +53,15 @@
   .fs-hero__media, .fs-hero__media img, .fs-hero__media video {
     position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2;
   }
-  .fs-hero__media--empty { background: linear-gradient(135deg, color-mix(in srgb, var(--fs-hero-accent) 80%, #000) 0%, #0c1117 70%); z-index: -2; }
+  .fs-hero__media--empty { z-index: -2; }
+  /* Dunkler Marken-Verlauf (Standard). */
+  .fs-hero__media--empty-dark { background: linear-gradient(135deg, color-mix(in srgb, var(--fs-hero-accent) 80%, #000) 0%, #0c1117 70%); }
+  /* Heller, luftiger Verlauf in der Sport-Akzentfarbe – dezenter Glow oben rechts. */
+  .fs-hero__media--empty-light {
+    background:
+      radial-gradient(115% 115% at 88% 10%, color-mix(in srgb, var(--fs-hero-accent) 32%, #fff) 0%, transparent 58%),
+      linear-gradient(160deg, #ffffff 0%, color-mix(in srgb, var(--fs-hero-accent) 13%, #fff) 100%);
+  }
   .fs-hero__overlay { position: absolute; inset: 0; z-index: -1;
     background: linear-gradient(180deg, rgba(8,12,18,calc(var(--fs-hero-overlay) * .5)) 0%, rgba(8,12,18,var(--fs-hero-overlay)) 100%); }
 
@@ -101,7 +119,7 @@
 </style>
 
 <div class="fs-hero fs-hero--{{ uid }} fs-hero--{{ section.settings.height }} fs-hero--{{ section.settings.text_align }} fs-hero--{{ section.settings.text_color }}">
-  <div class="fs-hero__media{% if section.settings.image == blank and section.settings.video == blank and section.settings.video_url == blank %} fs-hero__media--empty{% endif %}">
+  <div class="fs-hero__media{% if is_empty %} fs-hero__media--empty fs-hero__media--empty-{{ empty_bg }}{% endif %}">
     {%- if section.settings.video != blank -%}
       {{ section.settings.video | video_tag: image_size: '1600x', loop: true, autoplay: true, muted: true, controls: false, playsinline: true }}
     {%- elsif section.settings.video_url != blank -%}
@@ -122,7 +140,7 @@
       }}
     {%- endif -%}
   </div>
-  <div class="fs-hero__overlay"></div>
+  {%- unless is_empty and empty_bg == 'light' -%}<div class="fs-hero__overlay"></div>{%- endunless -%}
 
   <div class="fs-hero__inner">
     <div class="fs-hero__content">
@@ -191,6 +209,15 @@
     { "type": "video", "id": "video", "label": "Video (Shopify-gehostet)" },
     { "type": "url", "id": "video_url", "label": "Video-URL (.mp4, extern)", "info": "Alternative zum Shopify-Video." },
     { "type": "range", "id": "overlay_opacity", "label": "Overlay-Stärke", "min": 0, "max": 80, "step": 5, "unit": "%", "default": 40 },
+    {
+      "type": "select", "id": "empty_bg", "label": "Hintergrund ohne Bild",
+      "info": "Nur wirksam, wenn kein Bild/Video hinterlegt ist. Heller Verlauf → Textfarbe „Dunkel“ wählen.",
+      "options": [
+        { "value": "dark", "label": "Dunkler Marken-Verlauf" },
+        { "value": "light", "label": "Heller Sport-Verlauf" }
+      ],
+      "default": "dark"
+    },
     { "type": "header", "content": "Layout & Farben" },
     {
       "type": "select", "id": "height", "label": "Höhe",

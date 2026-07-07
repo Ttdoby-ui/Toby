@@ -15,11 +15,11 @@
         "cta1_link": "/collections/padel",
         "cta2_label": "Padel Court buchen",
         "cta2_link": "/pages/courts",
-        "image": "shopify://shop_images/IMG-5630.png",
         "height": "medium",
         "text_align": "left",
-        "text_color": "light",
-        "overlay_opacity": 55
+        "text_color": "dark",
+        "overlay_opacity": 0,
+        "empty_bg": "light"
       }
     },
     "fs_strip_schlaeger": {
