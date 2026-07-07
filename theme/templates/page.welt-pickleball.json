@@ -25,28 +25,40 @@
     "fs_strip_schlaeger": {
       "type": "fs-collection-strip",
       "settings": {
-        "eyebrow": "Sortiment", "heading": "Pickleball-Schläger",
-        "collection": "pickleball-schlaeger", "max_products": 8,
-        "show_view_all": true, "view_all_label": "Alle Paddles",
-        "columns_desktop": 4, "background": "anthracite"
+        "eyebrow": "Sortiment",
+        "heading": "Pickleball-Schläger",
+        "collection": "pickleball-schlaeger",
+        "max_products": 8,
+        "show_view_all": true,
+        "view_all_label": "Alle Paddles",
+        "columns_desktop": 4,
+        "background": "light"
       }
     },
     "fs_strip_baelle": {
       "type": "fs-collection-strip",
       "settings": {
-        "eyebrow": "Sortiment", "heading": "Pickleball-Bälle",
-        "collection": "pickleball-baelle", "max_products": 8,
-        "show_view_all": true, "view_all_label": "Alle Bälle",
-        "columns_desktop": 4, "background": "anthracite"
+        "eyebrow": "Sortiment",
+        "heading": "Pickleball-Bälle",
+        "collection": "pickleball-baelle",
+        "max_products": 8,
+        "show_view_all": true,
+        "view_all_label": "Alle Bälle",
+        "columns_desktop": 4,
+        "background": "grey"
       }
     },
     "fs_strip_alle": {
       "type": "fs-collection-strip",
       "settings": {
-        "eyebrow": "Entdecken", "heading": "Alle Pickleball-Artikel",
-        "collection": "pickleball", "max_products": 8,
-        "show_view_all": true, "view_all_label": "Alle ansehen",
-        "columns_desktop": 4, "background": "anthracite"
+        "eyebrow": "Entdecken",
+        "heading": "Alle Pickleball-Artikel",
+        "collection": "pickleball",
+        "max_products": 8,
+        "show_view_all": true,
+        "view_all_label": "Alle ansehen",
+        "columns_desktop": 4,
+        "background": "light"
       }
     },
     "fs_courts": {
@@ -57,10 +69,13 @@
         "heading": "Auf unseren Pickleball Courts.",
         "intro": "<p>Buche deinen Pickleball Court an unserem Standort – schnell, einfach und jederzeit über Playtomic.</p>",
         "image": "shopify://shop_images/IMG-5627.png",
-        "pickleball_url": "#", "pickleball_label": "Pickleball buchen",
-        "standort_url": "/pages/standorte", "standort_label": "Standort wählen",
-        "playtomic_url": "#", "playtomic_label": "Jetzt auf Playtomic buchen",
-        "background": "anthracite",
+        "pickleball_url": "#",
+        "pickleball_label": "Pickleball buchen",
+        "standort_url": "/pages/standorte",
+        "standort_label": "Standort wählen",
+        "playtomic_url": "#",
+        "playtomic_label": "Jetzt auf Playtomic buchen",
+        "background": "grey",
         "note": "Offizielle Buchungsplattform von Futurespin · Playtomic"
       }
     },
@@ -72,41 +87,105 @@
           "settings": {
             "image": "shopify://shop_images/IMG-5628.png",
             "name": "Futurespin Adelsdorf",
-            "street": "Weppersdorf 6a", "zip": "91325", "city": "Adelsdorf", "country": "DE",
+            "street": "Weppersdorf 6a",
+            "zip": "91325",
+            "city": "Adelsdorf",
+            "country": "DE",
             "hours": "Mo–Fr: 15:30–18:30\nSa: 10:00–13:00",
-            "click_collect": true, "has_pickleball": true, "has_tabletennis": true,
-            "landing_url": "/pages/standorte", "landing_label": "Standort entdecken", "add_schema": true
+            "click_collect": true,
+            "has_pickleball": true,
+            "has_tabletennis": true,
+            "landing_url": "/pages/standorte",
+            "landing_label": "Standort entdecken",
+            "add_schema": true
           }
         }
       },
-      "block_order": ["adelsdorf"],
+      "block_order": [
+        "adelsdorf"
+      ],
       "settings": {
-        "layout": "split", "eyebrow": "Omnichannel", "heading": "Unsere Standorte.",
+        "layout": "split",
+        "eyebrow": "Omnichannel",
+        "heading": "Unsere Standorte.",
         "intro": "<p>Erlebe Pickleball live – in unseren Stores und auf unseren Courts.</p>",
-        "button_label": "Alle Standorte ansehen", "button_link": "/pages/standorte",
-        "background": "anthracite"
+        "button_label": "Alle Standorte ansehen",
+        "button_link": "/pages/standorte",
+        "background": "light"
       }
     },
     "fs_trust": {
       "type": "fs-trust-bar",
       "blocks": {
-        "courts": { "type": "item", "settings": { "icon": "court", "label": "Eigene Courts", "sub": "Top-Anlagen an allen Standorten" } },
-        "advice": { "type": "item", "settings": { "icon": "advice", "label": "Persönliche Beratung", "sub": "Von Spielern für Spieler" } },
-        "shipping": { "type": "item", "settings": { "icon": "shipping", "label": "Schneller Versand", "sub": "Ab 69 € kostenlos in DE" } },
-        "collect": { "type": "item", "settings": { "icon": "collect", "label": "Click & Collect", "sub": "Online bestellen, im Store abholen" } },
-        "secure": { "type": "item", "settings": { "icon": "secure", "label": "Sichere Zahlung", "sub": "SSL-verschlüsselt und sicher" } }
+        "courts": {
+          "type": "item",
+          "settings": {
+            "icon": "court",
+            "label": "Eigene Courts",
+            "sub": "Top-Anlagen an allen Standorten"
+          }
+        },
+        "advice": {
+          "type": "item",
+          "settings": {
+            "icon": "advice",
+            "label": "Persönliche Beratung",
+            "sub": "Von Spielern für Spieler"
+          }
+        },
+        "shipping": {
+          "type": "item",
+          "settings": {
+            "icon": "shipping",
+            "label": "Schneller Versand",
+            "sub": "Ab 69 € kostenlos in DE"
+          }
+        },
+        "collect": {
+          "type": "item",
+          "settings": {
+            "icon": "collect",
+            "label": "Click & Collect",
+            "sub": "Online bestellen, im Store abholen"
+          }
+        },
+        "secure": {
+          "type": "item",
+          "settings": {
+            "icon": "secure",
+            "label": "Sichere Zahlung",
+            "sub": "SSL-verschlüsselt und sicher"
+          }
+        }
       },
-      "block_order": ["courts", "advice", "shipping", "collect", "secure"],
-      "settings": { "background": "anthracite" }
+      "block_order": [
+        "courts",
+        "advice",
+        "shipping",
+        "collect",
+        "secure"
+      ],
+      "settings": {
+        "background": "grey"
+      }
     },
     "fs_newsletter": {
       "type": "fs-newsletter",
       "settings": {
         "heading": "Bleib auf dem Laufenden.",
         "text": "<p>News, Events, Tipps und exklusive Angebote rund um Pickleball.</p>",
-        "background": "anthracite"
+        "background": "accent"
       }
     }
   },
-  "order": ["fs_hero", "fs_strip_schlaeger", "fs_strip_baelle", "fs_strip_alle", "fs_courts", "fs_locations", "fs_trust", "fs_newsletter"]
+  "order": [
+    "fs_hero",
+    "fs_strip_schlaeger",
+    "fs_strip_baelle",
+    "fs_strip_alle",
+    "fs_courts",
+    "fs_locations",
+    "fs_trust",
+    "fs_newsletter"
+  ]
 }
