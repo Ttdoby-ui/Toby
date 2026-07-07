@@ -131,9 +131,19 @@
   - **VIP** (Smart-Kollektion, Regel `for_vip AND NOT mws_apo_generated AND NOT Belag AND NOT Textil`,
     aktuell 562 Produkte): `gid://shopify/Collection/664158142812` (Beläge + Textilien ausgeschlossen,
     da deren VIP-Logik die Function steuert; `for_vip`-Tag bleibt für Preisanzeige)
-- **VIP-Rabatte laufen als AUTOMATISCHE Basic-Rabatte** (die alten Codes sind EXPIRED):
-  - VIP1 15 % → `2340297605468`, VIP2 25 % → `2340297671004`, VIP3 30 % → `2340297736540`
-  - jeweils auf die VIP-Kollektion, Kundensegmente nach Tags `VIP1`/`VIP2`/`VIP3`
+- **VIP-Rabatte laufen seit 2026-07-07 über die `kollektionsrabatt`-Function (UVP-Basis), NICHT mehr nativ:**
+  - Neu: **„VIP-Rabatt (UVP-Basis)"** `gid://shopify/DiscountAutomaticNode/2352883794268` (ACTIVE) – dieselbe
+    Function wie der Mengenrabatt, aber **VIP-only** (Config `tiers: []`, `VIP_ONLY=true`), auf die VIP-Collection
+    `664158142812`. Grund: nur die Function kann den VIP-% auf die **UVP (`compareAtAmountPerQuantity`)** rechnen
+    und deckelt auf den Angebotspreis → **kein Doppelrabatt** auf Sale-Artikel (Bug: VIP stapelte auf reduzierte
+    Preise). Anlage: Workflow **„VIP-Kollektionsrabatt anlegen (UVP-Basis)"** (`VIP_ONLY=true`, auf `main`).
+  - ⚠️ **Nebeneffekt (bewusst so, 2026-07-07):** Die Function ist **POS-ausgeschlossen** (`cart.retailLocation`)
+    → VIP gilt für diese Artikel **nur online, nicht im Laden** (die alten nativen VIP-Rabatte galten in allen
+    Kanälen). So gewollt, konsistent zum Mengenrabatt.
+  - Die 3 nativen VIP-Rabatte sind seither **EXPIRED/deaktiviert** (nicht löschen, für Rollback):
+    VIP1 15 % → `2340297605468`, VIP2 25 % → `2340297671004`, VIP3 30 % → `2340297736540` (jeweils auf die
+    VIP-Kollektion, Kundensegmente nach Tags `VIP1`/`VIP2`/`VIP3`). Rollback = diese reaktivieren + neuen
+    Function-Rabatt deaktivieren.
 - BXGY „Beläge: Kaufe 4, zahle 3" (`2337981858140`) ist aktuell **EXPIRED**
 - App „VIP Beläge Discount" (enthält die Discount-Function): client_id `9fe6aa2d03cc52e54d29fdba8ee8d823`
   - Store-Function-ID (für `discountAutomaticAppCreate`): `019f08c1-5ddb-7799-b6fa-287917c3aaa1`
@@ -329,9 +339,15 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
 - Ziel „**höchster Rabatt gewinnt**" (kein Stapeln) ist nur deterministisch, wenn **EINE**
   Stelle eine Kollektion steuert. Shopify: bei `combinesWith.productDiscounts = false`
   gilt nur 1 Produktrabatt pro Position — *welcher* ist aber nicht garantiert der höhere.
+- ✅ **UVP-Basis für VIP auf Angebots-Artikeln (2026-07-07):** Die Function misst den Nachlass bei einem
+  Angebot (Vergleichspreis/UVP > aktueller Preis) an der **UVP**: Zielpreis `UVP × (1−%)`, abgezogen wird
+  nur die Differenz bis dahin; ist das Angebot schon tiefer, greift **kein** Zusatzrabatt (kein Doppelrabatt).
+  Diese Logik steckt in `index.js` (`compareAtAmountPerQuantity`, `hasMarkdown`) und gilt für Mengenrabatt
+  **und** VIP. Deshalb wurde auch der **generelle VIP-Rabatt** (VIP-Collection, nicht Beläge/Textilien) von
+  nativ auf die Function umgestellt (VIP-only, `VIP_ONLY=true` → `tiers: []`; siehe Store-Fakten oben).
 - **Gewählte Lösung ① (Beläge):** Die Function `kollektionsrabatt` steuert Beläge **allein**
-  und rechnet pro Artikel `max(Mengenstaffel %, VIP %)`. VIP bleibt für alle anderen
-  Produkte als native Automatik-Rabatte bestehen.
+  und rechnet pro Artikel `max(Mengenstaffel %, VIP %)`. Seit 2026-07-07 läuft auch der **restliche VIP**
+  (VIP-Collection) über dieselbe Function (VIP-only) – native VIP-Rabatte sind deaktiviert.
   - **Umgesetzt (2026-06-28):** Beläge aus den VIP-Rabatten genommen über eine
     **Kollektions-Regel** statt Tag-Entfernung – VIP-Smart-Kollektion
     (`664158142812`) um `TAG NOT_EQUALS Belag` ergänzt (alle Beläge haben Tag
