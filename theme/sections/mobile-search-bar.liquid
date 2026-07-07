@@ -28,7 +28,7 @@
   assign sport_tag = ''
   if request.path contains '/pages/welt-tischtennis'
     if scope_tt
-      assign sport_tag = 'tischtennis'
+      assign sport_tag = 'Tischtennis'
     endif
   elsif request.path contains '/pages/welt-padel'
     assign sport_tag = 'padel'
@@ -66,7 +66,7 @@
     // Server hat auf einer Welt-Seite bereits einen Tag gesetzt → nichts tun.
     if (filter.value) return;
     var MAP = {
-      {%- if scope_tt %}'/pages/welt-tischtennis': 'tischtennis',{% endif %}
+      {%- if scope_tt %}'/pages/welt-tischtennis': 'Tischtennis',{% endif %}
       '/pages/welt-padel': 'padel',
       '/pages/welt-pickleball': 'pickleball'
     };
@@ -167,8 +167,8 @@
     {
       "type": "checkbox",
       "id": "scope_tischtennis",
-      "label": "Tischtennis-Suche auf Tag „tischtennis“ einschränken",
-      "info": "Erst aktivieren, wenn ALLE Tischtennis-Produkte den Tag „tischtennis“ tragen UND der Tag-Filter in Search & Discovery den Wert „tischtennis“ enthält. Sonst liefert die TT-Suche keine Treffer. Padel/Pickleball sind immer eingeschränkt.",
+      "label": "Tischtennis-Suche auf Tag „Tischtennis“ einschränken",
+      "info": "Erst aktivieren, wenn ALLE Tischtennis-Produkte den Tag „Tischtennis“ (großes T) tragen UND der Tag-Filter in Search & Discovery den Wert „Tischtennis“ enthält. Sonst liefert die TT-Suche keine Treffer. Padel/Pickleball sind immer eingeschränkt.",
       "default": false
     }
   ],
