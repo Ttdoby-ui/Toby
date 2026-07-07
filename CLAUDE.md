@@ -239,6 +239,28 @@
   - **Merke:** Bestellpositionen (Line Items) sind die Wahrheit, die Warenkorb-Notiz ist es nicht. Bei
     „Notiz sagt X, Bestellung enthält Y" die Line-Item-`customAttributes` prüfen.
 
+## Hauspreis (dauerhafte −10 % im Artikel, 2026-07-07)
+
+- **Was:** Alle aktiven Artikel dauerhaft im Artikel reduziert: **Preis = UVP × 0,9, abgerundet auf x,90**,
+  **Vergleichspreis = alte UVP**, Produkt-**Tag `Hauspreis`**. Kein Rabatt/Function – echte Produktdaten
+  (sofort live in ALLEN Themes, nicht per Theme-Rotation rückgängig).
+- **Ausgenommen:** Kollektionen **Vereinsbedarf** (`664017830236`) + Sale-Vereinsbedarf (`691374326108`),
+  **schon reduzierte** Varianten (Vergleichspreis gesetzt), Artikel **unter 10 €**, Geschenkgutscheine.
+- **Ergebnis Lauf 2026-07-07:** 1.062 Produkte / 5.169 Varianten geändert, 0 Fehler.
+- **Blaues „Hauspreis"-Feld:** KEINE Theme-Änderung nötig – `snippets/price.liquid` (live + Entwurf) rendert
+  bei gesetztem Metafeld **`custom.price_badge_text`** dieses Feld **statt „Angebot"**, in Farbe
+  **`custom.price_badge_color`**. Gesetzt: Text „Hauspreis", Farbe `#486A8F` (Futurespin-Blau) auf alle
+  `tag:Hauspreis`. → sofort live, keine Rotation.
+- **Tools (idempotent, Store-Token `write_products`):**
+  - Preise: `scripts/hauspreis-10-prozent.mjs` + Workflow **„Hauspreis 10% umstellen"** (`DRY_RUN` Default true,
+    `MIN_PRICE`, `DISCOUNT_PCT`, `LIMIT`; Rollback-Artefakt `hauspreis-rollback` mit variantId+altem Preis).
+  - Badge: `scripts/hauspreis-badge-metafields.mjs` + Workflow **„Hauspreis-Badge setzen"** (`MODE=set|clear`).
+  - **Neue Artikel** künftig: erst „Hauspreis 10% umstellen" (dry-run→echt), dann „Hauspreis-Badge setzen".
+- **Rollback:** Preise via Artefakt zurücksetzen (Preis←alterPreis, Vergleichspreis←leer), Tag `Hauspreis`
+  entfernen, Badge via `MODE=clear`.
+- **Wechselwirkung VIP/Mengenrabatt (passt):** Vergleichspreis=UVP → die `kollektionsrabatt`-Function rechnet
+  VIP/Mengenrabatt weiter auf UVP-Basis; der Hauspreis (−10 %) ist die Basis für Nicht-VIP.
+
 ## Versand: „B2B Versand" nur für Händler (Delivery Customization Function)
 
 - **Problem:** Die Versandmethode **„B2B Versand"** (8,21 €, Allgemeines Profil, Zone Deutschland) hatte keine
