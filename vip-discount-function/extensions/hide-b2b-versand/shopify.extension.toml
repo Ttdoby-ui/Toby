@@ -1,0 +1,17 @@
+api_version = "2025-10"
+
+[[extensions]]
+name = "B2B-Versand nur für Händler"
+handle = "hide-b2b-versand"
+type = "function"
+
+[[extensions.targeting]]
+target = "purchase.delivery-customization.run"
+input_query = "src/run.graphql"
+export = "run"
+
+[extensions.build]
+path = "dist/function.wasm"
+# Reines JS ohne generierte Typen → typegen no-op (sonst läuft graphql-codegen
+# und scheitert mangels Codegen-Konfig). Der Build bündelt + javy danach normal.
+typegen_command = "node --version"

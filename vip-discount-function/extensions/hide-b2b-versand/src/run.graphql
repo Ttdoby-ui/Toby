@@ -1,0 +1,18 @@
+query RunInput {
+  cart {
+    buyerIdentity {
+      customer {
+        # true, wenn der Kunde IRGENDEINEN B2B-Tag trägt (verifiziert an
+        # echten Kunden: B2B1/B2B2/B2B3 + Händler). Gäste (nicht eingeloggt)
+        # haben keinen customer → gelten als B2C.
+        hasAnyTag(tags: ["B2B1", "B2B2", "B2B3", "Händler"])
+      }
+    }
+    deliveryGroups {
+      deliveryOptions {
+        handle
+        title
+      }
+    }
+  }
+}

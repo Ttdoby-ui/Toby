@@ -1,0 +1,11 @@
+{
+  "name": "hide-b2b-versand",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test src/run.test.js"
+  },
+  "dependencies": {
+    "@shopify/shopify_function": "^2.0.1"
+  }
+}
