@@ -73,57 +73,62 @@
 
 {% stylesheet %}
   .fs-msearch {
-    display: none;
+    display: block;
+    padding: 0.5rem var(--page-margin, 16px);
   }
 
-  @media screen and (max-width: 749px) {
+  .fs-msearch__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: var(--style-border-radius-inputs, 8px);
+    background: var(--color-background, #fff);
+    color: var(--color-foreground, #555);
+  }
+
+  /* Auf Desktop mittig und begrenzt (nicht über die volle Breite). */
+  @media screen and (min-width: 750px) {
     .fs-msearch {
-      display: block;
-      padding: 0.5rem var(--page-margin, 16px);
+      padding-block: 0.35rem;
     }
-
     .fs-msearch__bar {
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
-      width: 100%;
-      margin: 0;
-      padding: 0.7rem 0.9rem;
-      border: 1px solid var(--color-border, #ddd);
-      border-radius: var(--style-border-radius-inputs, 8px);
-      background: var(--color-background, #fff);
-      color: var(--color-foreground, #555);
+      max-width: 640px;
+      margin-inline: auto;
     }
+  }
 
-    .fs-msearch__icon {
-      display: inline-flex;
-      width: 1.1rem;
-      height: 1.1rem;
-      flex: 0 0 auto;
-      opacity: 0.7;
-    }
+  .fs-msearch__icon {
+    display: inline-flex;
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 auto;
+    opacity: 0.7;
+  }
 
-    .fs-msearch__icon svg {
-      width: 100%;
-      height: 100%;
-    }
+  .fs-msearch__icon svg {
+    width: 100%;
+    height: 100%;
+  }
 
-    .fs-msearch__input {
-      flex: 1 1 auto;
-      min-width: 0;
-      border: 0;
-      outline: none;
-      background: transparent;
-      color: inherit;
-      font: inherit;
-      font-size: 0.95rem;
-      line-height: 1.2;
-    }
+  .fs-msearch__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.95rem;
+    line-height: 1.2;
+  }
 
-    .fs-msearch__input::placeholder {
-      color: inherit;
-      opacity: 0.7;
-    }
+  .fs-msearch__input::placeholder {
+    color: inherit;
+    opacity: 0.7;
   }
 {% endstylesheet %}
 

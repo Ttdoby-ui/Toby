@@ -102,11 +102,9 @@
     --cart-bubble-text: #ffffff !important;
   }
 
-  /* Auf Mobil die Header-Lupe ausblenden – die mobile Suchleiste ersetzt sie.
+  /* Header-Lupe ausblenden (mobil & Desktop) – das Suchfeld ersetzt sie.
      Die Suche im Menü-Drawer (--hidden-on-menu) bleibt erhalten. */
-  @media screen and (max-width: 749px) {
-    .search-action:not(.search-action--hidden-on-menu) { display: none !important; }
-  }
+  .search-action:not(.search-action--hidden-on-menu) { display: none !important; }
   {%- if current_sport_link != '' and current_accent != blank -%}
   :root { --fs-sport-accent: {{ current_accent }}; }
   {%- endif -%}
@@ -140,6 +138,8 @@
       }
       var a = document.querySelector('.header-logo');
       if (a) {
+        // Logo verlinkt auf die aktuelle Sportwelt statt auf die Startseite.
+        a.setAttribute('href', link);
         var img = a.querySelector('.header-logo__image');
         if (img) {
           img.setAttribute('src', map[link].logo);
