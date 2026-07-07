@@ -3,6 +3,11 @@
     "fs_hero": {
       "type": "fs-brand-hero",
       "settings": {
+        "logo": "shopify://shop_images/fs-emblem-tischtennis.png",
+        "logo_alt": "futurespin Tischtennis Emblem",
+        "logo_max_width": 160,
+        "logo_blend": false,
+        "logo_plate": false,
         "eyebrow": "Tischtennis",
         "heading": "Deine Tischtennis-Welt.",
         "text": "<p>Schläger, Beläge, Hölzer, Tische & Zubehör – plus Beratung vom Fachhandel.</p>",
