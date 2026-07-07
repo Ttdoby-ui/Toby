@@ -1,0 +1,37 @@
+name: Hauspreis-Badge setzen
+
+# Setzt bei allen Artikeln mit Tag "Hauspreis" das blaue Preis-Badge
+# (Metafelder custom.price_badge_text="Hauspreis", price_badge_color="#486A8F").
+# Theme zeigt es dann statt "Angebot" -> sofort live, ohne Rotation.
+# MODE=clear entfernt die Badges wieder.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Trockenlauf (nur zaehlen)"
+        type: boolean
+        default: true
+      mode:
+        description: "set = Badge setzen, clear = Badge entfernen"
+        type: choice
+        options: ["set", "clear"]
+        default: "set"
+
+jobs:
+  badge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Hauspreis-Badge
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          MODE: ${{ inputs.mode }}
+        run: node scripts/hauspreis-badge-metafields.mjs
