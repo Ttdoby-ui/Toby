@@ -84,6 +84,7 @@
           "price": {{ product.price | divided_by: 100.0 | json }},
           "priceFormatted": {{ product.price | money | json }},
           "compareAt": {{ fp_var.compare_at_price | default: 0 | divided_by: 100.0 | json }},
+          "onSale": {% if fp_var.metafields.custom.pre_sale_price != blank %}true{% else %}false{% endif %},
           {%- if product.featured_image -%}
           "img": {{ product.featured_image | image_url: width: 360 | prepend: 'https:' | json }},
           {%- else -%}
@@ -200,6 +201,7 @@
 <script src="{{ 'filter-panel-helpers.js' | asset_url }}" defer></script>
 <script src="{{ 'filter-panel-main.js' | asset_url }}" defer></script>
 <script src="{{ 'fs-new-badge.js' | asset_url }}" defer></script>
+<script src="{{ 'fs-sale-percent.js' | asset_url }}" defer></script>
 
 {% schema %}
 {
