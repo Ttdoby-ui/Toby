@@ -65,11 +65,14 @@ function buildTiers() {
 }
 
 function buildConfig() {
+  // VIP-only: keine Mengenstaffel, nur VIP-% (mit UVP-Basis über die Function).
+  // Für Kollektionen ohne Beläge/Textilien (z. B. die „VIP"-Smart-Collection).
+  const vipOnly = (process.env.VIP_ONLY ?? "false").toLowerCase() === "true";
   const config = {
     collectionIds: [toCollectionGid(required("COLLECTION_ID"))],
-    tiers: buildTiers(),
+    tiers: vipOnly ? [] : buildTiers(),
   };
-  if ((process.env.VIP_HIGHEST_WINS ?? "true").toLowerCase() === "true") {
+  if (vipOnly || (process.env.VIP_HIGHEST_WINS ?? "true").toLowerCase() === "true") {
     config.vipTags = VIP_TAGS;
     config.vipTiers = VIP_TIERS;
   }

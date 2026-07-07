@@ -234,3 +234,69 @@ describe("Kollektionsrabatt (Mengenstaffel)", () => {
     assert.equal(cands[0].value.percentage.value, "15");
   });
 });
+
+// VIP-only-Config (leere Staffeln) – für Kollektionen ohne Beläge/Textilien
+// (z. B. die „VIP"-Smart-Collection). Nur VIP-%, mit UVP-Basis.
+describe("VIP-only (tiers: [])", () => {
+  const VIP_ONLY = {
+    collectionIds: ["gid://shopify/Collection/664158142812"],
+    tiers: [],
+    vipTags: ["VIP1", "VIP2", "VIP3"],
+    vipTiers: [
+      { tag: "VIP1", percentage: 15 },
+      { tag: "VIP2", percentage: 25 },
+      { tag: "VIP3", percentage: 30 },
+    ],
+  };
+
+  it("Nicht-VIP-Kunde bekommt nichts", () => {
+    const result = run(
+      makeInput({ config: VIP_ONLY, lines: collectionLines(1, 20.0), vipTags: [] })
+    );
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("VIP2 ohne Angebot: 25 % auf den Preis", () => {
+    const result = run(
+      makeInput({ config: VIP_ONLY, lines: collectionLines(1, 20.0), vipTags: ["VIP2"] })
+    );
+    const cands = candidates(result);
+    assert.equal(cands.length, 1);
+    assert.equal(cands[0].value.percentage.value, "25");
+  });
+
+  it("keine Mengenstaffel: 10 Artikel geben trotzdem nur VIP", () => {
+    const result = run(
+      makeInput({ config: VIP_ONLY, lines: collectionLines(10, 20.0), vipTags: ["VIP1"] })
+    );
+    for (const c of candidates(result)) {
+      assert.equal(c.value.percentage.value, "15"); // VIP1, NICHT Mengenstaffel
+    }
+  });
+
+  it("Hülle im Sale (27,90 von UVP 39,90), VIP2 25 % → kein Zusatzrabatt", () => {
+    const result = run(
+      makeInput({ config: VIP_ONLY, lines: collectionLines(1, 27.9, 39.9), vipTags: ["VIP2"] })
+    );
+    // 39,90×0,75 = 29,925 > 27,90 → Angebot ist tiefer → nichts.
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("Hülle im Sale, VIP3 30 % → kein Zusatzrabatt (Sale schon ~30 %)", () => {
+    const result = run(
+      makeInput({ config: VIP_ONLY, lines: collectionLines(1, 27.9, 39.9), vipTags: ["VIP3"] })
+    );
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("leichtes Angebot (35,00 von UVP 39,90), VIP2 → auf UVP-Basis rabattiert", () => {
+    const result = run(
+      makeInput({ config: VIP_ONLY, lines: collectionLines(1, 35.0, 39.9), vipTags: ["VIP2"] })
+    );
+    const cands = candidates(result);
+    assert.equal(cands.length, 1);
+    // Zielpreis 39,90×0,75 = 29,925 → Abzug 35,00−29,925 = 5,075 → 5.08
+    assert.equal(cands[0].value.fixedAmount.amount, "5.08");
+    assert.equal(cands[0].value.fixedAmount.appliesToEachItem, true);
+  });
+});
