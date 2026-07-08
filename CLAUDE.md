@@ -125,8 +125,17 @@
   und beobachtet das Grid per MutationObserver (robust bei Lazy-Load/Filter/Reset). `filter-panel.liquid`
   gibt dafür zusätzlich **`published`** (`published_at`) im JSON aus und lädt das Asset. Repo-Mirror:
   `theme-horizon/{assets/fs-new-badge.js,sections/filter-panel.liquid}`. ⚠️ Theme-Änderung → nur im
-  **Entwurf-Horizon**, wird bei der nächsten Rotation live. **Offen:** native Kacheln/PDP (nicht Filter-Panel)
-  haben das Badge noch nicht.
+  **Entwurf-Horizon**, wird bei der nächsten Rotation live.
+  - **Native Kacheln (2026-07-08):** Dasselbe runde „NEU"-Badge liegt jetzt auch auf den **nativen Horizon-
+    Kacheln** – in `snippets/product-card-badges.liquid` (Liquid, `product.published_at ≤ 60 Tage`,
+    `.fs-new-badge-native`, Blau `#486A8F`, oben rechts). Repo-Mirror `theme-horizon/snippets/product-card-badges.liquid`.
+    ⚠️ Native Horizon-Datei → wird bei „Theme aktualisieren" zurückgesetzt, aus dem Mirror wiederherstellen.
+    **Offen:** nur noch die **PDP-Media-Galerie** (Produktseite-Hauptbild) hat das runde NEU noch nicht.
+- **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
+  `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
+  Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
+  von `filter-panel.liquid` `.fp-card__price{margin-top:.15em}` (überschreibt die CSS) → Preis sitzt direkt
+  unter den Farb-Dots, konsistent über alle Kacheln.
 
 ## Shopify App-Entwicklung (Dev Dashboard)
 
