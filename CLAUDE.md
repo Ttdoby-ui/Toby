@@ -275,10 +275,14 @@
   mit **Rabatt in %** zur UVP (z. B. „Sale -30%") → PDP zeigt es ohne Theme-Änderung. Vorzustand in
   `pre_sale_*`-Metafeldern gesichert → beim Ablauf exakte Wiederherstellung inkl. Hauspreis. ⚠️ Alt: setzte
   `sale_badge_*` (vom Theme NICHT gelesen) + compareAt=Hauspreis (falsche UVP) — behoben.
-- **„-X %"-Chip auf Kacheln nur bei echten Angeboten:** `filter-panel.liquid` emittiert `onSale`
-  (Variante hat `pre_sale_price`); Asset `assets/fs-sale-percent.js` legt bei onSale-Kacheln mit Markdown
-  einen roten „-X %"-Chip (vs UVP) in den Kachelpreis. Hauspreis (−10 %) ausgenommen. Nur Entwurf-Horizon
-  → live bei Rotation.
+- **Kachel-Badge = echtes Produkt-Badge (2026-07-08):** Die Filter-Panel-Kacheln (`filter-panel-main.js`)
+  schrieben hart **„Angebot"** für jeden reduzierten Artikel und lasen `price_badge_text` NICHT → Hauspreis-
+  Artikel zeigten auf Kacheln „Angebot" statt „Hauspreis" (PDP war korrekt). Fix ohne Eingriff in die
+  minifizierte Logik: `filter-panel.liquid` emittiert `badgeText`/`badgeColor` (Produkt-Metafelder
+  `custom.price_badge_text/color`), Asset `assets/fs-sale-percent.js` ersetzt den `.fp-card__sale-badge`-Text
+  + Farbe durch das echte Badge („Hauspreis" blau bzw. „Sale -30%" inkl. Rabatt-%). Das `-X%` steckt bei
+  Angeboten im Badge-Text (Job setzt `price_badge_text` auf **Produkt-Ebene**, PDP + Asset lesen es dort).
+  Nur Entwurf-Horizon → live bei Rotation.
 
 ## Versand: „B2B Versand" nur für Händler (Delivery Customization Function)
 
