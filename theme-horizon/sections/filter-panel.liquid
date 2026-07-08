@@ -154,7 +154,7 @@
 
 {{ 'filter-panel.css' | asset_url | stylesheet_tag }}
 {% style %}
-  .fp-card__price{color:#486A8F;}
+  .fp-card__price{color:#486A8F;margin-top:.15em;}/* nicht mehr ans Kartenende schieben (kein margin-top:auto) -> Preis direkt unter den Dots */
   .fp-card .belag-tiers{display:grid;grid-template-columns:max-content max-content;justify-content:start;column-gap:.55em;row-gap:.2em;margin-top:.35em;}
   .fp-card .belag-tier{padding:0;line-height:1.25;}
   .fp-card .belag-tier:nth-child(2n){border-inline-start:1px solid #ddd;padding-inline-start:.55em;}
