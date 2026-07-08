@@ -100,6 +100,16 @@
   - `assets/filter-panel-helpers.js`, `assets/filter-panel.css` – Helfer/Style.
 - **Konsequenz:** Kachel-Änderungen müssen **dort** rein, nicht (nur) in `price.liquid`.
   `price.liquid` greift weiter auf der **Produktdetailseite**.
+- 🚨 **PFLICHT-REGEL (User, 2026-07-08): Preis-/Badge-/Anzeige-Anpassungen IMMER an BEIDEN Render-Pfaden
+  umsetzen** – sonst weichen Kacheln und „normale" Ansicht voneinander ab (passierte beim Hauspreis-Badge:
+  PDP „Hauspreis", Kachel „Angebot"). Es gibt **zwei getrennte Render-Wege**, die sich NICHT gegenseitig
+  beeinflussen:
+  1. **Filter-Panel** (Beläge/Hölzer/Katalog-Kollektionen): `sections/filter-panel.liquid` (JSON-Daten) +
+     `assets/filter-panel-main.js` (Kachel-Bau) + die `assets/fs-*.js`-Post-Prozessoren (Badge/NEU/Sale).
+  2. **Native Horizon** (PDP, Homepage-`product-list`, Empfehlungen, Topseller `collection-topseller`,
+     sonstige Kollektionen): `snippets/price.liquid` (+ ggf. Produkt-Metafelder wie `custom.price_badge_text`).
+  → Bei jeder Preis-/Badge-/Prozent-/„inkl. MwSt."-Änderung **beide** Stellen anpassen und testen (Kachel
+  **und** Produktseite **und** Homepage/Empfehlungen). Nie nur eine Seite.
 - **Performance: inkrementelles Rendern (Lazy-Grid).** `filter-panel-main.js` hält ALLE
   Produktdaten im Speicher (Filter bleiben exakt), rendert aber nur **24 Kacheln** initial
   (`fpCard`) und lädt beim Scrollen per **IntersectionObserver**-Sentinel batchweise nach
