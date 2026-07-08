@@ -48,9 +48,14 @@
 
 ## Shopify Theme-Regeln
 
-- **Alle Änderungen zuerst im Entwurf-Horizon Theme** (ID: `gid://shopify/OnlineStoreTheme/200401420636`, UNPUBLISHED)
-  - ⚠️ Theme-IDs ändern sich (Neu-Anlage/Kopie)! Bei „Theme existiert nicht" mit
-    `themes(first: 20) { nodes { id name role } }` die aktuelle ID holen.
+- 🚨 **AKTUELLER Entwurf = „Entwurf Horizon 4.1.1"** (`gid://shopify/OnlineStoreTheme/200523612508`,
+  UNPUBLISHED) — **DAS** rotiert der User live, NICHT das alte „Entwurf-Horizon" (`200401420636`)!
+  (2026-07-08: Theme-Änderungen versehentlich in `200401420636` gemacht → nach 4.1.1 nachgezogen.
+  ⚠️ 4.1.1 hat **mehr** als das alte Theme, u. a. **B2B-Netto-Preise im Filter-Panel** (`b2bLevel`/`b2b`/
+  `b2bCompare`, `isTextil`) + PAngV-„inkl. MwSt."-Note — beim Reproduzieren NICHT verlieren! Immer die
+  **aktuelle** 4.1.1-Datei lesen und nur ergänzen.)
+  - ⚠️ Theme-IDs ändern sich (Neu-Anlage/Kopie)! **Vor** jeder Theme-Änderung mit
+    `themes(first: 20) { nodes { id name role } }` das aktuelle „Entwurf …"-Theme (höchste Version) holen.
 - Erst nach Abnahme durch den User ins Live-Theme ("futurespin live", MAIN) übernehmen
   - ⚠️ Schreibzugriff aufs **MAIN/Live-Theme ist via MCP gesperrt** – nur in Entwurf-Themes
     pushen; der User veröffentlicht. Live-IDs wechseln oft (User legt Kopien an).
