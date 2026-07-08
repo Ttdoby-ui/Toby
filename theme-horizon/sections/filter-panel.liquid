@@ -84,7 +84,8 @@
           "price": {{ product.price | divided_by: 100.0 | json }},
           "priceFormatted": {{ product.price | money | json }},
           "compareAt": {{ fp_var.compare_at_price | default: 0 | divided_by: 100.0 | json }},
-          "onSale": {% if fp_var.metafields.custom.pre_sale_price != blank %}true{% else %}false{% endif %},
+          "badgeText": {{ product.metafields.custom.price_badge_text.value | default: '' | json }},
+          "badgeColor": {{ product.metafields.custom.price_badge_color.value | default: '' | json }},
           {%- if product.featured_image -%}
           "img": {{ product.featured_image | image_url: width: 360 | prepend: 'https:' | json }},
           {%- else -%}
