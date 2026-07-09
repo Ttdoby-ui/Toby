@@ -123,6 +123,27 @@
   alle 400+ Kacheln+Bilder+Badges auf einmal.)
 - Diese Theme-Dateien lagen ursprünglich NICHT im Repo – Änderungen daran ins Repo
   spiegeln. (Rapid-Search-App ist installiert, aber auf Kollektionsseiten deaktiviert.)
+- 🚨 **250-Produkte-Falle (Liquid `paginate ... by 250` / `products.json?limit=250`, Audit 2026-07-09):**
+  Shopify begrenzt **jede** Liquid-`paginate`-Seite auf **max. 250** Produkte, und `products.json?limit=`
+  ebenso. Beläge (436) und Hölzer (338) liegen darüber → wer katalogweit rendert und nur Seite 1 nimmt,
+  verliert die Marken **D–Z** (Donic/Tibhar/Victas …). **Lösung:** weitere Seiten client-seitig per
+  `?page=N` nachladen und mergen (Muster in `filter-panel-main.js`, `fs-new-badge.js`,
+  `schlaeger-finder.js`; Cap 20 Seiten = 5000). Betroffene/geprüfte Stellen:
+  - ✅ `filter-panel-main.js` – lädt Seiten per IntersectionObserver nach (ok).
+  - ✅ `assets/fs-new-badge.js` – lädt Seiten per `?page=N` nach (2026-07-08 gefixt, sonst NEU-Badge nur < 250).
+  - ✅ **`snippets/schlaeger-finder-data.liquid` + `assets/schlaeger-finder.js` (2026-07-09 gefixt):** Das
+    Daten-Snippet (`#sf-catalog-data`) rendert nur Seite 1 → der Schläger-Finder empfahl nur aus den ersten
+    250. Fix: Snippet gibt jetzt `"pages"` (Seitenanzahl, `paginate.pages | at_least`) aus; `schlaeger-finder.js`
+    lädt die weiteren Seiten per `?page=N` im Hintergrund nach und mergt in `CATALOG` (dedupe per Handle),
+    während der Nutzer noch das 11-Schritt-Quiz beantwortet. Zwei paginate-Blöcke teilen sich denselben
+    `?page`-Param – beide liefern ihre Seite N. Repo-Mirror unter `theme-horizon/…`.
+  - ⚠️ `sections/schlaeger-berater.liquid` (KI-Chat-Widget) fetcht `products.json?limit=250`, **aber**
+    `buildProductList()` macht `arr.slice(0, 60)` → nur 60 Produkte gehen an die Claude-API. Der 250-Cap
+    ist durch den engeren 60er-Sample **maskiert** (kein Produktverlust-Symptom wie beim Finder); Erweitern
+    wäre eine Kosten-/Design-Entscheidung (größerer Prompt), kein Bugfix. **Nicht** blind „gefixt".
+  - ✅ Bewusst klein/gebunden (kein 250-Bug): `collection-topseller` (Metafeld-Liste, `limit: 6`),
+    `snippets/cross-sell.liquid` (`break` bei ~6), `snippets/fs-cart-crosssell.liquid` (fester ~6-Handle-Pool),
+    `produkt-vergleich.liquid` (nur Einzelprodukt-PDP-Daten).
 - **Rundes „NEU"-Badge auf den Kacheln (2026-07-07):** Neues Asset `assets/fs-new-badge.js` legt oben
   rechts aufs Produktbild ein rundes „NEU"-Kreis-Badge (Futurespin-Blau `#486A8F`), wenn das Produkt
   **≤ 60 Tage veröffentlicht** ist (`published_at`). Ohne Eingriff in die minifizierte `filter-panel-main.js`:
