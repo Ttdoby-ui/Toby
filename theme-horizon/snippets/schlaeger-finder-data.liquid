@@ -1,0 +1,76 @@
+{%- comment -%}
+  Futurespin Schläger-Finder: Sortiment-Daten als JSON.
+  Rendert das Belag- und Holz-Sortiment mit Metafeld-Werten, damit das Quiz
+  (schlaeger-finder.js) aus dem vollen Katalog empfehlen kann.
+
+  WICHTIG (>250 Produkte): `paginate ... by 250` rendert nur die ERSTE Seite –
+  Shopify begrenzt paginate auf max. 250 pro Seite. Beläge (436) und Hölzer (338)
+  liegen darüber, sonst fehlten die Marken D–Z (Donic/Tibhar/Victas …). Die
+  weiteren Seiten werden von schlaeger-finder.js per ?page=N nachgeladen und
+  gemergt. Das Feld "pages" gibt die Seitenanzahl aus (Maximum von Belag/Holz),
+  damit das JS weiß, wie viele Seiten es holen muss.
+{%- endcomment -%}
+
+{%- assign fs_b_pages = 1 -%}
+{%- assign fs_h_pages = 1 -%}
+<script id="sf-catalog-data" type="application/json">
+{
+  "belage": [
+    {%- assign first_b = true -%}
+    {%- paginate collections.belage.products by 250 -%}
+      {%- assign fs_b_pages = paginate.pages -%}
+      {%- for p in collections.belage.products -%}
+        {%- assign mf = p.metafields.custom -%}
+        {%- liquid
+          assign fs_schwamm = ''
+          for opt in p.options_with_values
+            assign optname = opt.name | downcase
+            if optname contains 'schwamm' or optname contains 'stärke' or optname contains 'staerke' or optname contains 'dicke'
+              assign fs_schwamm = opt.values | join: ' / '
+            endif
+          endfor
+        -%}
+        {%- unless first_b -%},{%- endunless -%}{%- assign first_b = false -%}
+        {
+          "handle": {{ p.handle | json }},
+          "title": {{ p.title | json }},
+          "type": {{ p.type | json }},
+          "price": {{ p.price | divided_by: 100.0 | json }},
+          "img": {{ p.featured_image | image_url: width: 300 | prepend: 'https:' | json }},
+          "url": {{ p.url | json }},
+          "tempo": {{ mf.tempo.value | default: '' | json }},
+          "kontrolle": {{ mf.kontrolle.value | default: '' | json }},
+          "effet": {{ mf.effet.value | default: '' | json }},
+          "haerte": {{ mf.haerte.value | default: '' | json }},
+          "schwammhaerte": {{ mf.schwammhaerte.value | default: '' | json }},
+          "schwamm": {{ fs_schwamm | json }}
+        }
+      {%- endfor -%}
+    {%- endpaginate -%}
+  ],
+  "holzer": [
+    {%- assign first_h = true -%}
+    {%- paginate collections.holzer.products by 250 -%}
+      {%- assign fs_h_pages = paginate.pages -%}
+      {%- for p in collections.holzer.products -%}
+        {%- assign mf = p.metafields.custom -%}
+        {%- unless first_h -%},{%- endunless -%}{%- assign first_h = false -%}
+        {
+          "handle": {{ p.handle | json }},
+          "title": {{ p.title | json }},
+          "type": {{ p.type | json }},
+          "price": {{ p.price | divided_by: 100.0 | json }},
+          "img": {{ p.featured_image | image_url: width: 300 | prepend: 'https:' | json }},
+          "url": {{ p.url | json }},
+          "tempo": {{ mf.tempo.value | default: '' | json }},
+          "kontrolle": {{ mf.kontrolle.value | default: '' | json }},
+          "effet": {{ mf.effet.value | default: '' | json }},
+          "haerte": {{ mf.haerte.value | default: '' | json }},
+          "gewicht": {{ mf.holzgewicht.value | default: '' | json }}
+        }
+      {%- endfor -%}
+    {%- endpaginate -%}
+  ],
+  "pages": {{ fs_b_pages | at_least: fs_h_pages }}
+}
+</script>
