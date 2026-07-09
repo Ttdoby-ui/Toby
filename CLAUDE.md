@@ -626,7 +626,10 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
         JSON-Schema: `{ autoplay:bool, interval:int(Sek.), bg_color, text_color, messages:[{text, cta_label, cta_link}] }`.
         Setzen via `metafieldsSet` (ownerId = Shop-GID `gid://shopify/Shop/78096073052`).
         - **Aktuelle Botschaften (2026-07-03):** VIP-Anmelden, Fachhandel/Versand, Konfigurator und neu
-          **„Ab 69 € versandkostenfrei shoppen!"** (ohne CTA). Der 69‑€‑Hinweis wurde aus der Homepage
+          **„Ab 69 € versandkostenfrei shoppen!"** (ohne CTA). ⚠️ **Konfigurator-CTA (2026-07-09 korrigiert):**
+          zeigte auf `/collections/konfigurierte-schlager` (Komplettschläger) statt auf den Konfigurator →
+          auf **`/pages/schlaeger-konfigurator`** gesetzt (im Metafeld **und** im Fallback-Block `msg_config`
+          in `header-group.json`). Der 69‑€‑Hinweis wurde aus der Homepage
           (Pull-Quote `section_Nr8Nwb` in `templates/index.json`) entfernt und in den Ticker verschoben;
           Fallback-Block `msg_versand` liegt zusätzlich in `header-group.json`.
         - ⚠️ **CTA-Links relativ halten** (`/account/login`, `/collections/...`) — NICHT eine komplette,
