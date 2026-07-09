@@ -305,6 +305,15 @@
   bei gesetztem Metafeld **`custom.price_badge_text`** dieses Feld **statt „Angebot"**, in Farbe
   **`custom.price_badge_color`**. Gesetzt: Text „Hauspreis", Farbe `#486A8F` (Futurespin-Blau) auf alle
   `tag:Hauspreis`. → sofort live, keine Rotation.
+- **Kein Doppel-Badge VIP + Hauspreis (2026-07-09):** Bei eingeloggtem VIP war der VIP-Preis besser als der
+  Hauspreis, es standen aber BEIDE Badges („Hauspreis" **und** „VIP") vor dem Preis. Ursache: `price.liquid`
+  rendert das custom Badge, sobald `custom.price_badge_text` gesetzt ist – auch wenn schon `price_badge == 'vip'`.
+  **Fix (native Pfad):** custom/„Angebot"-Badge nur noch `{%- unless price_badge == 'vip' -%}` → bei aktivem VIP
+  steht **nur „VIP"**. Das Badge trägt jetzt Klasse **`fs-price-badge`**; `snippets/fs-vip-cards.liquid` (client-
+  seitiger VIP-Rechner für gecachte Seiten) entfernt es beim Anwenden des VIP-Preises, damit auch dort kein
+  Doppel-Badge bleibt. **Filter-Panel-Pfad war schon korrekt** (VIP-Zweig in `filter-panel-main.js` gibt gar
+  kein Sale-Badge aus). Repo-Mirror `theme-horizon/snippets/{price.liquid,fs-vip-cards.liquid}`. Nur Entwurf-
+  Horizon → live bei Rotation; `price.liquid` wird bei „Theme aktualisieren" zurückgesetzt → aus Mirror wiederherstellen.
 - **Tools (idempotent, Store-Token `write_products`):**
   - Preise: `scripts/hauspreis-10-prozent.mjs` + Workflow **„Hauspreis 10% umstellen"** (`DRY_RUN` Default true,
     `MIN_PRICE`, `DISCOUNT_PCT`, `LIMIT`; Rollback-Artefakt `hauspreis-rollback` mit variantId+altem Preis).
