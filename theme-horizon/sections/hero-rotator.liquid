@@ -39,7 +39,10 @@
 </hero-rotator>
 
 {% style %}
-  .fs-hero-rot{position:relative;display:block;width:100%;max-width:100%;overflow:hidden;aspect-ratio:1774/887;}
+  /* Desktop-Container exakt im Seitenverhältnis des Desktop-Bildes (1600x639),
+     Mobil im Verhältnis des Mobil-Bildes (887x1774). So füllt object-fit:cover
+     das Bild randlos, ohne es abzuschneiden – bei jeder Bildschirmbreite. */
+  .fs-hero-rot{position:relative;display:block;width:100%;max-width:100%;overflow:hidden;aspect-ratio:1600/639;}
   @media (max-width:749px){ .fs-hero-rot{aspect-ratio:887/1774;} }
   .fs-hero-rot__slide{position:absolute;inset:0;opacity:0;transition:opacity .8s ease;pointer-events:none;}
   .fs-hero-rot__slide.is-active{opacity:1;pointer-events:auto;}
