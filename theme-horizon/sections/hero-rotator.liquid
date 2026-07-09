@@ -11,8 +11,8 @@
   data-interval="{{ section.settings.interval | default: 5 | times: 1000 }}"
 >
   {%- assign s = section.settings -%}
-  {%- comment -%} Aktive Banner: 1 = Konfigurator, 3 = Rabatt-Banner IMG-5657. Banner 2 (IMG-5619) ist deaktiviert (nicht in der Liste). {%- endcomment -%}
-  {%- assign idx = '1,3' | split: ',' -%}
+  {%- comment -%} Aktive Banner: 1 = Konfigurator. Banner 2 (IMG-5619) und Banner 3 (Rabatt-Banner IMG-5657) sind deaktiviert (nicht in der Liste). {%- endcomment -%}
+  {%- assign idx = '1' | split: ',' -%}
   {%- for i in idx -%}
     {%- assign dkey = 'b' | append: i | append: '_desktop' -%}
     {%- assign mkey = 'b' | append: i | append: '_mobile' -%}
