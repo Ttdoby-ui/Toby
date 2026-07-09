@@ -1,11 +1,15 @@
 /*
- * Futurespin: rundes "NEU"-Badge (Futurespin-Blau #486A8F) auf Filter-Panel-
- * Kacheln, deren Produkt vor <= 60 Tagen VERÖFFENTLICHT wurde (published_at
- * aus #fp-catalog-data). Läuft ohne Eingriff in die minifizierte Kachel-Logik:
- * - liest die neuen Produkt-IDs aus dem JSON,
- * - injiziert das CSS einmalig,
- * - taggt gerenderte Kacheln (per jdgm-preview-badge[data-id]) und
- * - beobachtet das Grid (Lazy-Load / Filter / Reset re-rendern Kacheln).
+ * Futurespin Filter-Panel-Kachel-Badges (kombiniert):
+ *  1) rundes "NEU"-Kreis-Badge (Futurespin-Blau) auf Produkten, die vor
+ *     <= 60 Tagen VERÖFFENTLICHT wurden (published_at).
+ *  2) ersetzt das hartkodierte "Angebot"-Badge durch das echte Produkt-Badge
+ *     (custom.price_badge_text/color) -> "Hauspreis" (blau) bzw. "Sale -30%".
+ *
+ * WICHTIG: Erfasst AUCH per Lazy-Load nachgeladene Produkte (Kollektionen >250,
+ * z. B. Beläge 436). #fp-catalog-data enthält nur die erste Seite; die weiteren
+ * Seiten (?page=N) werden hier – wie in filter-panel-main.js – nachgeladen und
+ * ihre Produktdaten gemergt. Ohne Eingriff in die minifizierte Kachel-Logik;
+ * robust bei Lazy-Load / Filter / Reset (MutationObserver).
  */
 (function () {
   "use strict";
@@ -16,24 +20,31 @@
   var grid = root && root.querySelector("[data-fp-grid]");
   if (!root || !dataEl || !grid) return;
 
-  // Set der "neuen" Produkt-IDs aus dem Katalog-JSON.
-  var newIds = Object.create(null);
-  try {
-    var data = JSON.parse(dataEl.textContent);
-    var now = Date.now() / 1000;
-    (data.products || []).forEach(function (p) {
+  var now = Date.now() / 1000;
+  var newIds = Object.create(null); // id -> 1 (neu)
+  var badgeMap = Object.create(null); // id -> {t, c}
+  var seen = Object.create(null);
+
+  function ingest(products) {
+    (products || []).forEach(function (p) {
       if (!p || p.id == null) return;
-      var c = parseFloat(p.published);
-      if (!isNaN(c) && c > 0 && now - c <= 86400 * MAX_DAYS) {
-        newIds[String(p.id)] = 1;
-      }
+      var id = String(p.id);
+      if (seen[id]) return;
+      seen[id] = 1;
+      var pub = parseFloat(p.published);
+      if (!isNaN(pub) && pub > 0 && now - pub <= 86400 * MAX_DAYS) newIds[id] = 1;
+      if (p.badgeText) badgeMap[id] = { t: p.badgeText, c: p.badgeColor || "#486A8F" };
     });
+  }
+
+  var initial;
+  try {
+    initial = JSON.parse(dataEl.textContent);
   } catch (e) {
     return;
   }
-  if (!Object.keys(newIds).length) return;
+  ingest(initial.products);
 
-  // CSS einmalig einfügen.
   if (!document.getElementById("fs-new-badge-css")) {
     var st = document.createElement("style");
     st.id = "fs-new-badge-css";
@@ -47,25 +58,74 @@
     document.head.appendChild(st);
   }
 
-  function tag(card) {
-    if (card.querySelector(".fp-card__new")) return;
+  function apply(card) {
     var jb = card.querySelector(".jdgm-preview-badge[data-id]");
-    if (!jb || !newIds[String(jb.getAttribute("data-id"))]) return;
-    var imgWrap = card.querySelector(".fp-card__img");
-    if (!imgWrap) return;
-    var b = document.createElement("span");
-    b.className = "fp-card__new";
-    b.textContent = "NEU";
-    imgWrap.appendChild(b);
+    if (!jb) return;
+    var id = String(jb.getAttribute("data-id"));
+    // 1) NEU-Badge
+    if (newIds[id] && !card.querySelector(".fp-card__new")) {
+      var img = card.querySelector(".fp-card__img");
+      if (img) {
+        var b = document.createElement("span");
+        b.className = "fp-card__new";
+        b.textContent = "NEU";
+        img.appendChild(b);
+      }
+    }
+    // 2) echtes Badge statt "Angebot"
+    var bm = badgeMap[id];
+    var badge = card.querySelector(".fp-card__sale-badge");
+    if (bm && badge && !badge.getAttribute("data-fs-badge")) {
+      badge.textContent = bm.t;
+      badge.style.background = bm.c;
+      badge.setAttribute("data-fs-badge", "1");
+    }
   }
 
   function scan() {
     var cards = grid.querySelectorAll(".fp-card");
-    for (var i = 0; i < cards.length; i++) tag(cards[i]);
+    for (var i = 0; i < cards.length; i++) apply(cards[i]);
   }
 
   scan();
   if ("MutationObserver" in window) {
     new MutationObserver(scan).observe(grid, { childList: true });
+  }
+
+  // Weitere Seiten nachladen (nur Daten mergen), damit Produkte jenseits der
+  // ersten 250 ebenfalls erfasst werden.
+  var total = parseInt(initial.total, 10);
+  if (isNaN(total)) total = (initial.products || []).length;
+  var pages = Math.min(Math.ceil(total / 250), 20);
+  if (pages > 1) {
+    var t = 2;
+    (function nextPage() {
+      if (t > pages) {
+        scan();
+        return;
+      }
+      fetch(location.pathname + "?page=" + t, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then(function (r) {
+          return r.ok ? r.text() : "";
+        })
+        .then(function (html) {
+          if (html) {
+            try {
+              var el = new DOMParser().parseFromString(html, "text/html").getElementById("fp-catalog-data");
+              if (el) {
+                var d = JSON.parse(el.textContent);
+                if (d && d.products) ingest(d.products);
+              }
+            } catch (e) {}
+          }
+          t++;
+          scan();
+          nextPage();
+        })
+        .catch(function () {
+          t++;
+          nextPage();
+        });
+    })();
   }
 })();
