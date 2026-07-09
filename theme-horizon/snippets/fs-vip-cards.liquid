@@ -1,0 +1,80 @@
+{%- comment -%}
+  Futurespin: rechnet VIP-Preise in Produkt-Rastern nach, die Horizons price.liquid
+  verwenden (PDP-Empfehlungen, native Kollektionen). Greift nur, wenn der Server den
+  VIP-Preis noch nicht angewandt hat (data-fs-applied="0"). Degradiert gefahrlos zur UVP.
+  Hinweis: Das per Custom-Code (Results-List/Vergleich) gerenderte Filter-Raster nutzt
+  price.liquid NICHT und wird hiervon nicht erfasst.
+{%- endcomment -%}
+{%- liquid
+  assign fs_vip_pct = 0
+  if customer.tags contains 'VIP1'
+    assign fs_vip_pct = settings.vip1_discount | times: 1.0
+  elsif customer.tags contains 'VIP2'
+    assign fs_vip_pct = settings.vip2_discount | times: 1.0
+  elsif customer.tags contains 'VIP3'
+    assign fs_vip_pct = settings.vip3_discount | times: 1.0
+  endif
+-%}
+<script>
+  window.FS_VIP = { pct: {{ fs_vip_pct | default: 0 }} };
+  (function () {
+    var PCT = (window.FS_VIP && window.FS_VIP.pct) ? parseFloat(window.FS_VIP.pct) : 0;
+    if (!PCT || PCT <= 0) return;
+
+    function money(cents) {
+      return '€' + (cents / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function applyOne(el) {
+      if (el.getAttribute('data-fs-applied') === '1') return;
+      if (el.getAttribute('data-fs-done') === '1') return;
+      var price = parseInt(el.getAttribute('data-fs-price'), 10);
+      if (isNaN(price)) return;
+      var compare = parseInt(el.getAttribute('data-fs-compare'), 10);
+      if (isNaN(compare)) compare = 0;
+      var uvp = price; if (compare > price) uvp = compare;
+      var existingPct = 0; if (uvp > price) existingPct = (uvp - price) * 100.0 / uvp;
+      if (PCT <= existingPct) { el.setAttribute('data-fs-done', '1'); return; }
+      var newPrice = Math.round(uvp * (100 - PCT) / 100);
+      var priceEl = el.querySelector('.price');
+      if (!priceEl) return;
+      if (!el.querySelector('.fs-vip-badge')) {
+        var badge = document.createElement('span');
+        badge.className = 'fs-vip-badge'; badge.textContent = 'VIP';
+        el.insertBefore(badge, el.firstChild);
+      }
+      // Kein Doppel-Badge: vorhandenes Hauspreis-/Sale-Badge entfernen, VIP ist der bessere Preis.
+      var oldBadge = el.querySelector('.fs-price-badge');
+      if (oldBadge && oldBadge.parentNode) oldBadge.parentNode.removeChild(oldBadge);
+      el.classList.add('compare-at-price-container');
+      if (!el.querySelector('.compare-at-price')) {
+        var cmp = document.createElement('span');
+        cmp.className = 'compare-at-price fs-vip-compare';
+        cmp.textContent = money(uvp);
+        priceEl.parentNode.insertBefore(cmp, priceEl);
+      }
+      priceEl.textContent = money(newPrice);
+      priceEl.classList.add('fs-vip-price');
+      el.setAttribute('data-fs-done', '1');
+    }
+    function run() {
+      var els = document.querySelectorAll('[data-fs-vip="1"]');
+      for (var i = 0; i < els.length; i++) applyOne(els[i]);
+    }
+    var mo, scheduled = false;
+    function tick() {
+      if (mo) mo.disconnect();
+      run();
+      if (mo) mo.observe(document.body, { childList: true, subtree: true });
+    }
+    mo = new MutationObserver(function () {
+      if (scheduled) return; scheduled = true;
+      requestAnimationFrame(function () { scheduled = false; tick(); });
+    });
+    tick();
+    mo.observe(document.body, { childList: true, subtree: true });
+  })();
+</script>
+<style>
+  .fs-vip-badge{display:inline-block;background:#111;color:#fff;font-size:0.7em;font-weight:700;padding:0.12em 0.4em;border-radius:3px;margin-right:0.35em;vertical-align:middle;line-height:1.4;}
+  .price.fs-vip-price{color:#1d3686;font-weight:700;}
+</style>

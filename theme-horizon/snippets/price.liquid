@@ -1,0 +1,305 @@
+{%- doc -%}
+  This snippet is used to render a product card.
+  It is used in the product block,featured product block, and the product card block.
+
+  @param {product} product_resource - The product to render
+  @param {boolean} [show_unit_price] - Whether to show the unit price
+  @param {boolean} [show_sale_price_first] - Whether to show the sale price first
+{%- enddoc -%}
+
+{%- liquid
+  assign show_unit_price = show_unit_price | default: false
+  assign show_sale_price_first = show_sale_price_first | default: false
+  assign selected_variant = product_resource.selected_or_first_available_variant
+  assign price = selected_variant.price
+  assign compare_at_price = selected_variant.compare_at_price
+
+  assign show_compare_price = false
+  assign price_badge = ''
+  if compare_at_price > price
+    assign show_compare_price = true
+    assign price_badge = 'sale'
+  endif
+
+  if product_resource.tags contains 'for_vip' and product_resource.type != 'mws_apo_generated'
+    assign vip_pct = 0
+    if customer.tags contains 'VIP1'
+      assign vip_pct = settings.vip1_discount | times: 1.0
+    elsif customer.tags contains 'VIP2'
+      assign vip_pct = settings.vip2_discount | times: 1.0
+    elsif customer.tags contains 'VIP3'
+      assign vip_pct = settings.vip3_discount | times: 1.0
+    endif
+
+    if vip_pct > 0
+      assign uvp = price
+      if compare_at_price > price
+        assign uvp = compare_at_price
+      endif
+      assign existing_pct = 0
+      if uvp > price
+        assign price_diff = uvp | minus: price
+        assign existing_pct = price_diff | times: 100.0 | divided_by: uvp
+      endif
+      if vip_pct > existing_pct
+        assign compare_at_price = uvp
+        assign show_compare_price = true
+        assign multiplier = 100 | minus: vip_pct
+        assign price = uvp | times: multiplier | divided_by: 100
+        assign price_badge = 'vip'
+      endif
+    endif
+  endif
+
+  if product_resource == blank
+    assign price = 1999
+  endif
+
+  comment
+    B2B-Netto-Anzeige für Händler mit Preisstufen-Tags B2B1 / B2B2 / B2B3:
+    - Je nach Stufe wird das passende Produkt-Metafeld
+      custom.preis_b2b1 / _b2b2 / _b2b3 (Netto) angezeigt.
+    - Ist für die Stufe kein Preis gesetzt: Fallback Brutto -> Netto
+      (settings.b2b_vat_rate, Standard 19).
+  endcomment
+  assign show_b2b_net = false
+  assign b2b_price_field = blank
+  if customer.tags contains 'B2B1'
+    assign show_b2b_net = true
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b1
+  elsif customer.tags contains 'B2B2'
+    assign show_b2b_net = true
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b2
+  elsif customer.tags contains 'B2B3'
+    assign show_b2b_net = true
+    assign b2b_price_field = product_resource.metafields.custom.preis_b2b3
+  endif
+  if show_b2b_net
+    assign b2b_vat_rate = settings.b2b_vat_rate | default: 19
+    assign b2b_vat_divisor = 100 | plus: b2b_vat_rate
+    if b2b_price_field != blank and b2b_price_field.value != blank
+      assign price = b2b_price_field.value | times: 100 | round
+      assign compare_at_price = 0
+      assign show_compare_price = false
+      assign price_badge = ''
+    else
+      assign price = price | times: 100 | divided_by: b2b_vat_divisor
+      if compare_at_price > 0
+        assign compare_at_price = compare_at_price | times: 100 | divided_by: b2b_vat_divisor
+      endif
+    endif
+  endif
+
+  if product.handle == closest.product.handle and settings.currency_code_enabled_product_pages
+    assign price = price | money_with_currency
+    assign compare_at_price = compare_at_price | money_with_currency
+  elsif product.handle != closest.product.handle and settings.currency_code_enabled_product_cards
+    assign price = price | money_with_currency
+    assign compare_at_price = compare_at_price | money_with_currency
+  else
+    assign price = price | money
+    assign compare_at_price = compare_at_price | money
+  endif
+
+  assign custom_badge_text = product_resource.metafields.custom.price_badge_text
+  assign custom_badge_color = product_resource.metafields.custom.price_badge_color | default: '#dc2626'
+-%}
+
+{%- liquid
+  assign fs_vip_eligible = false
+  if product_resource.tags contains 'for_vip' and product_resource.type != 'mws_apo_generated'
+    assign fs_vip_eligible = true
+  endif
+  if show_b2b_net
+    assign fs_vip_eligible = false
+  endif
+-%}
+<div class="{% if show_compare_price %}compare-at-price-container{% endif %}" ref="priceContainer"{% if fs_vip_eligible %} data-fs-vip="1" data-fs-price="{{ selected_variant.price }}" data-fs-compare="{{ selected_variant.compare_at_price | default: 0 }}" data-fs-applied="{% if price_badge == 'vip' %}1{% else %}0{% endif %}"{% endif %}>
+  {%- comment -%}
+    Kein Doppel-Badge: Bei aktivem VIP-Preis (price_badge == 'vip') ist VIP der
+    bessere Preis -> nur das VIP-Badge zeigen, das Hauspreis-/Angebot-Badge
+    unterdrücken. Sonst (kein VIP) das custom Badge („Hauspreis"/„Sale -X%") bzw.
+    „Angebot". Klasse fs-price-badge, damit fs-vip-cards.js es bei client-seitig
+    angewandtem VIP (cached pages) entfernen kann.
+  {%- endcomment -%}
+  {%- unless price_badge == 'vip' -%}
+    {%- if price_badge == 'sale' or custom_badge_text != blank -%}
+      {%- assign badge_label = custom_badge_text | default: 'Angebot' -%}
+      <span class="fs-price-badge" style="display:inline-block;background:{{ custom_badge_color }};color:#fff;font-size:0.7em;font-weight:700;padding:0.12em 0.4em;border-radius:3px;margin-right:0.35em;vertical-align:middle;line-height:1.4;">{{ badge_label }}</span>
+    {%- endif -%}
+  {%- endunless -%}
+  {%- if price_badge == 'vip' -%}<span style="display:inline-block;background:#111;color:#fff;font-size:0.7em;font-weight:700;padding:0.12em 0.4em;border-radius:3px;margin-right:0.35em;vertical-align:middle;line-height:1.4;">VIP</span>{%- endif -%}
+  {% if show_sale_price_first == false and show_compare_price %}
+    <span role="group">
+      <span class="visually-hidden">{{ 'content.price_regular' | t }}&nbsp;</span>
+      <span class="compare-at-price">{{- compare_at_price -}}</span>
+    </span>
+  {% endif %}
+
+  {% if show_compare_price %}
+    <span role="group">
+      <span class="visually-hidden">{{ 'content.price_sale' | t }}&nbsp;</span>
+      <span class="price">{{ price | default: '&nbsp;' }}</span>
+    </span>
+  {% else %}
+    <span class="price">{{ price | default: '&nbsp;' }}</span>
+  {% endif %}
+
+  {% if show_sale_price_first == true and show_compare_price %}
+    <span role="group">
+      <span class="visually-hidden">{{ 'content.price_regular' | t }}&nbsp;</span>
+      <span class="compare-at-price">{{- compare_at_price -}}</span>
+    </span>
+  {% endif %}
+  {%- if selected_variant.unit_price and show_unit_price -%}
+    {%- liquid
+      if product.handle == closest.product.handle and settings.currency_code_enabled_product_pages
+        assign unit_price = selected_variant.unit_price | money_with_currency
+      elsif product.handle != closest.product.handle and settings.currency_code_enabled_product_cards
+        assign unit_price = selected_variant.unit_price | money_with_currency
+      else
+        assign unit_price = selected_variant.unit_price | money
+      endif
+    -%}
+    {% render 'unit-price', price: unit_price, measurement: selected_variant.unit_price_measurement %}
+  {%- endif -%}
+  {%- if show_b2b_net -%}
+    <span class="b2b-net-note">zzgl. MwSt.</span>
+  {%- endif -%}
+
+  {%- comment -%}
+    Staffelpreise für Beläge (Mengenrabatt) – Preis je Stück nach Paketgröße.
+    WICHTIG: Mengen/Prozente synchron zum Rabatt „Belaege Mengenrabatt" halten
+    (aktuell: ab 2 → 15 %, ab 5 → 20 %, ab 10 → 25 %).
+  {%- endcomment -%}
+  {%- liquid
+    assign belag_excluded = false
+    if product_resource.tags contains 'kein_mengenrabatt'
+      assign belag_excluded = true
+    endif
+  -%}
+  {%- if product_resource.tags contains 'Belag' and show_b2b_net == false and product_resource != blank and belag_excluded == false -%}
+    {%- liquid
+      comment
+        Staffelpreis am UVP/Vergleichspreis gemessen, "höchster Rabatt gewinnt":
+        Eine Stufe wird nur gezeigt, wenn ihr Preis den aktuellen (ggf. Angebots-)
+        Preis unterbietet. Ist das Angebot tiefer, erscheint keine Box.
+      endcomment
+      assign belag_current = selected_variant.price
+      assign belag_uvp = belag_current
+      if selected_variant.compare_at_price > belag_current
+        assign belag_uvp = selected_variant.compare_at_price
+      endif
+      assign belag_t2 = belag_uvp | times: 85 | divided_by: 100
+      assign belag_t5 = belag_uvp | times: 80 | divided_by: 100
+      assign belag_t10 = belag_uvp | times: 75 | divided_by: 100
+    -%}
+    {%- if belag_t10 < belag_current -%}
+      <div class="belag-tiers">
+        {%- if belag_t2 < belag_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">im 2er-Paket</span>
+            <span class="belag-tier__price">{{ belag_t2 | money }}</span>
+          </div>
+        {%- endif -%}
+        {%- if belag_t5 < belag_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">im 5er-Paket</span>
+            <span class="belag-tier__price">{{ belag_t5 | money }}</span>
+          </div>
+        {%- endif -%}
+        {%- if belag_t10 < belag_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">im 10er-Paket</span>
+            <span class="belag-tier__price">{{ belag_t10 | money }}</span>
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+
+  {%- comment -%}
+    Staffelpreise für Textilien (Mengenrabatt) – Preis je Stück nach Menge.
+    WICHTIG: Mengen/Prozente synchron zum Rabatt „Textilien – Mengenrabatt" halten
+    (aktuell: ab 6 → 20 %, ab 20 → 25 %, ab 30 → 30 %).
+  {%- endcomment -%}
+  {%- if product_resource.tags contains 'Textil' and show_b2b_net == false and product_resource != blank and belag_excluded == false -%}
+    {%- liquid
+      assign textil_current = selected_variant.price
+      assign textil_uvp = textil_current
+      if selected_variant.compare_at_price > textil_current
+        assign textil_uvp = selected_variant.compare_at_price
+      endif
+      assign textil_t6 = textil_uvp | times: 80 | divided_by: 100
+      assign textil_t20 = textil_uvp | times: 75 | divided_by: 100
+      assign textil_t30 = textil_uvp | times: 70 | divided_by: 100
+    -%}
+    {%- if textil_t30 < textil_current -%}
+      <div class="belag-tiers">
+        {%- if textil_t6 < textil_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">ab 6 Stück</span>
+            <span class="belag-tier__price">{{ textil_t6 | money }}</span>
+          </div>
+        {%- endif -%}
+        {%- if textil_t20 < textil_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">ab 20 Stück</span>
+            <span class="belag-tier__price">{{ textil_t20 | money }}</span>
+          </div>
+        {%- endif -%}
+        {%- if textil_t30 < textil_current -%}
+          <div class="belag-tier">
+            <span class="belag-tier__label">ab 30 Stück</span>
+            <span class="belag-tier__price">{{ textil_t30 | money }}</span>
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .b2b-net-note {
+    display: inline-block;
+    font-size: 0.7em;
+    font-weight: 400;
+    opacity: 0.7;
+    margin-inline-start: 0.35em;
+    white-space: nowrap;
+  }
+
+  .belag-tiers {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 0.4em;
+  }
+
+  .belag-tier {
+    padding: 0 0.65em;
+    line-height: 1.3;
+  }
+
+  .belag-tier:first-child {
+    padding-inline-start: 0;
+  }
+
+  .belag-tier + .belag-tier {
+    border-inline-start: 1px solid var(--color-border, #ddd);
+  }
+
+  .belag-tier__label {
+    display: block;
+    font-size: 0.66em;
+    color: #777;
+    white-space: nowrap;
+  }
+
+  .belag-tier__price {
+    display: block;
+    font-size: 0.8em;
+    font-weight: 700;
+    color: #e02020;
+    white-space: nowrap;
+  }
+{% endstylesheet %}
