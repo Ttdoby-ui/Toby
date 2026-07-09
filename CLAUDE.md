@@ -115,6 +115,11 @@
      sonstige Kollektionen): `snippets/price.liquid` (+ ggf. Produkt-Metafelder wie `custom.price_badge_text`).
   → Bei jeder Preis-/Badge-/Prozent-/„inkl. MwSt."-Änderung **beide** Stellen anpassen und testen (Kachel
   **und** Produktseite **und** Homepage/Empfehlungen). Nie nur eine Seite.
+- **Sortierung „Neuheiten zuerst" (2026-07-09):** Sortier-Dropdown (`data-fp-sort`) hat die Option
+  **`new-desc` „Neuheiten zuerst"** – sortiert nach `published` (Veröffentlichungsdatum) absteigend, neueste
+  zuerst. In `filter-panel.liquid` (`<option>`), in `filter-panel-main.js` an ZWEI Stellen ergänzt: Sort-Chain
+  in `W()` (`n("published","desc")`) **und** die Modus-Whitelist (`{relevance,new-desc,price-asc,price-desc}`,
+  sonst würde die Option je Modus ausgeblendet). `published` gibt `filter-panel.liquid` bereits im JSON aus.
 - **Performance: inkrementelles Rendern (Lazy-Grid).** `filter-panel-main.js` hält ALLE
   Produktdaten im Speicher (Filter bleiben exakt), rendert aber nur **24 Kacheln** initial
   (`fpCard`) und lädt beim Scrollen per **IntersectionObserver**-Sentinel batchweise nach
