@@ -193,7 +193,7 @@
       assign belag_t2 = belag_uvp | times: 85 | divided_by: 100
       assign belag_t5 = belag_uvp | times: 80 | divided_by: 100
       assign belag_t10 = belag_uvp | times: 75 | divided_by: 100
-      comment Referenzpreis: bei aktivem VIP der VIP-Preis (+1 Cent, damit die 10er-Staffel, die dem VIP-Preis entspricht, sichtbar bleibt). So verschwinden 2er/5er, wenn der VIP-Rabatt hoeher ist als die Staffel. endcomment
+      # Referenzpreis fuer die Staffel: bei aktivem VIP der VIP-Preis (+1 Cent, damit die 10er-Staffel = VIP-Preis sichtbar bleibt). So verschwinden 2er/5er, wenn der VIP-Rabatt hoeher ist als die jeweilige Staffel.
       assign belag_ref = belag_current
       if price_badge == 'vip'
         assign belag_ref = belag_uvp | times: multiplier | divided_by: 100 | plus: 1
