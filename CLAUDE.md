@@ -166,6 +166,22 @@
     `.fs-new-badge-pdp`, Blau `#486A8F`, `.product-media` bekommt `position:relative`). Repo-Mirror
     `theme-horizon/snippets/product-media.liquid`. Damit ist das NEU-Badge an ALLEN Stellen (Filter-Kacheln,
     native Kacheln, PDP-Hauptbild).
+
+## Varianten-Bilder auf der PDP (nur die der gewählten Variante, 2026-07-11)
+
+- **Ziel (User):** Bei einem Artikel mit Farb-Varianten sollen die Bilder einer Farbe **nur** erscheinen,
+  wenn diese Variante ausgewählt ist (wie im Referenz-Shop contra.de).
+- **Theme:** Setting **„Hide unselected variant media"** (`hide_variants`) ist im Media-Block von
+  `templates/product.json` **an**. Horizons native Logik zeigt aber nur das **eine** `featured_media` der
+  Variante + geteilte Bilder. Für **alle** Bilder einer Variante wurde `snippets/product-media-gallery-content.liquid`
+  erweitert: bei `hide_variants` wird `sorted_media` = **alle der gewählten Variante zugeordneten Medien**
+  (`image.variants` enthält die Variante) **+ geteilte** (keiner Variante zugeordnete) Medien; Medien **anderer**
+  Varianten fallen raus. Greift über die Section-Neurenderung bei Variantenwechsel (`media-gallery.js` tauscht
+  `<media-gallery>` aus). Repo-Mirror `theme-horizon/snippets/product-media-gallery-content.liquid` (native
+  Datei → bei „Theme aktualisieren" zurücksetzen → aus Mirror wiederherstellen).
+- 🚨 **VORAUSSETZUNG (Daten, im Admin):** Die Bilder müssen der jeweiligen Variante **zugeordnet** sein
+  (Produkt → Medien → Bild → „Medien zu Varianten hinzufügen"/„Auf Variante anwenden"). Ohne Zuordnung sind
+  alle Bilder „geteilt" → es wird nicht gefiltert (alle zeigen). Das ist eine Pflege-Aufgabe pro Produkt.
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
