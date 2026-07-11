@@ -193,22 +193,27 @@
       assign belag_t2 = belag_uvp | times: 85 | divided_by: 100
       assign belag_t5 = belag_uvp | times: 80 | divided_by: 100
       assign belag_t10 = belag_uvp | times: 75 | divided_by: 100
+      comment Referenzpreis: bei aktivem VIP der VIP-Preis (+1 Cent, damit die 10er-Staffel, die dem VIP-Preis entspricht, sichtbar bleibt). So verschwinden 2er/5er, wenn der VIP-Rabatt hoeher ist als die Staffel. endcomment
+      assign belag_ref = belag_current
+      if price_badge == 'vip'
+        assign belag_ref = belag_uvp | times: multiplier | divided_by: 100 | plus: 1
+      endif
     -%}
-    {%- if belag_t10 < belag_current -%}
+    {%- if belag_t10 < belag_ref -%}
       <div class="belag-tiers">
-        {%- if belag_t2 < belag_current -%}
+        {%- if belag_t2 < belag_ref -%}
           <div class="belag-tier">
             <span class="belag-tier__label">im 2er-Paket</span>
             <span class="belag-tier__price">{{ belag_t2 | money }}</span>
           </div>
         {%- endif -%}
-        {%- if belag_t5 < belag_current -%}
+        {%- if belag_t5 < belag_ref -%}
           <div class="belag-tier">
             <span class="belag-tier__label">im 5er-Paket</span>
             <span class="belag-tier__price">{{ belag_t5 | money }}</span>
           </div>
         {%- endif -%}
-        {%- if belag_t10 < belag_current -%}
+        {%- if belag_t10 < belag_ref -%}
           <div class="belag-tier">
             <span class="belag-tier__label">im 10er-Paket</span>
             <span class="belag-tier__price">{{ belag_t10 | money }}</span>
@@ -233,22 +238,26 @@
       assign textil_t6 = textil_uvp | times: 80 | divided_by: 100
       assign textil_t20 = textil_uvp | times: 75 | divided_by: 100
       assign textil_t30 = textil_uvp | times: 70 | divided_by: 100
+      assign textil_ref = textil_current
+      if price_badge == 'vip'
+        assign textil_ref = textil_uvp | times: multiplier | divided_by: 100 | plus: 1
+      endif
     -%}
-    {%- if textil_t30 < textil_current -%}
+    {%- if textil_t30 < textil_ref -%}
       <div class="belag-tiers">
-        {%- if textil_t6 < textil_current -%}
+        {%- if textil_t6 < textil_ref -%}
           <div class="belag-tier">
             <span class="belag-tier__label">ab 6 Stück</span>
             <span class="belag-tier__price">{{ textil_t6 | money }}</span>
           </div>
         {%- endif -%}
-        {%- if textil_t20 < textil_current -%}
+        {%- if textil_t20 < textil_ref -%}
           <div class="belag-tier">
             <span class="belag-tier__label">ab 20 Stück</span>
             <span class="belag-tier__price">{{ textil_t20 | money }}</span>
           </div>
         {%- endif -%}
-        {%- if textil_t30 < textil_current -%}
+        {%- if textil_t30 < textil_ref -%}
           <div class="belag-tier">
             <span class="belag-tier__label">ab 30 Stück</span>
             <span class="belag-tier__price">{{ textil_t30 | money }}</span>
