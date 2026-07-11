@@ -161,7 +161,11 @@
     Kacheln** – in `snippets/product-card-badges.liquid` (Liquid, `product.published_at ≤ 60 Tage`,
     `.fs-new-badge-native`, Blau `#486A8F`, oben rechts). Repo-Mirror `theme-horizon/snippets/product-card-badges.liquid`.
     ⚠️ Native Horizon-Datei → wird bei „Theme aktualisieren" zurückgesetzt, aus dem Mirror wiederherstellen.
-    **Offen:** nur noch die **PDP-Media-Galerie** (Produktseite-Hauptbild) hat das runde NEU noch nicht.
+  - **PDP-Hauptbild (2026-07-11):** Das runde NEU-Badge liegt jetzt auch auf dem **Produktseiten-Hauptbild** –
+    in `snippets/product-media.liquid` (nur `is_main_product_media`, `closest.product.published_at ≤ 60 Tage`,
+    `.fs-new-badge-pdp`, Blau `#486A8F`, `.product-media` bekommt `position:relative`). Repo-Mirror
+    `theme-horizon/snippets/product-media.liquid`. Damit ist das NEU-Badge an ALLEN Stellen (Filter-Kacheln,
+    native Kacheln, PDP-Hauptbild).
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
@@ -310,6 +314,20 @@
   bei gesetztem Metafeld **`custom.price_badge_text`** dieses Feld **statt „Angebot"**, in Farbe
   **`custom.price_badge_color`**. Gesetzt: Text „Hauspreis", Farbe `#486A8F` (Futurespin-Blau) auf alle
   `tag:Hauspreis`. → sofort live, keine Rotation.
+- **Belag-/Textil-Staffeln bei aktivem VIP ausblenden (2026-07-11):** Auf der Kachel **und** PDP wurden bei
+  eingeloggtem VIP die Mengenrabatt-Staffeln (2er/5er/10er bzw. 6/20/30 Stk.) weiter mit ihrem UVP-Staffelpreis
+  gezeigt – auch wenn der VIP-Preis **niedriger** war als 2er/5er (verwirrend: „2er-Paket 48,40 €" über dem
+  VIP-Preis 42,71 €). **Fix:** Staffel nur noch zeigen, wenn ihr Preis den **effektiven** Preis unterbietet.
+  Referenz `belag_ref`/`textil_ref` = bei `price_badge == 'vip'` der **VIP-Preis** (`uvp × (100−vip%)/100 + 1 Cent`;
+  das +1 Cent lässt die **10er-Staffel = VIP-Preis** sichtbar), sonst der aktuelle Preis. Beide Render-Pfade:
+  `snippets/price.liquid` (PDP, Belag + Textil, `< belag_ref`/`< textil_ref`) und `assets/filter-panel-main.js`
+  (Kacheln, Tier-IIFE: `vipOn=e.forVip&&c>0&&c>p`, `thr=vipOn?ref+.005:ref-.005`). Ergebnis: VIP2 (25 %) →
+  nur 10er; VIP3 (30 %) → keine Staffel; VIP1 (15 %) → alle (buy-more lohnt).
+  ⚠️ **Merke Theme-Upsert-Falle:** Einzeiliges `comment … endcomment` in einem `{% liquid %}`-Block ist
+  **ungültig** (→ „comment tag was never closed"), im Liquid-Block **`#`-Inline-Kommentar** nutzen. Und:
+  `themeFilesUpsert` per **`body:{type:URL}`** verschluckt Validierungsfehler **still** (userErrors leer, Datei
+  wird einfach nicht übernommen) → bei „Upsert greift nicht" per **`body:{type:BASE64}`** (synchron) den echten
+  Fehler sichtbar machen.
 - **Kein Doppel-Badge VIP + Hauspreis (2026-07-09):** Bei eingeloggtem VIP war der VIP-Preis besser als der
   Hauspreis, es standen aber BEIDE Badges („Hauspreis" **und** „VIP") vor dem Preis. Ursache: `price.liquid`
   rendert das custom Badge, sobald `custom.price_badge_text` gesetzt ist – auch wenn schon `price_badge == 'vip'`.
