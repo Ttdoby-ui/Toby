@@ -120,13 +120,18 @@ def build_montage(urls):
     n = len(urls)
     cols = math.ceil(math.sqrt(n))
     rows = math.ceil(n / cols)
-    canvas = Image.new("RGB", (cols * CELL, rows * CELL), (255, 255, 255))
+    grid_w, grid_h = cols * CELL, rows * CELL
+    # Quadratische Leinwand (weiß), damit das Bild die (quadratische) Kachel FÜLLT
+    # und kein Theme-Kartenhintergrund als Letterbox-Rand durchscheint.
+    side = max(grid_w, grid_h)
+    canvas = Image.new("RGB", (side, side), (255, 255, 255))
+    offx, offy = (side - grid_w) // 2, (side - grid_h) // 2
     for i, u in enumerate(urls):
         uu = u + ("&" if "?" in u else "?") + f"width={CELL}"
         resp = requests.get(uu, timeout=60)
         resp.raise_for_status()
         cell = cell_image(resp.content)
-        canvas.paste(cell, ((i % cols) * CELL, (i // cols) * CELL))
+        canvas.paste(cell, (offx + (i % cols) * CELL, offy + (i // cols) * CELL))
     out = io.BytesIO()
     canvas.save(out, format="JPEG", quality=82)
     return out.getvalue()
