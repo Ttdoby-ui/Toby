@@ -31,10 +31,14 @@ on:
         description: "Ab diesem Rand-Mittelwert gilt der Hintergrund schon als weiß (überspringen)"
         required: false
         default: "244"
+      fill_tol:
+        description: "Flood-Fill: Farbabstand (0-441) zum Rand, ab dem ein Pixel als Hintergrund gilt"
+        required: false
+        default: "42"
       rmbg:
-        description: "Hintergrund je Bild freistellen (rembg)"
+        description: "KI-Freistellung (rembg) statt Flood-Fill – frisst helle Produkte, nur bewusst nutzen"
         type: boolean
-        default: true
+        default: false
 
 jobs:
   whiten:
@@ -47,7 +51,9 @@ jobs:
         with:
           python-version: "3.11"
       - name: Abhängigkeiten
-        run: pip install "rembg[cpu]" pillow requests
+        run: |
+          pip install pillow numpy scipy requests
+          if [ "${{ inputs.rmbg }}" = "true" ]; then pip install "rembg[cpu]"; fi
       - name: Hintergründe weißen
         env:
           SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
@@ -57,6 +63,7 @@ jobs:
           LIMIT: ${{ inputs.limit }}
           SOLID_STD: ${{ inputs.solid_std }}
           WHITE_MEAN: ${{ inputs.white_mean }}
+          FILL_TOL: ${{ inputs.fill_tol }}
           RMBG: ${{ inputs.rmbg }}
         run: python scripts/whiten-backgrounds.py
       - name: Backup hochladen

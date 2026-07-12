@@ -21,17 +21,23 @@ import os
 import time
 import statistics
 import requests
+import numpy as np
+from scipy import ndimage
 from PIL import Image
 
 DOMAIN = (os.environ.get("SHOPIFY_STORE_DOMAIN") or "").strip()
 TOKEN = (os.environ.get("SHOPIFY_ACCESS_TOKEN") or "").strip()
 API = "2025-01"
 DRY_RUN = (os.environ.get("DRY_RUN", "true").lower() != "false")
-RMBG = (os.environ.get("RMBG", "true").lower() != "false")
+# RMBG=true erzwingt die KI-Freistellung (rembg). DEFAULT ist FALSE -> Flood-Fill,
+# weil rembg helle/kontrastarme Produkte "frisst" (Handtuch wurde weiss statt der Hintergrund).
+RMBG = (os.environ.get("RMBG", "false").lower() == "true")
 ONLY = [x.strip() for x in os.environ.get("ONLY", "").split(",") if x.strip()]
 LIMIT = int(os.environ["LIMIT"]) if os.environ.get("LIMIT") else None
 SOLID_STD = float(os.environ.get("SOLID_STD", "14"))   # max Rand-Streuung fuer "einfarbig"
 WHITE_MEAN = float(os.environ.get("WHITE_MEAN", "244"))  # ab hier gilt Hintergrund als weiss
+FILL_TOL = float(os.environ.get("FILL_TOL", "42"))     # Farbabstand (0-441) zum Rand -> gilt als Hintergrund
+FILL_DILATE = int(os.environ.get("FILL_DILATE", "2"))  # Rand der Maske aufweiten (Halo/Antialias schlucken)
 BACKUP = "whiten-backup.json"
 
 if not DOMAIN or not TOKEN:
@@ -86,18 +92,57 @@ def border_stats(im):
     return means, stds
 
 
-def whiten(raw):
-    src = raw
-    if RMBG:
-        from rembg import remove
-        src = remove(raw, session=SESSION)
-    im = Image.open(io.BytesIO(src))
+def _flatten(raw):
+    """PNG/Alpha auf Weiss flach machen -> RGB-PIL-Bild."""
+    im = Image.open(io.BytesIO(raw))
     if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
         im = im.convert("RGBA")
         bg = Image.new("RGB", im.size, (255, 255, 255))
-        bg.paste(im, mask=im.split()[3]); im = bg
+        bg.paste(im, mask=im.split()[3])
+        return bg
+    return im.convert("RGB")
+
+
+def flood_whiten(im):
+    """
+    Nur den EINFARBIGEN Hintergrund durch Weiss ersetzen, ohne das Produkt anzufassen.
+    Vorgehen (deterministisch, keine KI): Hintergrundfarbe = Median der Rand-Pixel;
+    Maske = Pixel innerhalb FILL_TOL um diese Farbe; davon werden nur die
+    zusammenhaengenden Regionen ersetzt, die den BILDRAND beruehren (= echter
+    Hintergrund). Produktinnere Pixel gleicher Farbe bleiben, weil nicht mit dem
+    Rand verbunden. So wird NIE das Produkt selbst weiss gemacht.
+    """
+    arr = np.asarray(im, dtype=np.int16)
+    h, w, _ = arr.shape
+    b = max(3, min(w, h) // 40)
+    border = np.concatenate([
+        arr[:b, :, :].reshape(-1, 3), arr[-b:, :, :].reshape(-1, 3),
+        arr[:, :b, :].reshape(-1, 3), arr[:, -b:, :].reshape(-1, 3)])
+    bg = np.median(border, axis=0)
+    dist = np.sqrt(((arr - bg) ** 2).sum(axis=2))
+    near = dist < FILL_TOL
+    # nur Regionen behalten, die den Rand beruehren
+    lbl, n = ndimage.label(near)
+    edge = set(np.unique(lbl[0, :])) | set(np.unique(lbl[-1, :])) \
+        | set(np.unique(lbl[:, 0])) | set(np.unique(lbl[:, -1]))
+    edge.discard(0)
+    if not edge:
+        return im  # nichts am Rand -> nichts ersetzen (Sicherheit)
+    mask = np.isin(lbl, list(edge))
+    if FILL_DILATE > 0:
+        # Maske leicht ins Produkt aufweiten, um den Antialias-/Farbsaum-Ring zu schlucken
+        mask = ndimage.binary_dilation(mask, iterations=FILL_DILATE)
+    out = arr.copy()
+    out[mask] = [255, 255, 255]
+    return Image.fromarray(out.astype(np.uint8), "RGB")
+
+
+def whiten(raw):
+    if RMBG:
+        from rembg import remove
+        im = _flatten(remove(raw, session=SESSION))
     else:
-        im = im.convert("RGB")
+        im = flood_whiten(_flatten(raw))
     out = io.BytesIO(); im.save(out, format="JPEG", quality=88)
     return out.getvalue()
 
