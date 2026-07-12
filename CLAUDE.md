@@ -263,8 +263,15 @@
   `product.json`: `<h1>{{ closest.product.title }}</h1>`) und wird bei Variantenwechsel NICHT re-gerendert →
   daher JS statt Liquid. ⚠️ Nur Entwurf-Horizon → live bei Rotation; Galerie-Snippet wird bei „Theme
   aktualisieren" zurückgesetzt → aus Mirror wiederherstellen.
-- **Offen/optional:** Kombi-Übersichtsbild aller Farben (wie Contra-Thumbnail) – noch nicht umgesetzt (ein
-  neutrales Montage-Bild als Erst-/Kachelbild würde per Filter auf JEDER Farbe mit angezeigt).
+- **Kombi-Vorschaubild „Farbübersicht" erledigt (2026-07-12):** Für alle 138 zusammengeführten Produkte ein
+  Montage-Bild (Raster aus dem ersten Bild jeder Farbe) gebaut und als **erstes/Featured-Bild** gesetzt → es
+  erscheint **nur auf Kachel/Vorschau**. Auf der **PDP** wird es **ausgeblendet**, weil sein **Alt-Text ALLE
+  Farbnamen enthält** („<Titel> Farbübersicht <farbe1> <farbe2> …") → der bestehende Galerie-Alt-Text-Filter
+  blendet es bei JEDER gewählten Farbe aus (enthält immer „andere" Farben). **Kein Theme-Eingriff** nötig; greift
+  überall dort, wo der Filter aktiv ist (Entwurf-Horizon → live bei Rotation). Tool: `scripts/build-color-montages.mjs`
+  + Workflow **„Kombi-Vorschaubilder bauen"** (auf `main`; `sharp`-Montage, `stagedUploadsCreate` + `productCreateMedia`
+  + `productReorderMedia` an Position 0; idempotent: überspringt Produkte mit „Farbübersicht" im Alt-Text). Neue
+  Merges → Workflow erneut (nur `LIMIT`/`dry_run`-Optionen). Rollback: Bild mit „Farbübersicht"-Alt im Admin löschen.
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
