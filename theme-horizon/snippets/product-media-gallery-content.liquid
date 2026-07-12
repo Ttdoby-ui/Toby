@@ -106,34 +106,30 @@
     assign sorted_media = sorted_media | concat: selected_product.media | where: 'id', selected_variant_media.id
 
     if block_settings.hide_variants
-      # Futurespin: ALLE Medien der ausgewaehlten Variante + geteilte (keiner Variante
-      # zugeordnete) Medien zeigen; Medien ANDERER Varianten ausblenden. So erscheinen
-      # alle Bilder EINER Farbe, aber nur wenn diese Variante ausgewaehlt ist.
-      assign fs_sel_variant = selected_product.selected_or_first_available_variant
-      assign fs_sel_srcs = ''
-      for fs_img in selected_product.images
-        for fs_v in fs_img.variants
-          if fs_v.id == fs_sel_variant.id
-            assign fs_sel_srcs = fs_sel_srcs | append: '|' | append: fs_img.src | append: '|'
-          endif
-        endfor
-      endfor
+      # Futurespin: Bilder nach der gewaehlten Variante filtern. Shopify erlaubt pro
+      # Variante nur EIN zugeordnetes Bild, daher Abgleich ueber den Alt-Text der Bilder:
+      # Ein Bild wird nur ausgeblendet, wenn sein Alt-Text den Optionswert (z. B. die Farbe)
+      # EINER ANDEREN Variante enthaelt. Bilder mit passendem Alt-Text sowie neutrale Bilder
+      # (ohne Farbbezug im Alt-Text) bleiben. So erscheinen ALLE Bilder EINER Farbe, aber
+      # nur wenn diese Variante ausgewaehlt ist. Damit es greift, muessen die Bilder pro
+      # Farbe im Alt-Text die Farbe enthalten (bei den Marken-Importen der Fall).
+      assign fs_sel_value = selected_product.selected_or_first_available_variant.option1
+      assign fs_opt_values = selected_product.options_with_values[0].values
       for media in selected_product.media
         if media.id == selected_variant_media.id
           continue
         endif
-        assign fs_include = true
-        if variant_images contains media.src
-          assign fs_include = false
-          assign fs_key = '|' | append: media.src | append: '|'
-          if fs_sel_srcs contains fs_key
-            assign fs_include = true
+        assign fs_alt = media.alt | default: ''
+        assign fs_other_color = false
+        for ov in fs_opt_values
+          if ov != blank and ov != fs_sel_value and fs_alt contains ov
+            assign fs_other_color = true
           endif
-        endif
-        if fs_include
+        endfor
+        unless fs_other_color
           assign found_media = selected_product.media | where: 'id', media.id
           assign sorted_media = sorted_media | concat: found_media
-        endif
+        endunless
       endfor
     else
       for media in selected_product.media
