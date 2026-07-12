@@ -22,8 +22,8 @@ import time
 import requests
 from PIL import Image
 
-DOMAIN = os.environ.get("SHOPIFY_STORE_DOMAIN")
-TOKEN = os.environ.get("SHOPIFY_ACCESS_TOKEN")
+DOMAIN = (os.environ.get("SHOPIFY_STORE_DOMAIN") or "").strip()
+TOKEN = (os.environ.get("SHOPIFY_ACCESS_TOKEN") or "").strip()  # .strip(): Secret hat evtl. \n am Ende (requests lehnt \n im Header ab)
 API = "2025-01"
 DRY_RUN = (os.environ.get("DRY_RUN", "true").lower() != "false")
 REBUILD = (os.environ.get("REBUILD", "false").lower() == "true")
