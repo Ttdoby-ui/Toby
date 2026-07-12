@@ -167,6 +167,14 @@
     `theme-horizon/snippets/product-media.liquid`. Damit ist das NEU-Badge an ALLEN Stellen (Filter-Kacheln,
     native Kacheln, PDP-Hauptbild).
 
+## Bestand je Farb-Swatch: „> 15" statt exakter Menge (2026-07-12)
+
+- Der Button-Variant-Picker zeigt unter jedem Swatch den Bestand der Variante. In `snippets/variant-main-picker.liquid`
+  (Futurespin-Custom, native Horizon-Datei → **Repo-Mirror** `theme-horizon/snippets/variant-main-picker.liquid`)
+  gilt: **Bestand > 15 → „Bestand > 15"** (exakte Menge verborgen), **≤ 15 → „Bestand = N"** (genaue Zahl).
+  Logik: `assign fs_stock = product_option_value.variant.inventory_quantity` + `{% if fs_stock > 15 %}&gt; 15{% else %}= {{ fs_stock }}{% endif %}`.
+  ⚠️ Native Datei → bei „Theme aktualisieren" zurückgesetzt → aus Mirror wiederherstellen. Nur Entwurf-Horizon → live bei Rotation.
+
 ## Varianten-Bilder auf der PDP (nur die der gewählten Variante, 2026-07-11)
 
 - **Ziel (User):** Bei einem Artikel mit Farb-Varianten sollen die Bilder einer Farbe **nur** erscheinen,
