@@ -297,23 +297,33 @@
 - **Ziel (User):** Alle Produktbilder mit **einfarbigem, nicht-weißem** Hintergrund auf **Weiß** setzen →
   einheitliches Kachel-/Galeriebild. **Lifestyle-/Mehr-Objekt-Bilder** (unruhiger Hintergrund) NICHT anfassen.
 - **Tool:** `scripts/whiten-backgrounds.py` + Workflow **„Weißer Hintergrund (katalogweit)"**
-  (`.github/workflows/whiten-backgrounds.yml`, auf `main` + Feature-Branch, `workflow_dispatch`). Python/rembg
-  (`u2netp`, 1× `new_session`) – dieselbe stabile Freistellung wie der Montage-Builder (Node/@imgly stürzt in CI ab).
-- **Kandidaten-Erkennung** (`border_stats`): Rand-Frame des Bildes abtasten. **einfarbig** = max. Kanal-Streuung
-  `< SOLID_STD` (Default 14); **schon weiß** = alle Kanal-Mittel `> WHITE_MEAN` (Default 244). Weißer, nicht-alpha
-  Rand → übersprungen. Einfarbig-nicht-weiß **oder** transparenter PNG-Rand → **Kandidat**. Unruhiger Rand (nicht
-  alpha) → Lifestyle → übersprungen. Kombi-Bilder (Alt „Farbübersicht") → immer übersprungen.
+  (`.github/workflows/whiten-backgrounds.yml`, auf `main` + Feature-Branch, `workflow_dispatch`). Python (Pillow/numpy/scipy).
+- 🚨 **METHODE = Rand-Flood-Fill, NICHT rembg (2026-07-12 nach Fehlschlag umgestellt).** rembg (KI-Freistellung)
+  **fraß helle/kontrastarme Produkte** – das „futurespin Handtuch Logo" wurde komplett weiß statt nur der Hintergrund
+  (Handtuch hell → als Hintergrund fehlsegmentiert). **Flood-Fill** (`flood_whiten`) ist deterministisch und rührt das
+  Produkt NIE an: Hintergrundfarbe = Median der Rand-Pixel; Maske = Pixel innerhalb `FILL_TOL` (Default 42, Farbabstand
+  0–441) um diese Farbe; ersetzt werden nur die **zusammenhängenden Regionen, die den Bildrand berühren** (via
+  `scipy.ndimage.label`) → Produktinnere Pixel gleicher Farbe bleiben, weil nicht mit dem Rand verbunden. `FILL_DILATE`
+  (Default 2) weitet die Maske minimal ins Produkt, um den Antialias-/Farbsaum-Ring zu schlucken. **rembg nur noch
+  optional** über `RMBG=true` (bewusst, für Sonderfälle) – dann wird `rembg[cpu]` zusätzlich installiert.
+- **Kandidaten-Erkennung** (`border_stats`, entscheidet WELCHE Bilder): Rand-Frame abtasten. **einfarbig** = max.
+  Kanal-Streuung `< SOLID_STD` (Default 14); **schon weiß** = alle Kanal-Mittel `> WHITE_MEAN` (Default 244) → übersprungen.
+  Einfarbig-nicht-weiß **oder** transparenter PNG-Rand → **Kandidat**. Unruhiger Rand (nicht alpha) → Lifestyle → übersprungen.
+  Kombi-Bilder (Alt „Farbübersicht") → immer übersprungen.
 - 🚨 **Ersetzen ERHÄLT Alt-Text, Position und Varianten-Zuordnung** (kritisch für die 138 gemergten Farb-Produkte,
   sonst bricht der Alt-Text-Farbfilter!). Ablauf je Bild: `productCreateMedia` (Alt kopiert) → `productReorderMedia`
   (neue an die Position der alten) → `productVariantDetachMedia`/`AppendMedia` (Varianten-Bindung umhängen) →
   `productDeleteMedia` (alte weg). Shopify ersetzt Bilder NICHT in-place → immer neu anlegen + umhängen + löschen.
-- **Backup/Rollback:** schreibt `whiten-backup.json` (Produkt/altes Media/alte CDN-URL/Alt) → als Artefakt
-  hochgeladen. Rollback = alte URLs je Produkt neu anlegen.
-- **Env:** `DRY_RUN`(Default true), `ONLY`(IDs), `LIMIT`, `SOLID_STD`, `WHITE_MEAN`, `RMBG`. IMMER erst `dry_run=true`.
-- **Pilot 2026-07-12 verifiziert (`ONLY=14798226424156,15175005798748`):** „futurespin T-Shirt Promo" (3 Bilder,
-  Alt „"/„Schwarz"/„Orange" + Varianten Schwarz/Orange erhalten) und „futurespin Handtuch Logo" (1 Bild) auf Weiß
-  gesetzt, 0 Fehler; Varianten-Bild-Zuordnung nach Ersetzen intakt (Readback bestätigt). Danach Katalog-Batch.
+- **Backup/Rollback:** schreibt `whiten-backup.json` (Produkt/altes Media/**alte CDN-URL**/Alt) → als Artefakt
+  hochgeladen. Rollback = alte URLs je Produkt neu anlegen (Shopify holt `originalSource` serverseitig).
+  ⚠️ **Alte CDN-URLs sind flüchtig:** nach `productDeleteMedia` können sie zeitnah **404** werden (2024er PNGs des
+  T-Shirt Promo waren beim Restore weg → nur die neuere Handtuch-URL ging noch). Rollback also **zeitnah** fahren.
+- **Env:** `DRY_RUN`(Default true), `ONLY`(IDs), `LIMIT`, `SOLID_STD`, `WHITE_MEAN`, `FILL_TOL`, `RMBG`. IMMER erst `dry_run=true`.
+- **Pilot 2026-07-12:** Erst mit rembg getestet → Handtuch weiß gefressen → auf Flood-Fill umgebaut, Handtuch-Original
+  restauriert (aus Backup-URL) und per Flood-Fill neu geweißt (Produkt erhalten). T-Shirt Promo blieb bei den rembg-
+  Versionen (kontrastreiche Shirts, Vordergrund unbeschädigt; Flood-Fill überspringt sie, da Rand schon weiß).
   ⚠️ Store-Token hat **kein `write_files`** → Alt kommt über `productCreateMedia{alt}`, nicht `fileUpdate`.
+  Hilfs-Workflow `dump-backup.yml` gibt ein `whiten-backup`-Artefakt ins Log aus (Artefakt-Download via Proxy geblockt).
 
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
