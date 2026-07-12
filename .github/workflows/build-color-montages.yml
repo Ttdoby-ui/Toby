@@ -1,12 +1,12 @@
 name: Kombi-Vorschaubilder bauen
 
 # Baut je zusammengeführtem Farb-Produkt ein "Farbübersicht"-Montagebild (Raster
-# aus dem ersten Bild jeder Farbe), setzt es als erstes Produktbild (featured) →
-# erscheint nur auf Kachel/Vorschau. Auf der PDP wird es durch den Alt-Text-Filter
-# (enthält alle Farbnamen) ausgeblendet. Idempotent.
+# aus dem ersten Bild jeder Farbe, Hintergrund je Bild per KI freigestellt → WEISS),
+# setzt es als erstes Produktbild (featured) → erscheint nur auf Kachel/Vorschau.
+# Auf der PDP wird es durch den Alt-Text-Filter (enthält alle Farbnamen) ausgeblendet.
 #
-# IMMER zuerst dry_run=true. Rollback: das Kombi-Bild je Produkt im Admin löschen
-# (Alt-Text enthält "Farbübersicht").
+# IMMER zuerst dry_run=true. rebuild=true ersetzt vorhandene Kombi-Bilder.
+# Rollback: das Kombi-Bild je Produkt im Admin löschen (Alt-Text "Farbübersicht").
 
 on:
   workflow_dispatch:
@@ -15,6 +15,18 @@ on:
         description: "Trockenlauf (nichts schreiben, nur Report)"
         type: boolean
         default: true
+      rebuild:
+        description: "Vorhandene Kombi-Bilder ersetzen (statt überspringen)"
+        type: boolean
+        default: false
+      rmbg:
+        description: "Hintergrund je Bild freistellen → weiß"
+        type: boolean
+        default: true
+      only:
+        description: "Nur diese Produkt-IDs (Komma-getrennt) – Pilot"
+        required: false
+        default: ""
       limit:
         description: "Max. Produkte (leer = alle) – zum Testen"
         required: false
@@ -35,5 +47,8 @@ jobs:
           SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
           SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
           DRY_RUN: ${{ inputs.dry_run }}
+          REBUILD: ${{ inputs.rebuild }}
+          RMBG: ${{ inputs.rmbg }}
+          ONLY: ${{ inputs.only }}
           LIMIT: ${{ inputs.limit }}
-        run: npm i sharp@0.33 --no-save && node scripts/build-color-montages.mjs
+        run: npm i sharp@0.33 @imgly/background-removal-node --no-save && node scripts/build-color-montages.mjs
