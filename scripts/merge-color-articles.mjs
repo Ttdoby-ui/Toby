@@ -395,31 +395,24 @@ async function processSet(brand, ids, rollback) {
     return { status: 'PLANNED' };
   }
 
-  // --- Bilder: Master-Medien mit Master-Farbe alt-taggen ---
-  const colorFirstMediaId = {};
-  const allMediaIds = [];
-  if (master.p.media.nodes.length) {
-    await mutate(
-      `mutation($files:[FileUpdateInput!]!){fileUpdate(files:$files){userErrors{message}}}`,
-      { files: master.p.media.nodes.map((m) => ({ id: m.id, alt: `${base} ${master.color}` })) }
-    );
-    colorFirstMediaId[master.color] = master.p.media.nodes[0].id;
-    for (const m of master.p.media.nodes) allMediaIds.push(m.id);
-  }
-  const addedMedia = [];
+  // --- Bilder komplett über productSet (nur write_products, kein write_files):
+  //  Master-Medien behalten (id) + Alt = Master-Farbe; andere Farben per
+  //  originalSource neu anlegen + Alt = Farbe. Jede Variante bekommt das
+  //  ERSTE Bild ihrer Farbe als featured (für den Alt-Text-Filter). ---
+  const colorFile = {}; // Farbe -> {id} | {originalSource}
+  const files = [];
+  let addedImgCount = 0;
+  master.p.media.nodes.forEach((m, idx) => {
+    files.push({ id: m.id, alt: `${base} ${master.color}` });
+    if (idx === 0) colorFile[master.color] = { id: m.id };
+  });
   for (const o of others) {
     const imgs = o.p.media.nodes.filter((m) => m.image && m.image.url);
-    if (!imgs.length) continue;
-    const r = await gql(
-      `mutation($productId:ID!,$media:[CreateMediaInput!]!){productCreateMedia(productId:$productId,media:$media){media{... on MediaImage{id}} mediaUserErrors{message}}}`,
-      {
-        productId: master.p.id,
-        media: imgs.map((m) => ({ originalSource: m.image.url, alt: `${base} ${o.color}`, mediaContentType: 'IMAGE' })),
-      }
-    );
-    const newIds = (r.productCreateMedia.media || []).map((m) => m.id);
-    newIds.forEach((id) => { allMediaIds.push(id); addedMedia.push(id); });
-    if (newIds[0]) colorFirstMediaId[o.color] = newIds[0];
+    imgs.forEach((m, idx) => {
+      files.push({ originalSource: m.image.url, alt: `${base} ${o.color}` });
+      addedImgCount++;
+      if (idx === 0) colorFile[o.color] = { originalSource: m.image.url };
+    });
   }
 
   // --- Varianten bauen ---
@@ -447,7 +440,7 @@ async function processSet(brand, ids, rollback) {
       };
       if (v.compareAtPrice) variant.compareAtPrice = v.compareAtPrice;
       if (invQ.length) variant.inventoryQuantities = invQ;
-      if (colorFirstMediaId[m.color]) variant.file = { id: colorFirstMediaId[m.color] };
+      if (colorFile[m.color]) variant.file = colorFile[m.color];
       if (isMaster) variant.id = v.id; // Master-Varianten erhalten (Bestand/History)
       variants.push(variant);
     }
@@ -467,7 +460,7 @@ async function processSet(brand, ids, rollback) {
     productOptions,
     variants,
   };
-  if (allMediaIds.length) input.files = allMediaIds.map((id) => ({ id }));
+  if (files.length) input.files = files;
 
   const setRes = await gql(
     `mutation($input:ProductSetInput!){productSet(input:$input,synchronous:true){product{id handle variants(first:1){nodes{id}}} userErrors{field message code}}}`,
@@ -506,13 +499,13 @@ async function processSet(brand, ids, rollback) {
     }
   }
 
-  console.log(`   ✓ Zusammengeführt → /products/${actualHandle}  (${others.length} archiviert, ${redirects.length} Redirects${redirectFails.length ? `, ${redirectFails.length} Redirect-Fehler` : ''}, ${addedMedia.length} Bilder ergänzt)`);
+  console.log(`   ✓ Zusammengeführt → /products/${actualHandle}  (${others.length} archiviert, ${redirects.length} Redirects${redirectFails.length ? `, ${redirectFails.length} Redirect-Fehler` : ''}, ${addedImgCount} Bilder ergänzt)`);
   rollback.done.push({
     brand, base, masterId: master.p.id,
     oldMaster: { title: master.p.title, handle: master.p.handle },
     newHandle: actualHandle,
     archived: others.map((o) => ({ id: o.p.id, handle: o.p.handle })),
-    redirects, redirectFails, addedMedia,
+    redirects, redirectFails,
   });
   return { status: 'MERGED' };
 }
