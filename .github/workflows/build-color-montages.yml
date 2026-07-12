@@ -1,11 +1,12 @@
 name: Kombi-Vorschaubilder bauen
 
 # Baut je zusammengeführtem Farb-Produkt ein "Farbübersicht"-Montagebild (Raster
-# aus dem ersten Bild jeder Farbe, Hintergrund je Bild per KI freigestellt → WEISS),
-# setzt es als erstes Produktbild (featured) → erscheint nur auf Kachel/Vorschau.
-# Auf der PDP wird es durch den Alt-Text-Filter (enthält alle Farbnamen) ausgeblendet.
+# aus dem ersten Bild jeder Farbe), setzt es als erstes Produktbild (featured) →
+# erscheint nur auf Kachel/Vorschau. Auf der PDP wird es durch den Alt-Text-Filter
+# (enthält alle Farbnamen) ausgeblendet.
 #
 # IMMER zuerst dry_run=true. rebuild=true ersetzt vorhandene Kombi-Bilder.
+# ⚠️ rmbg (KI-Freistellen) ist in CI instabil (@imgly core dump) → Default aus.
 # Rollback: das Kombi-Bild je Produkt im Admin löschen (Alt-Text "Farbübersicht").
 
 on:
@@ -20,9 +21,9 @@ on:
         type: boolean
         default: false
       rmbg:
-        description: "Hintergrund je Bild freistellen → weiß"
+        description: "Hintergrund je Bild freistellen → weiß (⚠️ instabil in CI, Default aus)"
         type: boolean
-        default: true
+        default: false
       only:
         description: "Nur diese Produkt-IDs (Komma-getrennt) – Pilot"
         required: false
