@@ -27,7 +27,9 @@ const API_VERSION = '2025-01';
 const DRY_RUN = (process.env.DRY_RUN ?? 'true').toLowerCase() !== 'false';
 const LIMIT = process.env.LIMIT ? Number(process.env.LIMIT) : Infinity;
 // Hintergrund je Quellbild per KI freistellen und auf WEISS setzen → einheitliches Kombi-Bild.
-const RMBG = (process.env.RMBG ?? 'true').toLowerCase() !== 'false';
+// ⚠️ Default AUS: @imgly/background-removal-node stürzt in GitHub-Actions nativ ab
+// (free(): invalid size / core dump). Erst mit stabilem Freisteller (z. B. rembg) wieder anschalten.
+const RMBG = (process.env.RMBG ?? 'false').toLowerCase() === 'true';
 // Vorhandenes Kombi-Bild löschen und neu bauen (statt überspringen).
 const REBUILD = (process.env.REBUILD ?? 'false').toLowerCase() === 'true';
 // Nur diese numerischen Produkt-IDs (Komma-getrennt) – zum Pilot-Test.

@@ -20,9 +20,9 @@ on:
         type: boolean
         default: false
       rmbg:
-        description: "Hintergrund je Bild freistellen → weiß"
+        description: "Hintergrund je Bild freistellen → weiß (⚠️ instabil in CI, Default aus)"
         type: boolean
-        default: true
+        default: false
       only:
         description: "Nur diese Produkt-IDs (Komma-getrennt) – Pilot"
         required: false
