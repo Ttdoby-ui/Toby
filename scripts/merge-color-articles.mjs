@@ -457,14 +457,26 @@ async function processSet(brand, ids, rollback) {
     productType: master.p.productType,
     tags: master.p.tags,
     status: 'ACTIVE',
-    // Kategorie beim Merge entfernen → die "Farbe"/"Größe"-Optionen werden NICHT
-    // an die Shopify-Taxonomie (color-pattern/size) gebunden, sodass Freitext-
-    // Farben wie "schwarz/gelb", "navy/lime", "türkis" akzeptiert werden.
-    category: null,
     productOptions,
     variants,
   };
   if (files.length) input.files = files;
+
+  // Taxonomie-Bindung lösen: Kategorie entfernen + die Farb-/Größen-Metafelder
+  // (shopify.color-pattern / shopify.size) löschen. Sonst bindet Shopify die neue
+  // "Farbe"/"Größe"-Option an die Taxonomie und lehnt Freitext-Farben wie
+  // "navy/lime", "schwarz/gelb", "türkis" ab (INVALID_METAFIELD_VALUE_FOR_LINKED_OPTION).
+  await gql(
+    `mutation($id:ID!){productUpdate(product:{id:$id,category:null}){userErrors{message}}}`,
+    { id: master.p.id }
+  );
+  await gql(
+    `mutation($m:[MetafieldIdentifierInput!]!){metafieldsDelete(metafields:$m){userErrors{message}}}`,
+    { m: [
+      { ownerId: master.p.id, namespace: 'shopify', key: 'color-pattern' },
+      { ownerId: master.p.id, namespace: 'shopify', key: 'size' },
+    ] }
+  );
 
   const PS = `mutation($input:ProductSetInput!){productSet(input:$input,synchronous:true){product{id handle variants(first:1){nodes{id}}} userErrors{field message code}}}`;
   let setRes = await gql(PS, { input });
