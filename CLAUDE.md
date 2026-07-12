@@ -282,12 +282,13 @@
   + Workflow **„Kombi-Vorschaubilder bauen"** (auf `main`; `sharp`-Montage, `stagedUploadsCreate` + `productCreateMedia`
   + `productReorderMedia` an Position 0; idempotent: überspringt Produkte mit „Farbübersicht" im Alt-Text). Neue
   Merges → Workflow erneut (nur `LIMIT`/`dry_run`-Optionen). Rollback: Bild mit „Farbübersicht"-Alt im Admin löschen.
-  - **Weißer Hintergrund (2026-07-12, offen – Re-Run nötig):** Damit die Kombi-Bilder einheitlich weiß sind, stellt
-    das Skript jedes Quellbild per **`@imgly/background-removal-node`** frei und `sharp.flatten` setzt Weiß (`RMBG`,
-    Default an). Vorhandene Kombi-Bilder ersetzen mit **`REBUILD=true`** (löscht das alte „Farbübersicht"-Bild und
-    baut neu), `ONLY`/`LIMIT` für Pilot. ⚠️ Der erste Batch (2026-07-12) lief noch OHNE Freistellung → Kombi-Bilder
-    tragen den Hintergrund der Original-Fotos (teils grau). **TODO:** Workflow mit `rebuild=true` erneut laufen (erst
-    Pilot `only=<id>` prüfen). Blockiert war der Re-Run durch abgelaufenen GitHub-Token (Neu-Autorisierung nötig).
+  - **Weißer Hintergrund (2026-07-12, OFFEN – Freisteller instabil):** Alle 138 Kombi-Bilder tragen aktuell den
+    Hintergrund der Original-Fotos (teils grau, z. B. Bermuda). Ziel: einheitlich weiß. Der eingebaute KI-Freisteller
+    **`@imgly/background-removal-node`** (`RMBG`, `REBUILD`, `ONLY`/`LIMIT` im Skript) **stürzt in GitHub-Actions
+    nativ ab** (`free(): invalid size` / core dump, onnx-Runtime) → **`RMBG` Default AUS**. ⚠️ REBUILD löscht das
+    alte Bild ZUERST → bei Absturz bleibt das Produkt ohne Kombi-Bild (Bermuda so passiert, wieder hergestellt).
+    **TODO für weißen Hintergrund:** stabilen Freisteller nutzen – z. B. **`rembg` (Python)** als separater Schritt
+    ODER die **Adobe-Bild-MCP** (`image_remove_background`) je Quellbild – dann `REBUILD=true` mit `RMBG=true`.
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
