@@ -741,6 +741,11 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
            Grid mit **festen px-Spalten** (`repeat(N,140px)`)+`overflow-x:auto` → dehnt iOS
            die Seite. Fix: unter 1200px auf **Flex-Scroller** umbauen
            (`display:flex; .cots__item{flex:0 0 140px}; max-width:100%; overflow-x:auto`).
+           - ⚠️ **Desktop war zu groß (2026-07-12):** Desktop nutzte `grid-template-columns:repeat(var(--cots-cols),1fr)`
+             mit `--cots-cols = cots_items.size` → bei wenigen Produkten riesige Kacheln. Fix: **überall** fixer
+             Flex-Streifen `.cots__grid{display:flex;overflow-x:auto;max-width:100%}` + `.cots__item{flex:0 0 150px}`
+             (mobil 140px) → **immer gleich groß, klein & dezent, unabhängig von der Produktzahl**. Native Datei →
+             Repo-Mirror `theme-horizon/sections/collection-topseller.liquid`, in BEIDE Entwürfe deployt.
         - Diagnose: per JS `getBoundingClientRect().right > innerWidth` die Verursacher +
           deren `position` finden (Leiste **immer** anzeigen, sonst unklar ob sie lief).
         - `body{overflow-x:clip}` half NICHT (iOS scrollt `html`; `clip` erst iOS16+).
