@@ -1,0 +1,39 @@
+name: Kombi-Vorschaubilder bauen
+
+# Baut je zusammengeführtem Farb-Produkt ein "Farbübersicht"-Montagebild (Raster
+# aus dem ersten Bild jeder Farbe), setzt es als erstes Produktbild (featured) →
+# erscheint nur auf Kachel/Vorschau. Auf der PDP wird es durch den Alt-Text-Filter
+# (enthält alle Farbnamen) ausgeblendet. Idempotent.
+#
+# IMMER zuerst dry_run=true. Rollback: das Kombi-Bild je Produkt im Admin löschen
+# (Alt-Text enthält "Farbübersicht").
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Trockenlauf (nichts schreiben, nur Report)"
+        type: boolean
+        default: true
+      limit:
+        description: "Max. Produkte (leer = alle) – zum Testen"
+        required: false
+        default: ""
+
+jobs:
+  montages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Kombi-Bilder bauen
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          LIMIT: ${{ inputs.limit }}
+        run: npm i sharp@0.33 --no-save && node scripts/build-color-montages.mjs
