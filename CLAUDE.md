@@ -48,8 +48,10 @@
 
 ## Shopify Theme-Regeln
 
-- 🚨 **AKTUELLER Entwurf = „Entwurf Horizon 4.1.1"** (`gid://shopify/OnlineStoreTheme/200523612508`,
-  UNPUBLISHED) — **DAS** rotiert der User live, NICHT das alte „Entwurf-Horizon" (`200401420636`)!
+- 🚨 **Primärer Entwurf = „Entwurf Horizon 4.1.1"** (`gid://shopify/OnlineStoreTheme/200523612508`, UNPUBLISHED) —
+  hier IMMER arbeiten. **Zusätzlich** dieselbe Änderung – wenn problemlos möglich – auch in **„Entwurf-Futurespin"**
+  (`gid://shopify/OnlineStoreTheme/200580792668`, UNPUBLISHED) spiegeln (User-Wunsch 2026-07-12; bei Problemen
+  nachfragen). Entwurf-Futurespin ist eine Kopie mit unseren Anpassungen (Galerie-Filter, Bestand-Swatch etc.).
   (2026-07-08: Theme-Änderungen versehentlich in `200401420636` gemacht → nach 4.1.1 nachgezogen.
   ⚠️ 4.1.1 hat **mehr** als das alte Theme, u. a. **B2B-Netto-Preise im Filter-Panel** (`b2bLevel`/`b2b`/
   `b2bCompare`, `isTextil`) + PAngV-„inkl. MwSt."-Note — beim Reproduzieren NICHT verlieren! Immer die
@@ -280,6 +282,12 @@
   + Workflow **„Kombi-Vorschaubilder bauen"** (auf `main`; `sharp`-Montage, `stagedUploadsCreate` + `productCreateMedia`
   + `productReorderMedia` an Position 0; idempotent: überspringt Produkte mit „Farbübersicht" im Alt-Text). Neue
   Merges → Workflow erneut (nur `LIMIT`/`dry_run`-Optionen). Rollback: Bild mit „Farbübersicht"-Alt im Admin löschen.
+  - **Weißer Hintergrund (2026-07-12, offen – Re-Run nötig):** Damit die Kombi-Bilder einheitlich weiß sind, stellt
+    das Skript jedes Quellbild per **`@imgly/background-removal-node`** frei und `sharp.flatten` setzt Weiß (`RMBG`,
+    Default an). Vorhandene Kombi-Bilder ersetzen mit **`REBUILD=true`** (löscht das alte „Farbübersicht"-Bild und
+    baut neu), `ONLY`/`LIMIT` für Pilot. ⚠️ Der erste Batch (2026-07-12) lief noch OHNE Freistellung → Kombi-Bilder
+    tragen den Hintergrund der Original-Fotos (teils grau). **TODO:** Workflow mit `rebuild=true` erneut laufen (erst
+    Pilot `only=<id>` prüfen). Blockiert war der Re-Run durch abgelaufenen GitHub-Token (Neu-Autorisierung nötig).
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
