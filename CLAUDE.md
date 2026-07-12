@@ -282,13 +282,15 @@
   + Workflow **„Kombi-Vorschaubilder bauen"** (auf `main`; `sharp`-Montage, `stagedUploadsCreate` + `productCreateMedia`
   + `productReorderMedia` an Position 0; idempotent: überspringt Produkte mit „Farbübersicht" im Alt-Text). Neue
   Merges → Workflow erneut (nur `LIMIT`/`dry_run`-Optionen). Rollback: Bild mit „Farbübersicht"-Alt im Admin löschen.
-  - **Weißer Hintergrund (2026-07-12, OFFEN – Freisteller instabil):** Alle 138 Kombi-Bilder tragen aktuell den
-    Hintergrund der Original-Fotos (teils grau, z. B. Bermuda). Ziel: einheitlich weiß. Der eingebaute KI-Freisteller
-    **`@imgly/background-removal-node`** (`RMBG`, `REBUILD`, `ONLY`/`LIMIT` im Skript) **stürzt in GitHub-Actions
-    nativ ab** (`free(): invalid size` / core dump, onnx-Runtime) → **`RMBG` Default AUS**. ⚠️ REBUILD löscht das
-    alte Bild ZUERST → bei Absturz bleibt das Produkt ohne Kombi-Bild (Bermuda so passiert, wieder hergestellt).
-    **TODO für weißen Hintergrund:** stabilen Freisteller nutzen – z. B. **`rembg` (Python)** als separater Schritt
-    ODER die **Adobe-Bild-MCP** (`image_remove_background`) je Quellbild – dann `REBUILD=true` mit `RMBG=true`.
+  - **Weißer Hintergrund erledigt (2026-07-12):** Alle 138 Kombi-Bilder neu gebaut mit **weißem Hintergrund** –
+    jedes Quellbild per **`rembg` (Python, `u2netp`)** freigestellt und auf Weiß gesetzt, Leinwand **quadratisch**
+    (füllt die Kachel, kein Theme-Letterbox-Rand). Tool = **`scripts/build-color-montages.py`** + Workflow
+    „Kombi-Vorschaubilder bauen" (setup-python + `pip install rembg[cpu] pillow requests`, `RMBG`/`REBUILD`/`ONLY`/
+    `LIMIT`-Inputs, Modell 1× via `new_session`). 🚨 **Merke:** Der Node-Freisteller **`@imgly/background-removal-node`
+    stürzt in GitHub-Actions nativ ab** (`free(): invalid size` / core dump) → deshalb **Python/rembg** (stabil).
+    Fallen: (a) Secret `SHOPIFY_ACCESS_TOKEN` hat ein `\n` am Ende → in Python `.strip()` (requests lehnt `\n` im
+    Header ab); (b) `REBUILD=true` löscht das alte Bild ZUERST → bei Abbruch bleibt ein Produkt kurz ohne Kombi-Bild.
+    Das alte `scripts/build-color-montages.mjs` (Node) ist überholt – Python-Variante nutzen.
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
