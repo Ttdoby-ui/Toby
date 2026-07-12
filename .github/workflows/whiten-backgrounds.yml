@@ -1,0 +1,68 @@
+name: Weißer Hintergrund (katalogweit)
+
+# Setzt Produktbilder mit EINFARBIGEM (nicht-weißem) Hintergrund katalogweit auf WEISS:
+# je Bild rembg-Freistellung -> auf Weiß kompositiert -> ERSETZT (Alt-Text, Position und
+# Varianten-Zuordnung bleiben erhalten, damit der Farbfilter der zusammengeführten Produkte
+# intakt bleibt). Lifestyle-/Mehr-Objekt-Bilder (unruhiger Rand) werden übersprungen.
+#
+# IMMER zuerst dry_run=true (nur Report). Backup (alte CDN-URLs) wird als Artefakt hochgeladen.
+# Rollback: aus whiten-backup.json die alten URLs je Produkt neu anlegen.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Trockenlauf (nichts schreiben, nur Report)"
+        type: boolean
+        default: true
+      only:
+        description: "Nur diese Produkt-IDs (Komma-getrennt) – Pilot"
+        required: false
+        default: ""
+      limit:
+        description: "Max. Produkte (leer = alle) – zum Testen"
+        required: false
+        default: ""
+      solid_std:
+        description: "Max. Rand-Streuung, ab der ein Hintergrund als 'einfarbig' gilt"
+        required: false
+        default: "14"
+      white_mean:
+        description: "Ab diesem Rand-Mittelwert gilt der Hintergrund schon als weiß (überspringen)"
+        required: false
+        default: "244"
+      rmbg:
+        description: "Hintergrund je Bild freistellen (rembg)"
+        type: boolean
+        default: true
+
+jobs:
+  whiten:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Abhängigkeiten
+        run: pip install "rembg[cpu]" pillow requests
+      - name: Hintergründe weißen
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          ONLY: ${{ inputs.only }}
+          LIMIT: ${{ inputs.limit }}
+          SOLID_STD: ${{ inputs.solid_std }}
+          WHITE_MEAN: ${{ inputs.white_mean }}
+          RMBG: ${{ inputs.rmbg }}
+        run: python scripts/whiten-backgrounds.py
+      - name: Backup hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whiten-backup
+          path: whiten-backup.json
+          if-no-files-found: ignore
