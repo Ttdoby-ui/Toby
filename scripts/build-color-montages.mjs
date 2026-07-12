@@ -19,12 +19,19 @@
  */
 
 import sharp from 'sharp';
+import { removeBackground } from '@imgly/background-removal-node';
 
 const SHOPIFY_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const API_VERSION = '2025-01';
 const DRY_RUN = (process.env.DRY_RUN ?? 'true').toLowerCase() !== 'false';
 const LIMIT = process.env.LIMIT ? Number(process.env.LIMIT) : Infinity;
+// Hintergrund je Quellbild per KI freistellen und auf WEISS setzen → einheitliches Kombi-Bild.
+const RMBG = (process.env.RMBG ?? 'true').toLowerCase() !== 'false';
+// Vorhandenes Kombi-Bild löschen und neu bauen (statt überspringen).
+const REBUILD = (process.env.REBUILD ?? 'false').toLowerCase() === 'true';
+// Nur diese numerischen Produkt-IDs (Komma-getrennt) – zum Pilot-Test.
+const ONLY = (process.env.ONLY || '').split(',').map((s) => s.trim()).filter(Boolean).map(Number);
 
 if (!SHOPIFY_DOMAIN || !ACCESS_TOKEN) {
   console.error('ERROR: SHOPIFY_STORE_DOMAIN und SHOPIFY_ACCESS_TOKEN müssen gesetzt sein.');
@@ -95,8 +102,17 @@ async function buildMontage(urls) {
     const u = urls[i] + (urls[i].includes('?') ? '&' : '?') + `width=${CELL}`;
     const res = await fetch(u);
     if (!res.ok) throw new Error(`Bild-Fetch ${res.status}`);
-    const buf = Buffer.from(await res.arrayBuffer());
+    let buf = Buffer.from(await res.arrayBuffer());
+    if (RMBG) {
+      try {
+        const blob = await removeBackground(buf, { output: { format: 'image/png' } });
+        buf = Buffer.from(await blob.arrayBuffer());
+      } catch (e) {
+        console.log(`   ⚠️ Freistellen fehlgeschlagen (Bild ${i + 1}), nutze Original: ${String(e.message).slice(0, 80)}`);
+      }
+    }
     const cell = await sharp(buf)
+      .flatten({ background: { r: 255, g: 255, b: 255 } }) // transparente/alpha-Flächen → weiß
       .resize(CELL, CELL, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
       .toBuffer();
     cells.push({ input: cell, left: (i % cols) * CELL, top: Math.floor(i / cols) * CELL });
@@ -126,8 +142,15 @@ async function upload(buf, filename) {
 async function processOne(id) {
   const { product } = await gql(PRODUCT_Q, { id: gid(id) });
   if (!product) return console.log(`⧗ ${id} nicht gefunden`), 'SKIP';
-  if (product.media.nodes.some((m) => (m.alt || '').includes(MARKER)))
-    return console.log(`⧗ ${product.title} – hat schon Kombi-Bild`), 'SKIP';
+  const existing = product.media.nodes.filter((m) => (m.alt || '').includes(MARKER));
+  if (existing.length && !REBUILD) return console.log(`⧗ ${product.title} – hat schon Kombi-Bild`), 'SKIP';
+  if (existing.length && REBUILD && !DRY_RUN) {
+    await gql(
+      `mutation($id:ID!,$mediaIds:[ID!]!){productDeleteMedia(productId:$id,mediaIds:$mediaIds){deletedMediaIds mediaUserErrors{message}}}`,
+      { id: product.id, mediaIds: existing.map((m) => m.id) }
+    );
+    console.log(`   ↻ altes Kombi-Bild gelöscht (${existing.length})`);
+  }
 
   const { colors, images, optName } = colorImages(product);
   if (optName !== 'Farbe' || images.length < 2)
@@ -157,8 +180,8 @@ async function processOne(id) {
 }
 
 async function main() {
-  console.log(`=== Kombi-Vorschaubilder === DRY_RUN=${DRY_RUN}${LIMIT !== Infinity ? ` LIMIT=${LIMIT}` : ''}`);
-  const ids = MASTERS.slice(0, LIMIT);
+  console.log(`=== Kombi-Vorschaubilder === DRY_RUN=${DRY_RUN} RMBG=${RMBG} REBUILD=${REBUILD}${ONLY.length ? ` ONLY=${ONLY.length}` : ''}${LIMIT !== Infinity ? ` LIMIT=${LIMIT}` : ''}`);
+  const ids = (ONLY.length ? MASTERS.filter((i) => ONLY.includes(i)) : MASTERS).slice(0, LIMIT);
   const c = { DONE: 0, PLANNED: 0, SKIP: 0, ERROR: 0 };
   for (const id of ids) {
     try {
