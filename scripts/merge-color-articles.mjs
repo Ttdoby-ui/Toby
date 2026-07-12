@@ -457,17 +457,30 @@ async function processSet(brand, ids, rollback) {
     productType: master.p.productType,
     tags: master.p.tags,
     status: 'ACTIVE',
+    // Kategorie beim Merge entfernen → die "Farbe"/"Größe"-Optionen werden NICHT
+    // an die Shopify-Taxonomie (color-pattern/size) gebunden, sodass Freitext-
+    // Farben wie "schwarz/gelb", "navy/lime", "türkis" akzeptiert werden.
+    category: null,
     productOptions,
     variants,
   };
   if (files.length) input.files = files;
 
-  const setRes = await gql(
-    `mutation($input:ProductSetInput!){productSet(input:$input,synchronous:true){product{id handle variants(first:1){nodes{id}}} userErrors{field message code}}}`,
-    { input }
-  );
-  const errs = setRes.productSet.userErrors;
-  if (errs && errs.length) {
+  const PS = `mutation($input:ProductSetInput!){productSet(input:$input,synchronous:true){product{id handle variants(first:1){nodes{id}}} userErrors{field message code}}}`;
+  let setRes = await gql(PS, { input });
+  let errs = setRes.productSet.userErrors || [];
+  // Gezielte Retries: Handle-Kollision → Suffix; nicht-anpassbares Inventar → ohne Mengen.
+  for (let attempt = 0; attempt < 2 && errs.length; attempt++) {
+    const msg = JSON.stringify(errs);
+    if (msg.includes('HANDLE_NOT_UNIQUE')) {
+      input.handle = `${newHandle}-1`;
+    } else if (/inventory item is not allowed to be adjusted/i.test(msg)) {
+      for (const v of input.variants) delete v.inventoryQuantities;
+    } else break;
+    setRes = await gql(PS, { input });
+    errs = setRes.productSet.userErrors || [];
+  }
+  if (errs.length) {
     console.log(`   ✗ productSet userErrors: ${JSON.stringify(errs)}`);
     return { status: 'ERROR', errs };
   }
