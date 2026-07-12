@@ -171,17 +171,23 @@
 
 - **Ziel (User):** Bei einem Artikel mit Farb-Varianten sollen die Bilder einer Farbe **nur** erscheinen,
   wenn diese Variante ausgewählt ist (wie im Referenz-Shop contra.de).
-- **Theme:** Setting **„Hide unselected variant media"** (`hide_variants`) ist im Media-Block von
-  `templates/product.json` **an**. Horizons native Logik zeigt aber nur das **eine** `featured_media` der
-  Variante + geteilte Bilder. Für **alle** Bilder einer Variante wurde `snippets/product-media-gallery-content.liquid`
-  erweitert: bei `hide_variants` wird `sorted_media` = **alle der gewählten Variante zugeordneten Medien**
-  (`image.variants` enthält die Variante) **+ geteilte** (keiner Variante zugeordnete) Medien; Medien **anderer**
-  Varianten fallen raus. Greift über die Section-Neurenderung bei Variantenwechsel (`media-gallery.js` tauscht
-  `<media-gallery>` aus). Repo-Mirror `theme-horizon/snippets/product-media-gallery-content.liquid` (native
-  Datei → bei „Theme aktualisieren" zurücksetzen → aus Mirror wiederherstellen).
-- 🚨 **VORAUSSETZUNG (Daten, im Admin):** Die Bilder müssen der jeweiligen Variante **zugeordnet** sein
-  (Produkt → Medien → Bild → „Medien zu Varianten hinzufügen"/„Auf Variante anwenden"). Ohne Zuordnung sind
-  alle Bilder „geteilt" → es wird nicht gefiltert (alle zeigen). Das ist eine Pflege-Aufgabe pro Produkt.
+- **Shopify-Limit:** Ein Produkt-Variante ist pro Variante nur **EIN** Bild zuordenbar (`image.variants` /
+  `variant.featured_media` = genau 1). `productVariantAppendMedia` lehnt ein zweites Bild ab
+  („Variante hat bereits angehängte Medien"). Daher lässt sich „5 blaue + 4 grüne Bilder je Farbe" **nicht**
+  über die Varianten-Bild-Zuordnung lösen.
+- **Lösung = Alt-Text-Filter** in `snippets/product-media-gallery-content.liquid`: Setting
+  **„Hide unselected variant media"** (`hide_variants`) ist im Media-Block von `templates/product.json` **an**.
+  Bei `hide_variants` filtert die Galerie die Medien über den **Alt-Text**: ein Bild wird nur **ausgeblendet**,
+  wenn sein Alt-Text den **Optionswert einer ANDEREN Variante** enthält (`fs_opt_values` =
+  `options_with_values[0].values`, Abgleich gegen `variant.option1`). Bilder mit passendem Alt-Text + neutrale
+  Bilder (ohne Farbbezug) bleiben. So erscheinen ALLE Bilder EINER Farbe, aber nur bei deren Auswahl. Greift über
+  die Section-Neurenderung bei Variantenwechsel (`media-gallery.js` tauscht `<media-gallery>` aus). Repo-Mirror
+  `theme-horizon/snippets/product-media-gallery-content.liquid` (native Datei → bei „Theme aktualisieren"
+  zurücksetzen → aus Mirror wiederherstellen).
+- 🚨 **VORAUSSETZUNG (Daten):** Die Bilder müssen im **Alt-Text die Farbe** tragen, exakt wie der Options-/
+  Variantenwert (z. B. Alt „… Blau/Schwarz" bzw. „… Grün/Schwarz", Optionswerte „Blau/Schwarz"/„Grün/Schwarz").
+  Marken-Importe (andro etc.) liefern das meist mit. Fehlt der Farbbezug im Alt-Text, gilt das Bild als neutral
+  → wird bei jeder Farbe gezeigt (keine Filterung, aber kein Fehler). Farbe muss die **erste** Produktoption sein.
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
