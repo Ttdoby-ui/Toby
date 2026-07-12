@@ -1,0 +1,54 @@
+name: Farb-Artikel zusammenführen
+
+# Führt getrennte Farb-Artikel zu EINEM Produkt mit Farb-Variante zusammen
+# (Allow-Liste von 139 sicheren Sets im Skript). Bilder je Farbe werden ans
+# Master-Produkt gehängt + alt-getextet (Farbfilter), alte Produkte archiviert
+# + 301-Redirect. Preise/Bestände je Farbe bleiben erhalten.
+#
+# IMMER zuerst mit dry_run=true laufen lassen und den Plan (Log + Artefakt)
+# prüfen! Optional brand/limit zum stufenweisen Ausrollen.
+#
+# Rollback: Artefakt "merge-rollback" (Master-IDs, archivierte Produkte,
+# Redirects, ergänzte Medien) herunterladen.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Trockenlauf (nichts schreiben, nur Plan + Report)"
+        type: boolean
+        default: true
+      brand:
+        description: "Nur eine Marke (z. B. andro / Donic / Tibhar …), leer = alle"
+        required: false
+        default: ""
+      limit:
+        description: "Max. Sets verarbeiten (leer = alle) – zum Testen"
+        required: false
+        default: ""
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Farb-Artikel zusammenführen
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          BRAND: ${{ inputs.brand }}
+          LIMIT: ${{ inputs.limit }}
+        run: node scripts/merge-color-articles.mjs
+      - name: Plan/Rollback als Artefakt sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merge-rollback
+          path: merge-rollback.json
+          if-no-files-found: warn
