@@ -188,6 +188,16 @@
   Variantenwert (z. B. Alt „… Blau/Schwarz" bzw. „… Grün/Schwarz", Optionswerte „Blau/Schwarz"/„Grün/Schwarz").
   Marken-Importe (andro etc.) liefern das meist mit. Fehlt der Farbbezug im Alt-Text, gilt das Bild als neutral
   → wird bei jeder Farbe gezeigt (keine Filterung, aber kein Fehler). Farbe muss die **erste** Produktoption sein.
+- **Katalogweit alt-getextet (2026-07-12):** Gesamter aktiver Katalog gescannt; die einzigen echten
+  „ein Produkt / mehrere Farben / mehrere Bilder"-Fälle sind wenige Textil-/Ball-/Zubehör-Artikel. Bei diesen
+  15 wurden die Bild-Alt-Texte per `fileUpdate` auf „<Titel> <Optionswert>" gesetzt (Farbe je Bild **zuverlässig**
+  aus Varianten-Zuordnung/Artikelnummer-Präfix bzw. Farb-Wort im Dateinamen abgeleitet, nicht geraten): futurespin
+  T-Shirt Promo, Tibhar T-Shirt Smash, Joola Polo/Competition/Short Maco/Short Essential 25, Joola Tischtennisplatte
+  3000 SC Pro, Tibhar Ball SYNTT NG (72/3), Joola Magic ABS 72, andro Handtuch NUZN S/M, Tibhar Netz Smash, Joola
+  Anzugjacke/-hose Team 25. Taiva-Tasche + -Doppelhülle hatten schon korrekte Alt-Texte (andro-Import).
+  Beläge (Rot/Schwarz = Gummifarbe, 1 generisches Bild) und Getrennt-je-Farbe-Produkte brauchen nichts.
+  **Nicht automatisch lösbar:** `futurespin Schlägerhülle Logo` (Anthrazit/Blau) – Bilder keiner Variante zugeordnet
+  und ohne Farbe im Dateinamen → Alt-Text müsste manuell gesetzt werden (welches Bild Anthrazit vs. Blau ist).
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
