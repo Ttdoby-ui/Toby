@@ -231,13 +231,29 @@
   - ⚠️ **Shopify-Limit 1 Bild/Variante** (siehe oben): mehrere Bilder je Farbe gehen NUR über den Alt-Text-
     Filter, nicht über Varianten-Bild-Zuordnung. Ein Farbbild kann aber von mehreren Varianten (Größen) derselben
     Farbe als featured genutzt werden.
-- **Weitere Sets** (2026-07-12, per Katalog-Sweep gefunden, Merge noch offen – User will Liste vorab):
-  massenhaft Textil/Zubehör mit „gleiches Produkt, Farbe im Titel = Extra-Artikel" (andro Shorts Torin 6×,
-  T-Shirt Melange Alpha 10×, Shirt Lanton/Panji/Sangai/Tatio/Benzon/Ataxa, Jacke/Anzug Salivan, Hardcase,
-  Headband Pro, Doppelhülle Moriva/Sintra, Donic Jacke/Hose/Anzug Capri/Trail/Paddox, Poloshirt Spider, Netz
-  Stress, Hardcase, Kantenband, TT-Tisch Magnum/Roller, Umrandung u. v. m.). ⚠️ **Nicht mergen** wo der Suffix
-  Größe/Menge/Härte/Edition ist (Umrandung-Maße, Ball-Stückzahl, „Baumwolle" vs. nicht, Senso V1/V2, Turbo).
-  Preise können je Farbe abweichen → **pro Set prüfen** (wie Performance: Rot war günstiger).
+- **Massen-Merge erledigt (2026-07-12): 137 von 139 „sicheren" Sets zusammengeführt, 0 Datenfehler.**
+  Katalog-Sweep fand 148 Kandidaten-Sets (Artefakt/Übersicht); die 139 „sicheren" (ohne Schuhe/Schläger-
+  „prüfen"-Fälle + Joola-Duomat-Dublette) wurden per **Skript `scripts/merge-color-articles.mjs` + Workflow
+  „Farb-Artikel zusammenführen"** (auf `main`, checkt Feature-Branch aus) gemergt. Farbe je Set aus dem Titel
+  geparst (gemeinsame Wort-Präfixe/-Suffixe entfernt → Farbe = Mitte, robust auch bei „Kantenband **blau** 30cm"),
+  Master = höchster Variantenpreis (→ B2B vom teureren Farbwert). Preise/Bestände/Gewichte je Farbe 1:1 erhalten,
+  Metafelder/Tags/Kollektionen des Masters erhalten. **233 archivierte Farb-Handles** per 301-Redirect auf den
+  neuen Artikel (Master-Handles via `redirectNewHandle` automatisch). Idempotent + Rollback-Artefakt.
+  - **Nicht gemergt (2, bewusst):** `andro Shirt Avos` (hat > 1 Nicht-Farb-Option → zu komplex, manuell) und
+    `Joola Tisch Duomat Pro` (Daten-Dublette „blau" ×2 → erst aufräumen).
+  - 🚨 **Falle Taxonomie-gebundene Optionen (WICHTIG):** Bei **Bekleidung** trägt der Master ein
+    **`shopify.color-pattern`/`shopify.size`-Metafeld**; legt man dann eine Option „Farbe"/„Größe" an, bindet
+    Shopify sie an die Taxonomie und lehnt **Freitext-Farben** wie „navy/lime", „schwarz/gelb", „türkis",
+    „chili rot" ab (`INVALID_METAFIELD_VALUE_FOR_LINKED_OPTION`). `category:null` allein reicht NICHT →
+    **vor dem `productSet` diese Metafelder per `metafieldsDelete` (ownerId+namespace `shopify`+key) löschen**
+    (+ category:null). Zubehör/Tische (ohne Farb-Metafeld) sind nicht betroffen.
+  - 🚨 **Store-Token-Scopes:** Der Workflow-Token (`SHOPIFY_ACCESS_TOKEN`) hat **kein `write_files`** (→ `fileUpdate`
+    scheitert; Bild-Alt-Texte deshalb über `productSet.files{id,alt}` bzw. `originalSource,alt` setzen) und **kein
+    `write_online_store_navigation`** (→ `urlRedirectCreate` scheitert; Redirects per **MCP** nachtragen, mein
+    MCP-Token hat den Scope). `redirectNewHandle` (Master-Handle) läuft dagegen über `write_products` und greift.
+  - **Weitere Merges (Nachschub):** neue Farb-Extra-Artikel → in `SAFE_SETS` (Skript) als ID-Gruppe ergänzen,
+    Workflow erneut (erst `dry_run=true`). ⚠️ **Nicht mergen** wo der Suffix Größe/Menge/Härte/Edition ist
+    (Umrandung-Maße, Ball-Stückzahl, „Baumwolle" vs. nicht, Senso V1/V2, Turbo). Preise je Farbe können abweichen.
 - **Theme: gewählte Farbe im H1-Titel (2026-07-12):** `snippets/product-media-gallery-content.liquid` (Repo-
   Mirror) enthält am Ende ein self-contained Script (rendert 1× pro PDP): hängt „ – <Farbe>" an den `<h1>`, wenn
   die **erste** Produktoption „Farbe" heißt und > 1 Farbe hat. Liest die gewählte Varianten-ID aus dem
