@@ -103,9 +103,11 @@ async function buildMontage(urls) {
     const res = await fetch(u);
     if (!res.ok) throw new Error(`Bild-Fetch ${res.status}`);
     let buf = Buffer.from(await res.arrayBuffer());
+    const ctype = (res.headers.get('content-type') || 'image/jpeg').split(';')[0];
     if (RMBG) {
       try {
-        const blob = await removeBackground(buf, { output: { format: 'image/png' } });
+        const inBlob = new Blob([buf], { type: ctype });
+        const blob = await removeBackground(inBlob, { output: { format: 'image/png' } });
         buf = Buffer.from(await blob.arrayBuffer());
       } catch (e) {
         console.log(`   ⚠️ Freistellen fehlgeschlagen (Bild ${i + 1}), nutze Original: ${String(e.message).slice(0, 80)}`);
