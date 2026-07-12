@@ -1,9 +1,10 @@
 name: Kombi-Vorschaubilder bauen
 
 # Baut je zusammengeführtem Farb-Produkt ein "Farbübersicht"-Montagebild (Raster
-# aus dem ersten Bild jeder Farbe, Hintergrund je Bild per KI freigestellt → WEISS),
+# aus dem ersten Bild jeder Farbe, Hintergrund je Bild per rembg freigestellt → WEISS),
 # setzt es als erstes Produktbild (featured) → erscheint nur auf Kachel/Vorschau.
 # Auf der PDP wird es durch den Alt-Text-Filter (enthält alle Farbnamen) ausgeblendet.
+# Python/rembg (stabil), nicht Node/@imgly (stürzte in CI ab).
 #
 # IMMER zuerst dry_run=true. rebuild=true ersetzt vorhandene Kombi-Bilder.
 # Rollback: das Kombi-Bild je Produkt im Admin löschen (Alt-Text "Farbübersicht").
@@ -20,9 +21,9 @@ on:
         type: boolean
         default: false
       rmbg:
-        description: "Hintergrund je Bild freistellen → weiß (⚠️ instabil in CI, Default aus)"
+        description: "Hintergrund je Bild freistellen → weiß (rembg)"
         type: boolean
-        default: false
+        default: true
       only:
         description: "Nur diese Produkt-IDs (Komma-getrennt) – Pilot"
         required: false
@@ -39,9 +40,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: claude/shopify-adhesive-service-vkfNR
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: "20"
+          python-version: "3.11"
+      - name: Abhängigkeiten
+        run: pip install "rembg[cpu]" pillow requests
       - name: Kombi-Bilder bauen
         env:
           SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
@@ -51,4 +54,4 @@ jobs:
           RMBG: ${{ inputs.rmbg }}
           ONLY: ${{ inputs.only }}
           LIMIT: ${{ inputs.limit }}
-        run: npm i sharp@0.33 @imgly/background-removal-node --no-save && node scripts/build-color-montages.mjs
+        run: python scripts/build-color-montages.py
