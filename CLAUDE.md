@@ -291,6 +291,30 @@
     Fallen: (a) Secret `SHOPIFY_ACCESS_TOKEN` hat ein `\n` am Ende → in Python `.strip()` (requests lehnt `\n` im
     Header ab); (b) `REBUILD=true` löscht das alte Bild ZUERST → bei Abbruch bleibt ein Produkt kurz ohne Kombi-Bild.
     Das alte `scripts/build-color-montages.mjs` (Node) ist überholt – Python-Variante nutzen.
+
+## Produktbilder katalogweit auf WEISSEN Hintergrund (2026-07-12)
+
+- **Ziel (User):** Alle Produktbilder mit **einfarbigem, nicht-weißem** Hintergrund auf **Weiß** setzen →
+  einheitliches Kachel-/Galeriebild. **Lifestyle-/Mehr-Objekt-Bilder** (unruhiger Hintergrund) NICHT anfassen.
+- **Tool:** `scripts/whiten-backgrounds.py` + Workflow **„Weißer Hintergrund (katalogweit)"**
+  (`.github/workflows/whiten-backgrounds.yml`, auf `main` + Feature-Branch, `workflow_dispatch`). Python/rembg
+  (`u2netp`, 1× `new_session`) – dieselbe stabile Freistellung wie der Montage-Builder (Node/@imgly stürzt in CI ab).
+- **Kandidaten-Erkennung** (`border_stats`): Rand-Frame des Bildes abtasten. **einfarbig** = max. Kanal-Streuung
+  `< SOLID_STD` (Default 14); **schon weiß** = alle Kanal-Mittel `> WHITE_MEAN` (Default 244). Weißer, nicht-alpha
+  Rand → übersprungen. Einfarbig-nicht-weiß **oder** transparenter PNG-Rand → **Kandidat**. Unruhiger Rand (nicht
+  alpha) → Lifestyle → übersprungen. Kombi-Bilder (Alt „Farbübersicht") → immer übersprungen.
+- 🚨 **Ersetzen ERHÄLT Alt-Text, Position und Varianten-Zuordnung** (kritisch für die 138 gemergten Farb-Produkte,
+  sonst bricht der Alt-Text-Farbfilter!). Ablauf je Bild: `productCreateMedia` (Alt kopiert) → `productReorderMedia`
+  (neue an die Position der alten) → `productVariantDetachMedia`/`AppendMedia` (Varianten-Bindung umhängen) →
+  `productDeleteMedia` (alte weg). Shopify ersetzt Bilder NICHT in-place → immer neu anlegen + umhängen + löschen.
+- **Backup/Rollback:** schreibt `whiten-backup.json` (Produkt/altes Media/alte CDN-URL/Alt) → als Artefakt
+  hochgeladen. Rollback = alte URLs je Produkt neu anlegen.
+- **Env:** `DRY_RUN`(Default true), `ONLY`(IDs), `LIMIT`, `SOLID_STD`, `WHITE_MEAN`, `RMBG`. IMMER erst `dry_run=true`.
+- **Pilot 2026-07-12 verifiziert (`ONLY=14798226424156,15175005798748`):** „futurespin T-Shirt Promo" (3 Bilder,
+  Alt „"/„Schwarz"/„Orange" + Varianten Schwarz/Orange erhalten) und „futurespin Handtuch Logo" (1 Bild) auf Weiß
+  gesetzt, 0 Fehler; Varianten-Bild-Zuordnung nach Ersetzen intakt (Readback bestätigt). Danach Katalog-Batch.
+  ⚠️ Store-Token hat **kein `write_files`** → Alt kommt über `productCreateMedia{alt}`, nicht `fileUpdate`.
+
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
