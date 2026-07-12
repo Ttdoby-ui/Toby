@@ -198,6 +198,57 @@
   Beläge (Rot/Schwarz = Gummifarbe, 1 generisches Bild) und Getrennt-je-Farbe-Produkte brauchen nichts.
   **Nicht automatisch lösbar:** `futurespin Schlägerhülle Logo` (Anthrazit/Blau) – Bilder keiner Variante zugeordnet
   und ohne Farbe im Dateinamen → Alt-Text müsste manuell gesetzt werden (welches Bild Anthrazit vs. Blau ist).
+
+## Farb-Artikel zusammenführen (getrennte Farb-Produkte → 1 Produkt mit Farb-Variante)
+
+- **Hintergrund (User):** Früher wurden Farben als **separate Artikel** angelegt (schlechte Filterbarkeit).
+  Ziel: pro „Set" **ein** Produkt mit **Farbe = 1. Variantenoption** (Pflicht, sonst greift der Alt-Text-
+  Bildfilter nicht, siehe oben – `option1` muss die Farbe sein) und Größe als 2. Option; Bilder je Farbe mit
+  Farbe im Alt-Text → Galerie-Filter zeigt beim Farbklick nur die Bilder dieser Farbe.
+- **Pilot fertig (2026-07-12): „futurespin Shirt Performance"** – aus rot/schwarz/blau **ein** Produkt
+  `gid://shopify/Product/15157844574556` (Handle `futurespin-shirt-performance`), 23 Varianten (Schwarz 9,
+  Rot 5, Blau 9). **Preise unverändert** (Rot 24,90 €, Schwarz/Blau 34,90 €, Vergleichspreis 49,90 €), **B2B-
+  Metafelder = Schwarz/Blau-Werte** (Master war Schwarz → `custom.preis_b2b1/2/3` = 17,45/17,60/29,33 bleiben
+  erhalten). Alte rot/blau-Produkte **archiviert** (`15157841559900`, `15157844738396`), alle drei alten Handles
+  **301-Redirect** auf den neuen (schwarz-Redirect automatisch via `redirectNewHandle:true`, rot/blau per
+  `urlRedirectCreate`).
+- **Verfahren (reproduzierbar, rein Shopify-Daten – sofort live in ALLEN Themes):**
+  1. **Bilder der Nicht-Master-Farben** an den Master hängen: `productCreateMedia`/`productSet files` mit
+     `originalSource` (CDN-URL des alten Produktbilds), **Alt-Text = „<Titel> <Farbe>"** (die Farbe MUSS im
+     Alt-Text stehen, exakt wie der Optionswert). Master-eigenes Bild nur per `fileUpdate` den Alt-Text setzen.
+     → deterministisch: erst Media anlegen (IDs holen), dann in `productSet` **per `id`** referenzieren (kein
+     Dupe-Risiko durch wiederholte `originalSource` über viele Varianten).
+  2. **`productSet`** auf den Master (declarativ!): `productOptions` [Farbe pos1 (alle Farben), Größe pos2 (Union
+     aller Größen)], `variants` = **alle** Kombinationen die es real gibt (Master-Varianten mit ihrer `id`
+     behalten → Bestand/History bleiben; neue Farben ohne id → werden angelegt), jede Variante mit
+     `optionValues`, `price`, `compareAtPrice`, `taxable`, `inventoryItem{tracked,measurement{weight}}`,
+     `inventoryQuantities[{locationId, name:"available", quantity}]` und **`file:{id: <Farbbild>}`** (Bildzuordnung
+     → `variant.featured_media`, ohne die der Filter NICHT greift, weil `selected_or_first_available_variant.featured_media`
+     nil wäre → else-Zweig zeigt ALLE Bilder). `files` listet alle 3 Bild-IDs. **Metafields/Collections weglassen
+     → bleiben erhalten.** `handle` neu + `redirectNewHandle:true`. `synchronous:true` (≤ ~250 Varianten ok).
+  3. **Alte Farb-Produkte** `status:ARCHIVED` (nicht löschen → reversibel) + `urlRedirectCreate` je Alt-Handle
+     → `/products/<neuer-handle>`.
+  - ⚠️ **Shopify-Limit 1 Bild/Variante** (siehe oben): mehrere Bilder je Farbe gehen NUR über den Alt-Text-
+    Filter, nicht über Varianten-Bild-Zuordnung. Ein Farbbild kann aber von mehreren Varianten (Größen) derselben
+    Farbe als featured genutzt werden.
+- **Weitere Sets** (2026-07-12, per Katalog-Sweep gefunden, Merge noch offen – User will Liste vorab):
+  massenhaft Textil/Zubehör mit „gleiches Produkt, Farbe im Titel = Extra-Artikel" (andro Shorts Torin 6×,
+  T-Shirt Melange Alpha 10×, Shirt Lanton/Panji/Sangai/Tatio/Benzon/Ataxa, Jacke/Anzug Salivan, Hardcase,
+  Headband Pro, Doppelhülle Moriva/Sintra, Donic Jacke/Hose/Anzug Capri/Trail/Paddox, Poloshirt Spider, Netz
+  Stress, Hardcase, Kantenband, TT-Tisch Magnum/Roller, Umrandung u. v. m.). ⚠️ **Nicht mergen** wo der Suffix
+  Größe/Menge/Härte/Edition ist (Umrandung-Maße, Ball-Stückzahl, „Baumwolle" vs. nicht, Senso V1/V2, Turbo).
+  Preise können je Farbe abweichen → **pro Set prüfen** (wie Performance: Rot war günstiger).
+- **Theme: gewählte Farbe im H1-Titel (2026-07-12):** `snippets/product-media-gallery-content.liquid` (Repo-
+  Mirror) enthält am Ende ein self-contained Script (rendert 1× pro PDP): hängt „ – <Farbe>" an den `<h1>`, wenn
+  die **erste** Produktoption „Farbe" heißt und > 1 Farbe hat. Liest die gewählte Varianten-ID aus dem
+  `/cart/add`-Formular, mappt sie (Liquid-`MAP` id→`option1`) auf die Farbe, hält es beim Variantenwechsel
+  synchron (change/input/variant-events + MutationObserver auf der Section, Loop-Schutz via Text-Vergleich,
+  Init-Guard `window.__fsColorHeadingInit`). Der Titel-Textblock ist native Horizon (`text`-Block in
+  `product.json`: `<h1>{{ closest.product.title }}</h1>`) und wird bei Variantenwechsel NICHT re-gerendert →
+  daher JS statt Liquid. ⚠️ Nur Entwurf-Horizon → live bei Rotation; Galerie-Snippet wird bei „Theme
+  aktualisieren" zurückgesetzt → aus Mirror wiederherstellen.
+- **Offen/optional:** Kombi-Übersichtsbild aller Farben (wie Contra-Thumbnail) – noch nicht umgesetzt (ein
+  neutrales Montage-Bild als Erst-/Kachelbild würde per Filter auf JEDER Farbe mit angezeigt).
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
