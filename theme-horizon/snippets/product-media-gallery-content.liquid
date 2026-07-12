@@ -1072,3 +1072,63 @@
     content-visibility: visible;
   }
 {% endstylesheet %}
+
+{%- comment -%}
+  Futurespin: Gewählte Farbe im Produkt-Titel (H1) einblenden.
+  Greift nur, wenn die ERSTE Produktoption "Farbe" heißt und mehr als eine Farbe
+  hat (zusammengeführte Farb-Artikel). Hängt " – <Farbe>" an den Titel und hält
+  es beim Variantenwechsel synchron (liest die gewählte Varianten-ID aus dem
+  Warenkorb-Formular und mappt sie auf die Farbe). Self-contained, rendert einmal
+  pro PDP (im Galerie-Snippet). Kein Eingriff in native Horizon-Blöcke.
+{%- endcomment -%}
+{%- if closest.product != blank -%}
+  {%- assign fs_opt1 = closest.product.options_with_values[0] -%}
+  {%- if fs_opt1.name == 'Farbe' and fs_opt1.values.size > 1 -%}
+    <script>
+    (function(){
+      if (window.__fsColorHeadingInit) return; window.__fsColorHeadingInit = 1;
+      var BASE = {{ closest.product.title | json }};
+      var MAP = {
+        {%- for v in closest.product.variants -%}
+          {{ v.id | json }}: {{ v.option1 | json }}{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      };
+      function findH1(){
+        var hs = document.querySelectorAll('h1');
+        for (var i = 0; i < hs.length; i++){
+          var t = (hs[i].textContent || '').trim();
+          if (t === BASE || t.indexOf(BASE) === 0) return hs[i];
+        }
+        return null;
+      }
+      function selId(){
+        var el = document.querySelector('form[action*="/cart/add"] [name="id"], .product-information [name="id"], [name="id"]');
+        return el ? el.value : null;
+      }
+      function apply(){
+        var h1 = findH1(); if (!h1) return;
+        var color = MAP[selId()];
+        var want = color ? (BASE + ' – ' + color) : BASE;
+        if (h1.textContent !== want) h1.textContent = want;
+      }
+      var t = null;
+      function schedule(){ if (t) clearTimeout(t); t = setTimeout(apply, 40); }
+      document.addEventListener('change', schedule, true);
+      document.addEventListener('input', schedule, true);
+      ['variant:change','on:variant:change','variantchange'].forEach(function(ev){
+        document.addEventListener(ev, schedule, true);
+      });
+      window.addEventListener('popstate', schedule);
+      function boot(){
+        apply();
+        var h1 = findH1();
+        var host = h1 ? h1.closest('.shopify-section') : null;
+        if (host) new MutationObserver(schedule).observe(host, {childList:true, subtree:true, characterData:true});
+        [200, 600, 1200].forEach(function(ms){ setTimeout(apply, ms); });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+      else boot();
+    })();
+    </script>
+  {%- endif -%}
+{%- endif -%}
