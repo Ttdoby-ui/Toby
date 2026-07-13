@@ -325,6 +325,22 @@
   ⚠️ Store-Token hat **kein `write_files`** → Alt kommt über `productCreateMedia{alt}`, nicht `fileUpdate`.
   Hilfs-Workflow `dump-backup.yml` gibt ein `whiten-backup`-Artefakt ins Log aus (Artefakt-Download via Proxy geblockt).
 
+## VIP-15%-Hinweis auf jeder PDP (grafisch, 2026-07-13)
+
+- **Was:** Grafische VIP-Box (Gold-Kreis „15%", Krone, Text, CTA) auf **jeder Produktseite** direkt unter dem
+  Kaufen-Button → bewirbt den VIP-Rabatt + „Jetzt kostenlos registrieren" (`/account/login`) + „Rabatt-Details"
+  (`/pages/rabattbestimmungen`). Öffentlich **nur 15%** (konsistent zur Rabattbestimmungen-Seite: VIP2/25% & VIP3/30%
+  werden NICHT beworben). Markenfarben Blau `#486A8F` + VIP-Gold `#C19A3E`.
+- **Umsetzung:** Snippet **`snippets/vip-hint.liquid`** (self-contained, scoped CSS `.fsvip-*`, `{% style %}` inline),
+  eingehängt in **`blocks/buy-buttons.liquid`** per `{% render 'vip-hint', product: product %}` direkt nach dem
+  `</product-form-component>` (vor Konfigurator-CTA + Cross-Sell). Rendert auf jeder PDP, da buy-buttons der native
+  Kaufen-Block ist. **Für eingeloggte VIP-Kunden ausgeblendet** (`customer.tags contains 'VIP1'/'VIP2'/'VIP3'` →
+  `{% unless %}`). Repo: `snippets/vip-hint.liquid` + `blocks/buy-buttons.liquid` (beide Root, wie cross-sell).
+- **Deploy:** In BEIDE Entwürfe gepusht (Horizon 4.1.1 `200523612508` + Entwurf-Futurespin `200580792668`) via
+  `themeFilesUpsert` – vip-hint per BASE64 (synchron, prüft Liquid), buy-buttons per URL@SHA. Read-back verifiziert
+  (md5 identisch). ⚠️ `blocks/buy-buttons.liquid` wird bei „Theme aktualisieren" zurückgesetzt → aus Repo wiederherstellen
+  (der `{% render 'vip-hint' %}`-Aufruf + Snippet müssen dann erneut rein). Nur Entwurf → live bei Rotation.
+
 - **Filter-Panel-Kachelpreis nicht mehr am Kartenende (2026-07-08):** `.fp-card__price` hatte in
   `filter-panel.css` `margin-top:auto` → bei Kacheln ohne Staffelbox (z. B. Angebot günstiger als alle
   Mengenstaffeln, „andro Hexer Duro") klebte der Preis unten mit großer Lücke. Fix: im `{% style %}`-Block
