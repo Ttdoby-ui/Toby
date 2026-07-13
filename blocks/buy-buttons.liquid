@@ -240,6 +240,7 @@
         {%- endif -%}
       {%- endform -%}
     </product-form-component>
+    {% render 'vip-hint', product: product %}
     {% render 'schlaeger-konfigurieren-btn', product: product, block: block %}
     {% render 'cross-sell', product: product, block: block %}
   {%- else -%}
