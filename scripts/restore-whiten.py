@@ -23,6 +23,10 @@ TOKEN = (os.environ.get("SHOPIFY_ACCESS_TOKEN") or "").strip()
 API = "2025-01"
 DRY_RUN = (os.environ.get("DRY_RUN", "true").lower() != "false")
 ONLY = set(x.strip() for x in os.environ.get("ONLY", "").split(",") if x.strip())
+# RESTORE_TYPES: nur Produkte restaurieren, deren productType eines dieser Teilworte
+# enthaelt (case-insensitiv, Komma-Liste). Leer = alle. SKIP_TYPES = Ausschluss.
+RESTORE_TYPES = [t.strip().lower() for t in os.environ.get("RESTORE_TYPES", "").split(",") if t.strip()]
+SKIP_TYPES = [t.strip().lower() for t in os.environ.get("SKIP_TYPES", "").split(",") if t.strip()]
 BACKUP = os.environ.get("BACKUP", "whiten-backup.json")
 
 if not DOMAIN or not TOKEN:
@@ -48,7 +52,7 @@ def gql(query, variables=None, attempt=0):
 PROD_Q = """
 query($id: ID!) {
   product(id: $id) {
-    id title
+    id title productType
     media(first: 50) { nodes { ... on MediaImage { id image { url } } } }
     variants(first: 100) { nodes { id media(first: 5) { nodes { ... on MediaImage { id } } } } }
   }
@@ -59,6 +63,12 @@ def restore_product(pid, entries):
     p = gql(PROD_Q, {"id": f"gid://shopify/Product/{pid}"})["product"]
     if not p:
         print(f"- {pid} nicht gefunden"); return "SKIP"
+    ptype = (p.get("productType") or "").strip()
+    ptl = ptype.lower()
+    if RESTORE_TYPES and not any(t in ptl for t in RESTORE_TYPES):
+        print(f"- {p['title']} [{ptype}] - Typ nicht in RESTORE_TYPES, uebersprungen"); return "SKIP"
+    if SKIP_TYPES and any(t in ptl for t in SKIP_TYPES):
+        print(f"- {p['title']} [{ptype}] - Typ in SKIP_TYPES, uebersprungen"); return "SKIP"
     media = p["media"]["nodes"]
     order = [m["id"] for m in media]
     url_by_id = {m["id"]: (m.get("image") or {}).get("url", "") for m in media}
@@ -78,7 +88,7 @@ def restore_product(pid, entries):
     if not todo:
         print(f"- {p['title']} - kein white-* gefunden (schon restauriert?)"); return "SKIP"
 
-    print(f"> {p['title']} - {len(todo)} Bild(er) zurueck")
+    print(f"> {p['title']} [{ptype}] - {len(todo)} Bild(er) zurueck")
     if DRY_RUN:
         return "PLANNED"
 
