@@ -1,0 +1,51 @@
+name: Weißen zurückrollen (Restore)
+
+# Stellt die Original-Produktbilder aus dem whiten-backup.json eines Weiß-Laufs wieder
+# her und entfernt die geweißten "white-*"-Bilder. Lädt das Backup-Artefakt direkt aus
+# dem angegebenen Weiß-Run (kein Proxy nötig, Shopify holt die Originale serverseitig).
+#
+# IMMER zuerst dry_run=true. ONLY = nur diese Produkt-IDs (sonst alle im Backup).
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: "Run-ID des Weiß-Laufs, aus dem whiten-backup geladen wird"
+        required: true
+        default: "29287724797"
+      dry_run:
+        description: "Trockenlauf (nichts schreiben, nur Report)"
+        type: boolean
+        default: true
+      only:
+        description: "Nur diese Produkt-IDs (Komma-getrennt) – sonst alle im Backup"
+        required: false
+        default: ""
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Abhängigkeiten
+        run: pip install requests
+      - uses: actions/download-artifact@v4
+        with:
+          name: whiten-backup
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          ONLY: ${{ inputs.only }}
+          BACKUP: whiten-backup.json
+        run: python scripts/restore-whiten.py
