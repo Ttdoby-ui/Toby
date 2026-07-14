@@ -324,6 +324,23 @@
   Versionen (kontrastreiche Shirts, Vordergrund unbeschädigt; Flood-Fill überspringt sie, da Rand schon weiß).
   ⚠️ Store-Token hat **kein `write_files`** → Alt kommt über `productCreateMedia{alt}`, nicht `fileUpdate`.
   Hilfs-Workflow `dump-backup.yml` gibt ein `whiten-backup`-Artefakt ins Log aus (Artefakt-Download via Proxy geblockt).
+- 🚨 **KATALOG-LAUF ZURÜCKGEROLLT (2026-07-14) — Flood-Fill franst bei 3D/Schatten-Produkten aus:** Der echte
+  Katalog-Lauf weißte 112 Bilder; bei Produkten mit **weichem Schlagschatten / runder 3D-Silhouette**
+  (Komplettschläger „Futurespin Pink/Blue", Koffer/Hüllen, Taschen, Schuhe, Tische — teils auch Hölzer/Textilien)
+  folgte die Flood-Fill-Maske dem Schattenverlauf → **ausgefranste, „angefressene" Produktkanten**. Nur **flache
+  Beläge** (harte rechteckige Kante) wurden sauber. **Shopify-`productType` trennt flach/3D NICHT** (Taschen, Koffer,
+  Tische liegen alle unter „Zubehör") → kein verlässlicher Typ-Filter. Da die Bilder aus der Session nicht sichtbar
+  sind (CDN-Proxy geblockt), wurde **alles auf die Originale zurückgestellt**.
+- **Restore-Tool:** `scripts/restore-whiten.py` + Workflow **„Weißen zurückrollen (Restore)"**
+  (`.github/workflows/restore-whiten.yml`). Lädt das `whiten-backup`-Artefakt eines Weiß-Runs per
+  `actions/download-artifact@v4` (`run-id`), findet je Backup-Eintrag das aktuelle `white-<alteMediaId>.jpg`
+  (der Weiß-Lauf benennt Ersatzbilder so → exakte Zuordnung), legt das Original aus `oldUrl` neu an
+  (Shopify holt serverseitig → Proxy egal), überträgt Position + Varianten-Zuordnung und löscht das white-Bild.
+  Inputs: `source_run_id`, `dry_run`, `only` (Produkt-IDs), `RESTORE_TYPES`/`SKIP_TYPES` (Typ-Teilworte).
+  ⚠️ **Alte CDN-URLs zeitnah nutzen** (können nach `productDeleteMedia` 404 werden — hier gingen sie noch).
+- **Lehre / künftig:** Weißen NUR auf verlässlich flache Mengen anwenden — am besten über **Kollektions-Zugehörigkeit**
+  (Beläge `607791087964`), NICHT über `productType`. 3D-/Schatten-Produkte brauchen echtes Matting (rembg) —
+  das wiederum frisst helle Produkte. Also: kein Katalog-Weitwurf mehr; kuratiert pro Kollektion + Sichtprüfung.
 
 ## VIP-15%-Hinweis auf jeder PDP (grafisch, 2026-07-13)
 
