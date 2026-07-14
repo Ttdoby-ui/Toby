@@ -5,6 +5,7 @@ name: Weißen zurückrollen (Restore)
 # dem angegebenen Weiß-Run (kein Proxy nötig, Shopify holt die Originale serverseitig).
 #
 # IMMER zuerst dry_run=true. ONLY = nur diese Produkt-IDs (sonst alle im Backup).
+# RESTORE_TYPES/SKIP_TYPES = nach Produkttyp filtern (Teilworte).
 
 on:
   workflow_dispatch:
@@ -19,6 +20,14 @@ on:
         default: true
       only:
         description: "Nur diese Produkt-IDs (Komma-getrennt) – sonst alle im Backup"
+        required: false
+        default: ""
+      restore_types:
+        description: "Nur Produkttypen restaurieren (Teilworte, Komma) – leer = alle"
+        required: false
+        default: ""
+      skip_types:
+        description: "Produkttypen ausschließen (Teilworte, Komma)"
         required: false
         default: ""
 
@@ -47,5 +56,7 @@ jobs:
           SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
           DRY_RUN: ${{ inputs.dry_run }}
           ONLY: ${{ inputs.only }}
+          RESTORE_TYPES: ${{ inputs.restore_types }}
+          SKIP_TYPES: ${{ inputs.skip_types }}
           BACKUP: whiten-backup.json
         run: python scripts/restore-whiten.py
