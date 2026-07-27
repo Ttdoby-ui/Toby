@@ -77,6 +77,127 @@ def broken_products():
     return out
 
 
+# Kuratierte Quellseiten je Handle (per Websuche ermittelt, Hersteller zuerst).
+# Die Seite wird gefetcht, og:image extrahiert und das Bild hochgeladen.
+SOURCES = {
+    "barna-super-glanti-new-blue-edition": [
+        "https://www.der-materialspezialist.com/en/Rubbers/Barna-Original/Anti-Top/SUPER-GLANTI-NEW-BLUE-EDITION::231.html",
+    ],
+    "barna-virus-2": [
+        "https://www.der-materialspezialist.com/en/Rubbers/Barna-Original/Long-pimples/VIRUS-2::197.html",
+        "https://www.spinfactory.de/tischtennis-belaege/barna-langnoppe-virus-2.html",
+    ],
+    "der-materialspezialist-kamikaze": [
+        "https://www.der-materialspezialist.com/en/Rubbers/der-materialspezialist/Long-pimples/KAMIKAZE::133.html",
+        "https://www.spinfactory.de/tischtennis-belaege/tischtennis-belag-der-materialspezialist-kamikaze.html",
+    ],
+    "donic-coppa-jo-silver": [
+        "https://tischtennis-billiger.de/belaege/donic/donic-coppa-jo-silver.html",
+        "https://www.tischtennisbedarf.at/xt/de/Donic-Belag-Coppa-JO-Silver",
+    ],
+    "joola-vizon": [
+        "https://joola.de/de-eu/products/joola-belag-vizon",
+        "https://derttshop.de/belaege/noppen-innen/2647/joola-vizon",
+        "https://www.tischtennis.biz/joola-tischtennisbelaege/joola-vizon.html",
+    ],
+    "sauer-troger-hass": [
+        "https://www.sauer-troeger.com/en/products/hass",
+        "https://www.sauer-troeger.com/products/hass",
+        "https://www.spinfactory.de/tischtennis-belaege/tischtennis-belag-sauer-troeger-hass.html",
+    ],
+    "sauer-troger-blackout": [
+        "https://www.sauer-troeger.com/products/blackout-anti",
+        "https://tischtennis-billiger.de/belaege/sauer-troeger/sauer-troeger-blackout.html",
+    ],
+    "tibhar-hybrid-k3-pro": [
+        "https://ttstore.de/produkt/tibhar-hybrid-k3-pro/",
+        "https://www.racket-company.de/tischtennis/tibhar-hybrid-k3-pro.html",
+        "https://tischtennis-billiger.de/belaege/tibhar/tibhar-hybrid-k3-pro.html",
+    ],
+    "tibhar-shang-kun-hybrid-ac": [
+        "https://tibhar.info/en/shop/shang-kun-hybrid-ac/",
+        "https://ttstore.de/produkt/tibhar-shang-kun-hybrid-ac/",
+        "https://tt-shop-duesseldorf.de/products/tibhar-holz-shang-kun-hybrid-ac",
+    ],
+    "dhs-hurricane-long-5x": [
+        "https://www.racket-company.de/dhs-hurricane-long-5x.html",
+        "https://li-ning.de/products/dhs-hurricane-long-5x-holz-st-dxcr003-1",
+        "https://tischtennis-billiger.de/nach-hersteller/dhs/dhs-hurricane-long-5x.html",
+    ],
+    "red-black-flow": [
+        "https://www.spinfactory.de/tischtennis-hoelzer/tischtennis-holz-red-and-black-flow.html",
+    ],
+    "red-black-kazak": [
+        "https://www.spinfactory.de/tischtennis-hoelzer/kazak.html",
+    ],
+    "red-black-kazak-a": [
+        "https://www.spinfactory.de/tischtennis-hoelzer/kazak-a-allround.html",
+    ],
+    "red-black-kazak-c": [
+        "https://www.spinfactory.de/tischtennis-hoelzer/tischtennis-holz-red-black-kazak-c-combi.html",
+    ],
+    "red-black-kazak-d": [
+        "https://www.spinfactory.de/tischtennis-hoelzer/tischtennis-holz-red-black-kazak-defense.html",
+    ],
+    "red-black-ruby": [
+        "https://www.spinfactory.de/tischtennis-hoelzer/ruby.html",
+    ],
+    "xiom-solo": [
+        "https://www.tt-center.de/xiom-solo",
+        "https://www.racket-company.de/tischtennis/xiom-solo-off.html",
+        "https://tischtennis-billiger.de/hoelzer/xiom/xiom-solo.html",
+    ],
+    "xiom-tmxi-an-jaehyun": [
+        "https://www.racket-company.de/xiom-ajh-tmxi.html",
+        "https://tt-xpert.de/xiom-tmxi-an-jaehyun/000001363701",
+    ],
+    "xiom-tmxi-an-jaehyun-kopie": [
+        "https://www.vetts.de/conk_de/xiom-holz-an-jaehyun-tmxi-pro.html",
+        "https://www.tms-tischtennis.de/XIOM-Holz-An-JaeHyun-TMXi-Pro/11112",
+    ],
+    # futurespin-innercarbon: Eigenmarke, keine externe Quelle -> manuell
+}
+
+BROWSER_UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+              "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"}
+
+
+def og_image_from(page_url):
+    r = requests.get(page_url, headers=BROWSER_UA, timeout=45)
+    if r.status_code != 200:
+        return None, f"HTTP {r.status_code}"
+    m = re.search(r'property="og:image(?::secure_url)?"\s+content="([^"]+)"', r.text) or \
+        re.search(r'content="([^"]+)"\s+property="og:image(?::secure_url)?"', r.text) or \
+        re.search(r'<link\s+rel="image_src"\s+href="([^"]+)"', r.text) or \
+        re.search(r'name="twitter:image"\s+content="([^"]+)"', r.text)
+    if not m:
+        return None, "kein og:image"
+    u = m.group(1)
+    if u.startswith("//"):
+        u = "https:" + u
+    return u, None
+
+
+def source_image(handle):
+    """Kuratierte Quellseiten -> og:image -> Bild-Bytes."""
+    for page in SOURCES.get(handle, []):
+        host = page.split("/")[2]
+        try:
+            img_url, err = og_image_from(page)
+            if not img_url:
+                print(f"   ~ {host}: {err}")
+                continue
+            r = requests.get(img_url, headers=BROWSER_UA, timeout=90)
+            ctype = r.headers.get("Content-Type", "")
+            if r.status_code != 200 or len(r.content) < 3000 or "image" not in ctype:
+                print(f"   ~ {host}: Bild nicht ladbar ({r.status_code}, {ctype}, {len(r.content)}B)")
+                continue
+            return r.content, f"{host}"
+        except Exception as e:
+            print(f"   ~ {host}: {str(e)[:70]}")
+    return None, "keine Quellseite lieferte ein Bild"
+
+
 def contra_image(title):
     """Zweite Quelle: contra.de (Lieferant) - Suche -> Produktseite -> og:image."""
     q = re.sub(r"\bKopie( von)?\b", "", title, flags=re.I).strip()
@@ -133,18 +254,31 @@ def wayback_image(handle):
 
 
 def upload_and_attach(pid, data, filename):
+    mime = "image/png" if data[:8] == b"\x89PNG\r\n\x1a\n" else "image/jpeg"
     d = gql("mutation($input:[StagedUploadInput!]!){stagedUploadsCreate(input:$input){stagedTargets{url resourceUrl parameters{name value}} userErrors{message}}}",
-            {"input": [{"filename": filename, "mimeType": "image/jpeg", "httpMethod": "POST", "resource": "IMAGE"}]})
+            {"input": [{"filename": filename, "mimeType": mime, "httpMethod": "POST", "resource": "IMAGE"}]})
     t = d["stagedUploadsCreate"]["stagedTargets"][0]
     form = {p["name"]: p["value"] for p in t["parameters"]}
-    up = requests.post(t["url"], data=form, files={"file": (filename, data, "image/jpeg")}, timeout=120)
+    up = requests.post(t["url"], data=form, files={"file": (filename, data, mime)}, timeout=120)
     up.raise_for_status()
     cr = gql("mutation($productId:ID!,$media:[CreateMediaInput!]!){productCreateMedia(productId:$productId,media:$media){media{... on MediaImage{id}} mediaUserErrors{message}}}",
              {"productId": pid, "media": [{"originalSource": t["resourceUrl"], "alt": "", "mediaContentType": "IMAGE"}]})
     err = cr["productCreateMedia"]["mediaUserErrors"]
     if err:
         return None, str(err)
-    return cr["productCreateMedia"]["media"][0]["id"], None
+    mid = cr["productCreateMedia"]["media"][0]["id"]
+    # Lehre aus dem Whiten-Restore: IMMER auf finalen Status warten (READY),
+    # PROCESSING/FAILED nie als Erfolg werten.
+    for _ in range(15):
+        time.sleep(2)
+        n = gql("query($id:ID!){node(id:$id){... on MediaImage{status mediaErrors{message}}}}", {"id": mid})["node"]
+        if n["status"] == "READY":
+            return mid, None
+        if n["status"] == "FAILED":
+            gql("mutation($id:ID!,$m:[ID!]!){productDeleteMedia(productId:$id,mediaIds:$m){deletedMediaIds mediaUserErrors{message}}}",
+                {"id": pid, "m": [mid]})
+            return None, f"Media FAILED: {n.get('mediaErrors')}"
+    return None, "Media blieb PROCESSING (Timeout)"
 
 
 def main():
@@ -157,9 +291,9 @@ def main():
         print(f"  - {p['handle']} ({p['title']})")
     ok = fail = 0
     for p in broken:
-        data, note = wayback_image(p["handle"])
+        data, note = source_image(p["handle"])
         if not data:
-            data, note2 = contra_image(p["title"])
+            data, note2 = wayback_image(p["handle"])
             note = f"{note}; {note2}" if not data else note2
         if not data:
             print(f"x {p['handle']}: {note}")
