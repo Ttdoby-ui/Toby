@@ -189,8 +189,9 @@ def source_image(handle):
                 continue
             r = requests.get(img_url, headers=BROWSER_UA, timeout=90)
             ctype = r.headers.get("Content-Type", "")
-            if r.status_code != 200 or len(r.content) < 3000 or "image" not in ctype:
-                print(f"   ~ {host}: Bild nicht ladbar ({r.status_code}, {ctype}, {len(r.content)}B)")
+            # < 12 KB ist meist nur ein Thumbnail/Logo -> naechste Quelle probieren
+            if r.status_code != 200 or len(r.content) < 12000 or "image" not in ctype:
+                print(f"   ~ {host}: Bild nicht brauchbar ({r.status_code}, {ctype}, {len(r.content)}B)")
                 continue
             return r.content, f"{host}"
         except Exception as e:
