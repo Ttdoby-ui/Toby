@@ -341,6 +341,24 @@
 - **Lehre / künftig:** Weißen NUR auf verlässlich flache Mengen anwenden — am besten über **Kollektions-Zugehörigkeit**
   (Beläge `607791087964`), NICHT über `productType`. 3D-/Schatten-Produkte brauchen echtes Matting (rembg) —
   das wiederum frisst helle Produkte. Also: kein Katalog-Weitwurf mehr; kuratiert pro Kollektion + Sichtprüfung.
+- 🚨 **NACHWEHEN (2026-07-27): 20 Produkte verloren ihr Bild endgültig → Schläger-Finder-Quiz live kaputt.**
+  Beim Restore (14.07.) waren manche Original-CDN-URLs schon purged → `productCreateMedia` ging **asynchron**
+  auf FAILED (Mutation meldet Erfolg + PROCESSING!), das white-Bild war aber schon gelöscht → Produkt ohne Media.
+  **Folge:** Bildlose AKTIVE Produkte in belage/holzer erzeugen im Finder-JSON (`#sf-catalog-data`)
+  `Liquid error: invalid url input` (image_url auf nil) **mitten im JSON** → JSON.parse scheitert → Quiz „keine
+  Ergebnisse". **Fixes:** (a) Snippet `schlaeger-finder-data.liquid` ist jetzt **nil-sicher**
+  (`{% if p.featured_image %}` um "img") — in BEIDEN Entwürfen, live ab nächster Rotation; Repo-Mirror aktuell.
+  (b) `Barna Super Glanti Black Edition` Bild aus Files-Kopie restauriert. (c) Workflow **„Quiz-Bilder-Rettung"**
+  (`scripts/rescue-quiz-images.py`) scannt belage/holzer auf bildlose aktive Produkte, Quellen Wayback+contra.de —
+  brachte aber **0 Treffer** (keine Snapshots, contra-Suche liefert nichts) → **19 Produkte brauchen manuell neue
+  Bilder** (Liste im Workflow-Log Run 30256952491): 2× Barna (New Blue/Virus 2), DMS Kamikaze, Donic Coppa JO
+  Silver, Joola Vizon, S&T Hass/Blackout, Tibhar Hybrid K3 Pro + Shang Kun AC, DHS Hurricane Long 5X, futurespin
+  Innercarbon, Red+Black Flow/Kazak(4×)/Ruby, Xiom Solo/TMXi(2×).
+  **Merke:** Nach `productCreateMedia` mit `originalSource` IMMER den finalen Status (READY, nicht PROCESSING/FAILED)
+  prüfen, BEVOR das alte Bild gelöscht wird — Restore-/Whiten-Skripte entsprechend härten.
+- **Entwurf-Futurespin-Homepage war zurückgesetzt (2026-07-27 gefixt):** `templates/index.json` stand auf
+  Horizon-Default (1,6 KB) → Konfigurator-Banner & alle Custom-Sektionen weg („Konfigurator ist nicht drin").
+  Aktuelle Vorlage aus Entwurf-Horizon (= Live-Stand) rüberkopiert; Repo-Mirror `templates/index.json` aktualisiert.
 
 ## VIP-15%-Hinweis auf jeder PDP (grafisch, 2026-07-13)
 
