@@ -9,6 +9,11 @@
   weiteren Seiten werden von schlaeger-finder.js per ?page=N nachgeladen und
   gemergt. Das Feld "pages" gibt die Seitenanzahl aus (Maximum von Belag/Holz),
   damit das JS weiß, wie viele Seiten es holen muss.
+
+  WICHTIG (bildlose Produkte): image_url auf nil erzeugt den Text
+  "Liquid error: invalid url input" MITTEN im JSON -> JSON.parse scheitert ->
+  Quiz liefert keine Ergebnisse. Deshalb ist "img" nil-sicher: nur rendern,
+  wenn p.featured_image existiert, sonst "".
 {%- endcomment -%}
 
 {%- assign fs_b_pages = 1 -%}
@@ -36,8 +41,9 @@
           "title": {{ p.title | json }},
           "type": {{ p.type | json }},
           "price": {{ p.price | divided_by: 100.0 | json }},
-          "img": {{ p.featured_image | image_url: width: 300 | prepend: 'https:' | json }},
+          "img": {% if p.featured_image %}{{ p.featured_image | image_url: width: 300 | prepend: 'https:' | json }}{% else %}""{% endif %},
           "url": {{ p.url | json }},
+          "available": {{ p.available | json }},
           "tempo": {{ mf.tempo.value | default: '' | json }},
           "kontrolle": {{ mf.kontrolle.value | default: '' | json }},
           "effet": {{ mf.effet.value | default: '' | json }},
@@ -60,8 +66,9 @@
           "title": {{ p.title | json }},
           "type": {{ p.type | json }},
           "price": {{ p.price | divided_by: 100.0 | json }},
-          "img": {{ p.featured_image | image_url: width: 300 | prepend: 'https:' | json }},
+          "img": {% if p.featured_image %}{{ p.featured_image | image_url: width: 300 | prepend: 'https:' | json }}{% else %}""{% endif %},
           "url": {{ p.url | json }},
+          "available": {{ p.available | json }},
           "tempo": {{ mf.tempo.value | default: '' | json }},
           "kontrolle": {{ mf.kontrolle.value | default: '' | json }},
           "effet": {{ mf.effet.value | default: '' | json }},
