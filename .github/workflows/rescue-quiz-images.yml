@@ -1,0 +1,39 @@
+name: Quiz-Bilder-Rettung
+
+# Findet AKTIVE Produkte in belage/holzer OHNE Bild (die zerschossen den
+# Schläger-Finder-JSON: image_url auf nil -> "Liquid error: invalid url input"
+# mitten im JSON -> Quiz ohne Ergebnisse) und stellt das Produktbild aus der
+# Wayback Machine (archivierte Produktseite -> og:image) wieder her.
+# IMMER zuerst dry_run=true (zeigt Kandidaten + ob ein Snapshot existiert).
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Trockenlauf (nichts schreiben, nur Report)"
+        type: boolean
+        default: true
+      only:
+        description: "Nur diese Handles (Komma-getrennt)"
+        required: false
+        default: ""
+
+jobs:
+  rescue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Abhängigkeiten
+        run: pip install requests
+      - name: Bilder retten
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          ONLY: ${{ inputs.only }}
+        run: python scripts/rescue-quiz-images.py
