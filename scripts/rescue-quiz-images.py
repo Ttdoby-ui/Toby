@@ -77,6 +77,32 @@ def broken_products():
     return out
 
 
+def contra_image(title):
+    """Zweite Quelle: contra.de (Lieferant) - Suche -> Produktseite -> og:image."""
+    q = re.sub(r"\bKopie( von)?\b", "", title, flags=re.I).strip()
+    try:
+        sr = requests.get("https://www.contra.de/search",
+                          params={"sSearch": q}, headers=UA, timeout=45)
+        if sr.status_code != 200:
+            return None, f"contra Suche HTTP {sr.status_code}"
+        links = re.findall(r'<a[^>]+href="(https://www\.contra\.de/[^"]+)"[^>]*class="[^"]*product--title', sr.text)
+        if not links:
+            links = re.findall(r'class="[^"]*product--title[^"]*"[^>]*href="(https://www\.contra\.de/[^"]+)"', sr.text)
+        if not links:
+            return None, "contra: kein Treffer"
+        pr = requests.get(links[0], headers=UA, timeout=45)
+        m = re.search(r'property="og:image"\s+content="([^"]+)"', pr.text) or \
+            re.search(r'content="([^"]+)"\s+property="og:image"', pr.text)
+        if not m:
+            return None, "contra: kein og:image"
+        r = requests.get(m.group(1), headers=UA, timeout=60)
+        if r.status_code != 200 or len(r.content) < 2000:
+            return None, f"contra: Bild nicht ladbar ({r.status_code})"
+        return r.content, f"contra.de ({links[0].split('/')[-1][:40]})"
+    except Exception as e:
+        return None, f"contra Fehler: {str(e)[:80]}"
+
+
 def wayback_image(handle):
     """Snapshot der Produktseite suchen -> og:image -> Roh-Bild-Bytes."""
     page = f"https://futurespin.de/products/{handle}"
@@ -132,6 +158,9 @@ def main():
     ok = fail = 0
     for p in broken:
         data, note = wayback_image(p["handle"])
+        if not data:
+            data, note2 = contra_image(p["title"])
+            note = f"{note}; {note2}" if not data else note2
         if not data:
             print(f"x {p['handle']}: {note}")
             fail += 1
