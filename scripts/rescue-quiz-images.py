@@ -120,9 +120,10 @@ SOURCES = {
         "https://tt-shop-duesseldorf.de/products/tibhar-holz-shang-kun-hybrid-ac",
     ],
     "dhs-hurricane-long-5x": [
+        "https://www.schoeler-micke.de/hoelzer/spielertyp/offensiv/1875/dhs-holz-hurricane-long-5x-inkl.-schlaegerhuelle",
+        "https://www.tabletennis11.com/other_eng/dhs-hurricane-long-5x",
+        "https://smshrs.com/products/dhs-hurricane-long-5x-holz-fl-dxcp001-1",
         "https://www.racket-company.de/dhs-hurricane-long-5x.html",
-        "https://li-ning.de/products/dhs-hurricane-long-5x-holz-st-dxcr003-1",
-        "https://tischtennis-billiger.de/nach-hersteller/dhs/dhs-hurricane-long-5x.html",
     ],
     "red-black-flow": [
         "https://www.spinfactory.de/tischtennis-hoelzer/tischtennis-holz-red-and-black-flow.html",
