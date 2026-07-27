@@ -349,11 +349,16 @@
   Ergebnisse". **Fixes:** (a) Snippet `schlaeger-finder-data.liquid` ist jetzt **nil-sicher**
   (`{% if p.featured_image %}` um "img") — in BEIDEN Entwürfen, live ab nächster Rotation; Repo-Mirror aktuell.
   (b) `Barna Super Glanti Black Edition` Bild aus Files-Kopie restauriert. (c) Workflow **„Quiz-Bilder-Rettung"**
-  (`scripts/rescue-quiz-images.py`) scannt belage/holzer auf bildlose aktive Produkte, Quellen Wayback+contra.de —
-  brachte aber **0 Treffer** (keine Snapshots, contra-Suche liefert nichts) → **19 Produkte brauchen manuell neue
-  Bilder** (Liste im Workflow-Log Run 30256952491): 2× Barna (New Blue/Virus 2), DMS Kamikaze, Donic Coppa JO
-  Silver, Joola Vizon, S&T Hass/Blackout, Tibhar Hybrid K3 Pro + Shang Kun AC, DHS Hurricane Long 5X, futurespin
-  Innercarbon, Red+Black Flow/Kazak(4×)/Ruby, Xiom Solo/TMXi(2×).
+  (`scripts/rescue-quiz-images.py`): Wayback + contra.de-Suche brachten 0 Treffer; **erfolgreich war die kuratierte
+  Quellseiten-Liste `SOURCES`** (Handle → Hersteller-/Händler-Produktseiten, per Websuche aus der Session ermittelt;
+  CI fetcht Seite → og:image → staged Upload → productCreateMedia → **READY-Poll**, <12 KB gilt als Thumbnail →
+  nächste Quelle). **Ergebnis 2026-07-27: 19/20 wiederhergestellt** (der-materialspezialist.com, sauer-troeger.com,
+  tibhar.info, joola.de, spinfactory.de für die komplette Red+Black-Serie, tt-center/tt-xpert/tms für Xiom,
+  schoeler-micke für DHS 5X; alle READY-verifiziert). ⚠️ WebFetch/direkte Fetches sind in der SESSION geblockt
+  (Proxy 403) — nur die GitHub-Action hat freien Egress; Websuche in der Session + Fetch in CI = das Muster.
+  **Einzig offen: `futurespin-innercarbon` (Eigenmarke, kein Bild im Netz) → Bild muss der User liefern.**
+  Solange 1 aktives Produkt in belage/holzer bildlos ist, bleibt das LIVE-Quiz (altes Snippet) kaputt —
+  Fix: Innercarbon-Bild hochladen ODER Rotation (gehärtetes Snippet ist in beiden Entwürfen).
   **Merke:** Nach `productCreateMedia` mit `originalSource` IMMER den finalen Status (READY, nicht PROCESSING/FAILED)
   prüfen, BEVOR das alte Bild gelöscht wird — Restore-/Whiten-Skripte entsprechend härten.
 - **Entwurf-Futurespin-Homepage war zurückgesetzt (2026-07-27 gefixt):** `templates/index.json` stand auf
