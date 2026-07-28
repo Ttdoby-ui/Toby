@@ -1,0 +1,138 @@
+{%- comment -%}
+  snippets/fs-config-note-sync.liquid
+  Haelt die Packzettel-Notiz + Schlaegerbau-Attribute mit dem TATSAECHLICHEN
+  Warenkorbinhalt synchron. sections/konfigurator.liquid schreibt die Notiz nur
+  EINMAL direkt beim Hinzufuegen (aus der /cart/add.js-Antwort) - entfernt der
+  Kunde danach im Warenkorb/-drawer eine Position (z. B. Holz oder
+  Klebeservice), bleibt die alte Notiz stehen und behauptet Bausteine, die gar
+  nicht mehr im Warenkorb liegen (Folgefehler zu Bug #9260, siehe CLAUDE.md).
+  Site-weit geladen (layout/theme.liquid), weil der Kunde auf JEDER Seite
+  (Warenkorb-Drawer, /cart-Seite) Positionen entfernen kann, nicht nur auf der
+  Konfigurator-Seite.
+
+  Quelle der Wahrheit = /cart.js (aktueller Warenkorb), gruppiert per
+  Zeilen-Property _kfg/_rolle (vom Konfigurator gesetzt). Nur EIGENE Notizen
+  (leer oder beginnend mit dem Konfigurator-Header) werden angefasst, damit
+  ein manuell gesetzter Kommentar nie ueberschrieben wird.
+{%- endcomment -%}
+<script>
+(function () {
+  'use strict';
+  if (window.__fsConfigNoteSync) return;
+  window.__fsConfigNoteSync = true;
+
+  var T = {
+    header:        {{ 'konfigurator.js.note_header'          | t | json }},
+    holz:          {{ 'konfigurator.js.note_holz'             | t | json }},
+    vorhand:       {{ 'konfigurator.js.note_vorhand'          | t | json }},
+    rueckhand:     {{ 'konfigurator.js.note_rueckhand'        | t | json }},
+    kantenband:    {{ 'konfigurator.js.note_kantenband'       | t | json }},
+    klebeservice:  {{ 'konfigurator.js.note_klebeservice'     | t | json }},
+    versiegelung:  {{ 'konfigurator.js.note_versiegelung'     | t | json }},
+    footer:        {{ 'konfigurator.js.note_footer'           | t | json }},
+    klebeservice_val: {{ 'konfigurator.js.note_klebeservice_val' | t | json }},
+    none:          {{ 'konfigurator.js.note_none'             | t | json }},
+    attr_holz:         {{ 'konfigurator.js.attr_holz'         | t | json }},
+    attr_vorhand:      {{ 'konfigurator.js.attr_vorhand'      | t | json }},
+    attr_rueckhand:    {{ 'konfigurator.js.attr_rueckhand'    | t | json }},
+    attr_klebeservice: {{ 'konfigurator.js.attr_klebeservice' | t | json }},
+    attr_kantenband:   {{ 'konfigurator.js.attr_kantenband'   | t | json }},
+    attr_versiegelung: {{ 'konfigurator.js.attr_versiegelung' | t | json }},
+    yes: {{ 'konfigurator.js.yes' | t | json }},
+    no:  {{ 'konfigurator.js.no'  | t | json }}
+  };
+
+  var busy = false;   // eigener /cart/update.js-Aufruf laeuft gerade
+  var timer = null;
+
+  function nm(it) {
+    if (!it) return null;
+    var base = it.product_title || it.title || '';
+    var vt = it.variant_title && it.variant_title !== 'Default Title' ? it.variant_title : '';
+    return vt ? base + ' (' + vt + ')' : base;
+  }
+
+  function write(note, attrs) {
+    busy = true;
+    fetch('/cart/update.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: note, attributes: attrs })
+    }).then(function () { busy = false; }, function () { busy = false; });
+  }
+
+  function sync() {
+    fetch('/cart.js', { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (cart) {
+        var byRole = {};
+        (cart.items || []).forEach(function (it) {
+          var p = it.properties || {};
+          if (!p._kfg || !p._rolle || byRole[p._rolle]) return;
+          byRole[p._rolle] = it;
+        });
+        var holz = byRole.holz, vor = byRole.vorhand, rue = byRole.rueckhand,
+            kan = byRole.kantenband, kle = byRole.klebeservice, ver = byRole.versiegelung;
+        var hasAny = !!(holz || vor || rue || kan);
+
+        // Nur EIGENE Notiz anfassen: leer oder von uns geschrieben (Header-Zeile).
+        var currentNote = cart.note || '';
+        var ownNote = currentNote === '' || currentNote.indexOf(T.header) === 0;
+        if (!ownNote) return;
+
+        var note = '';
+        var attrs = {};
+        if (hasAny) {
+          note = [
+            T.header,
+            T.holz       + (nm(holz) || T.none),
+            T.vorhand    + (nm(vor)  || T.none),
+            T.rueckhand  + (nm(rue)  || T.none),
+            T.kantenband + (nm(kan)  || T.none),
+            T.klebeservice + (kle ? T.klebeservice_val : T.no),
+            T.versiegelung + (ver ? T.yes : T.no),
+            T.footer
+          ].join('\n');
+          attrs[T.attr_holz]         = nm(holz) || '';
+          attrs[T.attr_vorhand]      = nm(vor)  || '';
+          attrs[T.attr_rueckhand]    = nm(rue)  || '';
+          attrs[T.attr_klebeservice] = kle ? T.yes : '';
+          attrs[T.attr_kantenband]   = nm(kan)  || '';
+          attrs[T.attr_versiegelung] = ver ? T.yes : '';
+        }
+
+        if (note === currentNote) return; // schon aktuell, nichts zu tun
+        write(note, attrs);
+      })
+      .catch(function () {});
+  }
+
+  function scheduleSync() {
+    if (busy) return;
+    clearTimeout(timer);
+    timer = setTimeout(sync, 400);
+  }
+
+  // Cart-Mutationen abfangen (Warenkorb-Drawer, /cart-Seite, Konfigurator selbst,
+  // Produktseiten-Add). Netzwerk-Ebene statt theme-spezifischer Events, damit es
+  // unabhaengig von der nativen Cart-Komponente funktioniert.
+  var origFetch = window.fetch;
+  window.fetch = function (input) {
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    var isCartMutation = /\/cart\/(change|update|add|clear)\.js/.test(url);
+    var p = origFetch.apply(this, arguments);
+    if (isCartMutation && !busy) {
+      p.then(function () { scheduleSync(); }, function () {});
+    }
+    return p;
+  };
+
+  // Einmalig beim Laden abgleichen (deckt Faelle ab, in denen die Aenderung
+  // nicht in dieser Seitenansicht passiert ist, z. B. anderer Tab/Geraet).
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', sync);
+  } else {
+    sync();
+  }
+})();
+</script>
