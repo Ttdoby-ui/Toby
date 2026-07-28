@@ -516,6 +516,27 @@
     gebaut – nie mehr aus `S.*`. Ohne Konfigurator-Zeile im Warenkorb bleibt die Notiz unangetastet.
   - **Merke:** Bestellpositionen (Line Items) sind die Wahrheit, die Warenkorb-Notiz ist es nicht. Bei
     „Notiz sagt X, Bestellung enthält Y" die Line-Item-`customAttributes` prüfen.
+- ⚠️ **Folgefehler zu #9260 (2026-07-28, Bestellung #9904): Notiz veraltet, wenn der Kunde NACH dem Hinzufügen
+  Positionen wieder entfernt.** Der #9260-Fix schreibt die Notiz nur **einmalig** direkt nach `addToCart()`
+  aus der `/cart/add.js`-Antwort. Entfernt der Kunde danach im Warenkorb/-drawer z. B. Holz + Klebeservice
+  (oder tauscht einen Beleg gegen einen direkt von der PDP hinzugefügten aus), bleibt die alte Notiz stehen
+  und behauptet Bausteine, die gar nicht mehr im Warenkorb liegen – exakt das gleiche Symptom wie #9260, nur
+  zeitlich NACH dem Schreiben statt beim Schreiben selbst. Bestellung #9904 zeigte „Holz: andro TP Ligna
+  Basalt…" + „Klebeservice: Ja" in der Notiz, obwohl die 3 tatsächlichen Zeilen (Kantenband, 2× Belag) **keine**
+  `_kfg`-Properties mehr trugen → Notiz manuell per `orderUpdate` (`note:""`, `customAttributes:[]`) korrigiert.
+  - **Fix:** neues Snippet **`snippets/fs-config-note-sync.liquid`**, site-weit geladen über
+    `layout/theme.liquid` (nach `fs-vip-cards`) – läuft auf JEDER Seite, nicht nur auf der Konfigurator-Seite.
+    Patcht `window.fetch` und erkennt jede Cart-Mutation (`/cart/change|update|add|clear.js`) netzwerkseitig
+    (unabhängig von der nativen Cart-Drawer-Komponente, deren Interna nicht im Repo liegen) → 400ms danach
+    `sync()`: liest `/cart.js`, gruppiert Zeilen per `_kfg`/`_rolle`, baut die Notiz aus dem **aktuellen**
+    Warenkorb neu (leer, wenn kein Konfigurator-Baustein mehr drin ist) und schreibt nur, wenn abweichend.
+    Zusätzlich einmaliger Abgleich beim Seitenaufruf (deckt Änderungen aus anderen Tabs/Geräten ab).
+    **Fasst nur EIGENE Notizen an** (leer oder beginnt mit dem Konfigurator-Header) – eine manuell gesetzte
+    Notiz wird nie überschrieben. `busy`-Flag verhindert eine Endlosschleife durch den eigenen
+    `/cart/update.js`-Aufruf. Mit 4 Szenarien lokal verifiziert (Teilentfernung, Vollentfernung → Notiz leer,
+    fremde Notiz → unangetastet, bereits synchron → kein Schreibvorgang). ⚠️ Nur Entwurf → live bei Rotation;
+    `layout/theme.liquid` wird bei „Theme aktualisieren" zurückgesetzt → aus Repo wiederherstellen (inkl. des
+    `{% render 'fs-config-note-sync' %}`-Aufrufs).
 
 ## Hauspreis (dauerhafte −10 % im Artikel, 2026-07-07)
 
