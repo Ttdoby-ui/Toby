@@ -1,0 +1,43 @@
+name: Hauspreis entfernen (Filter)
+
+# Macht den Hauspreis fuer alle Produkte rueckgaengig, die der Suchquery matchen:
+# Preis <- Vergleichspreis (UVP), Vergleichspreis leer, Tag "Hauspreis" weg,
+# Badge-Metafelder (price_badge_text/color) geloescht. Produktdaten -> sofort live.
+# IMMER zuerst dry_run=true.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Trockenlauf (nichts schreiben, nur Report)"
+        type: boolean
+        default: true
+      query:
+        description: "Produkt-Suchquery"
+        required: false
+        default: "vendor:Tibhar tag:Hauspreis tag:Belag status:active"
+      limit:
+        description: "Max. Produkte (leer = alle)"
+        required: false
+        default: ""
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Abhängigkeiten
+        run: pip install requests
+      - name: Hauspreis entfernen
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          QUERY: ${{ inputs.query }}
+          LIMIT: ${{ inputs.limit }}
+        run: python scripts/remove-hauspreis.py
