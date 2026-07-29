@@ -1,0 +1,183 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap');
+
+  .pz { font-family: Arial, Helvetica, sans-serif; color: #1f2733; font-size: 13px; }
+  .pz-kopf { display: flex; justify-content: space-between; align-items: flex-start; }
+  .pz-shop { font-size: 22px; font-weight: 800; letter-spacing: .5px; color: #3F5974; }
+  .pz-shop small { display: block; font-size: 11px; font-weight: 400; color: #666; letter-spacing: 0; margin-top: 2px; }
+
+  .pz-barcode { text-align: center; }
+  .pz-barcode .code { font-family: 'Libre Barcode 39'; font-size: 52px; line-height: 1; }
+  .pz-barcode .nr { font-size: 12px; letter-spacing: 2px; margin-top: 2px; }
+
+  .pz-meta { margin-top: 18px; display: flex; justify-content: space-between; }
+  .pz-block h4 { margin: 0 0 4px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #5D7FA7; }
+  .pz-block p { margin: 0; line-height: 1.45; }
+
+  .pz-status-offen { color: #d63b3b; font-weight: 700; }
+  .pz-status-ok { color: #1f9d55; font-weight: 700; }
+
+  /* Notiz/Kommentar zur Bestellung - bewusst GLEICH NACH den Meta-Angaben und VOR der
+     Artikeltabelle, damit ein Kommentar (z. B. "bitte anrufen vor Versand") vom Packer
+     als Erstes gesehen wird, nicht erst nach der kompletten Artikelliste. */
+  .pz-notiz { margin-top: 16px; padding: 10px 14px; background: #fff3cd; border: 2px solid #ffc107;
+              border-radius: 6px; font-size: 13px; }
+
+  .pz-titel { margin: 22px 0 6px; font-size: 17px; font-weight: 800; border-bottom: 2px solid #3F5974; padding-bottom: 6px; }
+
+  table.pz-tab { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .pz-tab th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+               color: #5D7FA7; border-bottom: 1px solid #c9d3e0; padding: 6px 6px; }
+  .pz-tab td { border-bottom: 1px solid #e2e7ee; padding: 8px 6px; vertical-align: top; }
+  .pz-tab .menge { width: 60px; text-align: center; font-weight: 700; font-size: 15px; }
+  .pz-tab .bild { width: 66px; text-align: center; }
+  .pz-tab .bild img { width: 60px; height: 60px; object-fit: contain;
+                      border: 1px solid #e2e7ee; border-radius: 6px; background: #fff; }
+  .pz-tab .bestand { width: 70px; text-align: center; font-variant-numeric: tabular-nums; }
+  .pz-tab .bestand-kritisch { color: #d63b3b; font-weight: 800; }
+  .pz-tab .check { width: 40px; text-align: center; }
+  .pz-tab .box { display: inline-block; width: 16px; height: 16px; border: 2px solid #3F5974; border-radius: 3px; }
+  .pz-variante { color: #555; font-size: 12px; }
+  .pz-ean { color: #888; font-size: 11px; }
+
+  /* Bundle-Kennzeichnung: Header-Zeile ueber den Bestandteilen + dezenter linker
+     Rahmen an den Zeilen, damit Bundle-Positionen visuell erkennbar zusammengehoeren. */
+  .pz-bundle-kopf td { background: #eef2f8; font-size: 11.5px; font-weight: 700; color: #3F5974;
+                        padding: 6px 6px; border-bottom: 1px solid #c9d3e0; letter-spacing: .3px; }
+  .pz-bundle-item td { border-left: 3px solid #A9C0DA; }
+  .pz-bundle-tag { color: #5D7FA7; font-weight: 700; }
+
+  .pz-fuss { margin-top: 26px; padding-top: 10px; border-top: 1px solid #c9d3e0;
+             font-size: 11px; color: #666; display: flex; justify-content: space-between; }
+</style>
+
+<div class="pz">
+
+  <!-- Kopf: Shopname + Scan-Barcode -->
+  <div class="pz-kopf">
+    <div class="pz-shop">
+      FUTURESPIN
+      <small>futurespin.de · versand@futurespin.de</small>
+    </div>
+    <div class="pz-barcode">
+      <div class="code">*{{ order.order_number }}*</div>
+      <div class="nr">{{ order.name }}</div>
+    </div>
+  </div>
+
+  <!-- Adressen + Bestelldaten -->
+  <div class="pz-meta">
+    <div class="pz-block">
+      <h4>Lieferadresse</h4>
+      <p>
+        {{ shipping_address.name }}<br>
+        {% if shipping_address.company != blank %}{{ shipping_address.company }}<br>{% endif %}
+        {{ shipping_address.address1 }}<br>
+        {% if shipping_address.address2 != blank %}{{ shipping_address.address2 }}<br>{% endif %}
+        {{ shipping_address.zip }} {{ shipping_address.city }}<br>
+        {{ shipping_address.country }}
+      </p>
+    </div>
+    <div class="pz-block">
+      <h4>Bestellung</h4>
+      <p>
+        Bestellnummer: <strong>{{ order.name }}</strong><br>
+        Bestelldatum: {{ order.created_at | date: "%d.%m.%Y" }}<br>
+        {% if order.shipping_lines.first %}Versandart: {{ order.shipping_lines.first.title }}<br>{% endif %}
+
+        {% assign zahlart = order.gateway %}
+        {% case order.gateway %}
+          {% when 'shopify_payments' %}{% assign zahlart = 'Kredit-/Debitkarte (Shopify Payments)' %}
+          {% when 'paypal' %}{% assign zahlart = 'PayPal' %}
+          {% when 'Klarna' %}{% assign zahlart = 'Klarna' %}
+          {% when 'manual' %}{% assign zahlart = 'Manuell / Vorkasse' %}
+        {% endcase %}
+        Zahlart: <strong>{{ zahlart }}</strong><br>
+
+        Zahlungsstatus:
+        {% case order.financial_status %}
+          {% when 'paid' %}<span class="pz-status-ok">Bezahlt</span>
+          {% when 'partially_paid' %}<span class="pz-status-offen">TEILWEISE bezahlt!</span>
+          {% when 'pending' %}<span class="pz-status-offen">OFFEN – nicht bezahlt!</span>
+          {% when 'refunded' %}<span class="pz-status-offen">Erstattet</span>
+          {% when 'partially_refunded' %}<span class="pz-status-offen">Teilw. erstattet</span>
+          {% else %}{{ order.financial_status }}
+        {% endcase %}<br>
+
+        Positionen: {{ line_items.size }}
+      </p>
+    </div>
+  </div>
+
+  {% if order.note != blank %}
+  <div class="pz-notiz">
+    <strong>⚠ Kommentar zur Bestellung:</strong> {{ order.note }}
+  </div>
+  {% endif %}
+
+  <!-- Artikel -->
+  <div class="pz-titel">Packzettel</div>
+  <table class="pz-tab">
+    <thead>
+      <tr>
+        <th class="menge">Menge</th>
+        <th class="bild"></th>
+        <th>Artikel</th>
+        <th class="bestand">Bestand</th>
+        <th class="check">✓</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% assign fs_bundle_id = "" %}
+      {% for line_item in line_items %}
+        {% assign fs_group = line_item.line_item_group %}
+        {% if fs_group != blank %}
+          {% if fs_group.id != fs_bundle_id %}
+            {% assign fs_bundle_id = fs_group.id %}
+            <tr class="pz-bundle-kopf">
+              <td colspan="5">
+                📦 <span class="pz-bundle-tag">Bundle:</span> {{ fs_group.title }}{% if fs_group.quantity > 1 %} ({{ fs_group.quantity }}×){% endif %}
+              </td>
+            </tr>
+          {% endif %}
+        {% else %}
+          {% assign fs_bundle_id = "" %}
+        {% endif %}
+      <tr{% if fs_group != blank %} class="pz-bundle-item"{% endif %}>
+        <td class="menge">{{ line_item.quantity }}×</td>
+        <td class="bild">
+          {% if line_item.image %}
+            <img src="{{ line_item.image | img_url: '120x120' }}" alt="">
+          {% elsif line_item.product.featured_image %}
+            <img src="{{ line_item.product.featured_image | img_url: '120x120' }}" alt="">
+          {% endif %}
+        </td>
+        <td>
+          {% if fs_group != blank %}<span class="pz-bundle-tag">↳ </span>{% endif %}{{ line_item.title }}
+          {% if line_item.variant_title != blank and line_item.variant_title != "Default Title" %}
+            <div class="pz-variante">{{ line_item.variant_title }}</div>
+          {% endif %}
+          {% if line_item.variant.barcode != blank %}
+            <div class="pz-ean">EAN: {{ line_item.variant.barcode }}</div>
+          {% endif %}
+        </td>
+        <td class="bestand{% if line_item.variant.inventory_quantity <= 0 %} bestand-kritisch{% endif %}">
+          {%- if line_item.variant -%}
+            {{ line_item.variant.inventory_quantity }}
+          {%- else -%}
+            –
+          {%- endif -%}
+        </td>
+        <td class="check"><span class="box"></span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Fußzeile -->
+  <div class="pz-fuss">
+    <span>Vielen Dank für deine Bestellung bei Futurespin!</span>
+    <span>Fragen? versand@futurespin.de</span>
+  </div>
+
+</div>
