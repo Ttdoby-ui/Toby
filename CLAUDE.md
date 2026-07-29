@@ -952,6 +952,35 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       plus **mobil größere Kacheln** (Titel 1rem, Preis 1.1rem, engerer Grid-Gap) – CSS im
       `{% style %}`-Block von `sections/filter-panel.liquid`. Entwurf-Theme.
 
+## Order Printer (Packzettel/Rechnung)
+
+- 🚨 **Templates liegen in der Order-Printer-App selbst, NICHT im Theme.** Die App (Shopify „Order Printer",
+  Apps → Order Printer → Vorlagen) speichert ihre Liquid/HTML-Vorlagen intern – **kein API-Zugriff** (weder
+  MCP noch Admin-GraphQL bietet einen Endpunkt dafür, geprüft 2026-07-29). Bearbeiten geht nur über den
+  Code-Editor **in der App selbst**. Als Repo-Spiegel liegen die Vorlagen unter `order-printer-templates/*.html`
+  – bei jeder Änderung: User liefert den aktuellen Stand aus der App (Copy-Paste), ich bearbeite die Datei
+  hier, User kopiert das Ergebnis zurück in die App. Kein automatischer Sync möglich.
+  - **Aktuell aktive Packzettel-Vorlage = „Packzettel neu"** → Repo-Datei `futurespin-packzettel-neu.html`
+    (Kopf mit Barcode via `Libre Barcode 39`-Font aus `{{ order.order_number }}`, Lieferadresse + Bestelldaten
+    zweispaltig, Artikeltabelle mit Bild/Bestand/Checkbox). `futurespin-packliste.html` ist eine **ältere,
+    einfachere Vorlage** (kein Barcode/Bilder/Bestand) – nicht mehr aktiv, nur zur Historie im Repo.
+  - Liquid-Kontext ist der **klassische Notification/Packzettel-Kontext** (nicht das normale Storefront-Liquid):
+    `order.*` für Bestelldaten, aber `line_items`/`shipping_address`/`billing_address` **ohne** `order.`-Präfix
+    auf oberster Ebene.
+  - **Kommentar/Notiz zur Bestellung** (2026-07-29): `order.note` wird jetzt **vor** der Artikeltabelle gezeigt
+    (gelb hervorgehoben, `.pz-notiz`) – vorher stand der Hinweis ganz unten, leicht übersehen. `order.note` ist
+    das interne Notiz-Feld (Sidebar „Notiz" im Bestell-Admin, dasselbe Feld, das der Konfigurator via
+    `fs-config-note-sync.liquid` beschreibt) – **nicht** die Zeitleisten-Kommentare (die hat Liquid hier nicht).
+  - **Bundle-Kennzeichnung** (2026-07-29): Kauft ein Kunde ein Bundle-Produkt, verknüpft Shopify jede
+    Bestandteil-Zeile über `line_item.line_item_group` (Feld `title`/`quantity`/`id`) mit dem Bundle. Neu:
+    Kopfzeile „📦 Bundle: „ pro Bundle-Gruppe + Rahmen/„↳"-Markierung an den zugehörigen Artikelzeilen.
+    ⚠️ Ob `line_item.line_item_group` im Order-Printer-Liquid-Kontext tatsächlich befüllt ist, war zum
+    Zeitpunkt der Änderung **nicht per Testdruck verifizierbar** (kein Zugriff auf die App) – Feld existiert
+    zweifelsfrei im Admin-GraphQL-Datenmodell (`LineItem.lineItemGroup`, verifiziert an Bestellung #9951:
+    „Futurespin Sticky Europe"-Bundle → 3 Zeilen mit gemeinsamer `lineItemGroup`). Falls die Kopfzeile nach dem
+    Einspielen bei einer echten Bundle-Bestellung NICHT erscheint, ist das Feld dort nicht verfügbar → dann
+    Alternativlösung nötig (z. B. Bundle-Erkennung über Produkt-Tag/-Typ).
+
 ## Git
 
 - Feature-Branch: `claude/shopify-adhesive-service-vkfNR`
