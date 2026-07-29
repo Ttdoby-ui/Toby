@@ -40,13 +40,6 @@
   .pz-variante { color: #555; font-size: 12px; }
   .pz-ean { color: #888; font-size: 11px; }
 
-  /* Bundle-Kennzeichnung: Header-Zeile ueber den Bestandteilen + dezenter linker
-     Rahmen an den Zeilen, damit Bundle-Positionen visuell erkennbar zusammengehoeren. */
-  .pz-bundle-kopf td { background: #eef2f8; font-size: 11.5px; font-weight: 700; color: #3F5974;
-                        padding: 6px 6px; border-bottom: 1px solid #c9d3e0; letter-spacing: .3px; }
-  .pz-bundle-item td { border-left: 3px solid #A9C0DA; }
-  .pz-bundle-tag { color: #5D7FA7; font-weight: 700; }
-
   .pz-fuss { margin-top: 26px; padding-top: 10px; border-top: 1px solid #c9d3e0;
              font-size: 11px; color: #666; display: flex; justify-content: space-between; }
 </style>
@@ -111,7 +104,8 @@
 
   {% if order.note != blank %}
   <div class="pz-notiz">
-    <strong>⚠ Kommentar zur Bestellung:</strong> {{ order.note }}
+    <strong>⚠ Hinweis zur Bestellung:</strong><br>
+    {{ order.note | newline_to_br }}
   </div>
   {% endif %}
 
@@ -128,22 +122,8 @@
       </tr>
     </thead>
     <tbody>
-      {% assign fs_bundle_id = "" %}
       {% for line_item in line_items %}
-        {% assign fs_group = line_item.line_item_group %}
-        {% if fs_group != blank %}
-          {% if fs_group.id != fs_bundle_id %}
-            {% assign fs_bundle_id = fs_group.id %}
-            <tr class="pz-bundle-kopf">
-              <td colspan="5">
-                📦 <span class="pz-bundle-tag">Bundle:</span> {{ fs_group.title }}{% if fs_group.quantity > 1 %} ({{ fs_group.quantity }}×){% endif %}
-              </td>
-            </tr>
-          {% endif %}
-        {% else %}
-          {% assign fs_bundle_id = "" %}
-        {% endif %}
-      <tr{% if fs_group != blank %} class="pz-bundle-item"{% endif %}>
+      <tr>
         <td class="menge">{{ line_item.quantity }}×</td>
         <td class="bild">
           {% if line_item.image %}
@@ -153,7 +133,7 @@
           {% endif %}
         </td>
         <td>
-          {% if fs_group != blank %}<span class="pz-bundle-tag">↳ </span>{% endif %}{{ line_item.title }}
+          {{ line_item.title }}
           {% if line_item.variant_title != blank and line_item.variant_title != "Default Title" %}
             <div class="pz-variante">{{ line_item.variant_title }}</div>
           {% endif %}
