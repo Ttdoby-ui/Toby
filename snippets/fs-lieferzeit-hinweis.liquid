@@ -1,0 +1,73 @@
+{%- doc -%}
+  Lieferzeit-Hinweis im Warenkorb, wenn mindestens ein Artikel "gelb" ist.
+
+  "Gelb" = exakt dieselbe Definition wie die Bestands-Ampel auf der Produktseite
+  (blocks/product-inventory.liquid, status == 'low'): Bestand <= 0, aber
+  Weiterverkauf erlaubt (inventory_policy == 'continue') -> Artikel wird
+  nachbestellt. Grün (Bestand > 0) = 1-3 Werktage, Gelb = 3-5 Werktage.
+
+  Hintergrund: Shopifys Lieferversprechen im Checkout ("Ausführen bis" /
+  Zustelltermin) wird aus der GLOBALEN Bearbeitungszeit des Versandprofils
+  berechnet und kennt den Lagerstatus einzelner Artikel NICHT. Damit ein Kunde
+  bei einem Nachbestell-Artikel keine zu kurze Lieferzeit annimmt, weist dieser
+  Hinweis im Warenkorb (Drawer + /cart-Seite) explizit darauf hin.
+
+  Wird aus snippets/fs-free-shipping-bar.liquid gerendert, das seinerseits in
+  snippets/cart-summary.liquid (nativ) haengt -> laeuft bei JEDEM Cart-Rendering
+  neu, ist also immer aktuell (auch nach Hinzufuegen/Entfernen).
+  Repo-Mirror: snippets/fs-lieferzeit-hinweis.liquid
+{%- enddoc -%}
+
+{%- liquid
+  assign fs_lz_count = 0
+  for item in cart.items
+    assign v = item.variant
+    if v.inventory_management == 'shopify' and v.inventory_quantity <= 0 and v.inventory_policy == 'continue'
+      assign fs_lz_count = fs_lz_count | plus: 1
+    endif
+  endfor
+-%}
+
+{%- if fs_lz_count > 0 -%}
+  <div class="fs-lzhint" role="status">
+    <span class="fs-lzhint__dot" aria-hidden="true"></span>
+    <p class="fs-lzhint__text">
+      {%- if fs_lz_count == 1 -%}
+        <strong>Ein Artikel</strong> ist derzeit nicht vorrätig und wird für dich bestellt –
+      {%- else -%}
+        <strong>{{ fs_lz_count }} Artikel</strong> sind derzeit nicht vorrätig und werden für dich bestellt –
+      {%- endif -%}
+      Lieferung deiner Bestellung in <strong>3&nbsp;–&nbsp;5&nbsp;Werktagen</strong>.
+    </p>
+  </div>
+
+  <style>
+    .fs-lzhint {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      width: 100%;
+      box-sizing: border-box;
+      margin-block-end: var(--margin-md, 1rem);
+      padding: 0.75rem 0.9rem;
+      background: rgba(178, 94, 9, 0.08);
+      border: 1px solid rgba(178, 94, 9, 0.28);
+      border-radius: 12px;
+    }
+    .fs-lzhint__dot {
+      flex: 0 0 auto;
+      width: 10px;
+      height: 10px;
+      margin-top: 0.28rem;
+      border-radius: 50%;
+      background: #b25e09;
+    }
+    .fs-lzhint__text {
+      margin: 0;
+      font-size: var(--font-size--xs, 0.78rem);
+      line-height: 1.4;
+      color: #8a4907;
+    }
+    .fs-lzhint__text strong { font-weight: 700; color: #8a4907; }
+  </style>
+{%- endif -%}

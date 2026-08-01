@@ -1,0 +1,179 @@
+{%- doc -%}
+  Fortschrittsbalken bis zum kostenlosen Versand (Schwelle 69 EUR) + Versandkosten-Schaetzung.
+  Futurespin-Branding: Primary #5D7FA7, Dark #3F5974.
+  Self-contained: Markup + Style + Live-Update-Skript in einem Snippet.
+  Basis: cart.total_price (Cent), cart.total_weight (Gramm). Schwelle 6900 Cent.
+  Versandtarife DE: <1000g=3,90 EUR, 1000-31500g=5,90 EUR, >31500g=Checkout, ab 69 EUR gratis.
+  Enthaelt zusaetzlich das Futurespin-Blau-Styling fuer den Auschecken-Button
+  (#checkout), da dieses Snippet in cart-summary rendert (Cart-Seite + Drawer).
+  Rendert im Anschluss das Warenkorb-Cross-Sell (fs-cart-crosssell) und den
+  Lieferzeit-Hinweis fuer Nachbestell-Artikel (fs-lieferzeit-hinweis).
+{%- enddoc -%}
+
+{%- liquid
+  assign fs_threshold = 6900
+  assign fs_current = cart.total_price
+  assign fs_weight = cart.total_weight
+  assign fs_remaining = fs_threshold | minus: fs_current
+  if fs_remaining < 0
+    assign fs_remaining = 0
+  endif
+  assign fs_pct = fs_current | times: 100 | divided_by: fs_threshold
+  if fs_pct > 100
+    assign fs_pct = 100
+  endif
+  if fs_remaining <= 0
+    assign fs_ship_state = 'free'
+  elsif fs_weight > 31500
+    assign fs_ship_state = 'checkout'
+  elsif fs_weight < 1000
+    assign fs_ship_state = 'low'
+  else
+    assign fs_ship_state = 'high'
+  endif
+-%}
+
+{% render 'fs-lieferzeit-hinweis' %}
+
+<free-shipping-bar
+  class="fs-shipbar{% if fs_remaining <= 0 %} fs-shipbar--reached{% endif %}"
+  data-threshold="{{ fs_threshold }}"
+  data-current="{{ fs_current }}"
+  data-weight="{{ fs_weight }}"
+  {% if cart == empty %}hidden{% endif %}
+>
+  <p class="fs-shipbar__text" ref="text">
+    {%- if fs_remaining <= 0 -%}
+      Geschafft! Dein Versand ist <strong>kostenlos</strong>.
+    {%- else -%}
+      Noch <strong>{{ fs_remaining | money }}</strong> bis zum kostenlosen Versand
+    {%- endif -%}
+  </p>
+  <div class="fs-shipbar__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ fs_pct }}">
+    <div class="fs-shipbar__fill" ref="fill" style="width: {{ fs_pct }}%;"></div>
+  </div>
+  <p class="fs-shipbar__ship" ref="ship"{% if fs_ship_state == 'free' %} style="display:none;"{% endif %}>
+    {%- if fs_ship_state == 'checkout' -%}
+      Versand wird im Checkout berechnet
+    {%- elsif fs_ship_state == 'low' -%}
+      Versand innerhalb DE: <strong>ca. 3,90&nbsp;€</strong> &middot; gratis ab 69&nbsp;€
+    {%- elsif fs_ship_state == 'high' -%}
+      Versand innerhalb DE: <strong>ca. 5,90&nbsp;€</strong> &middot; gratis ab 69&nbsp;€
+    {%- endif -%}
+  </p>
+</free-shipping-bar>
+
+{% render 'fs-cart-crosssell' %}
+
+<style>
+  .fs-shipbar {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-block-end: var(--margin-md, 1rem);
+    padding: 0.85rem 1rem 0.95rem;
+    background: rgba(93, 127, 167, 0.07);
+    border: 1px solid rgba(93, 127, 167, 0.20);
+    border-radius: 12px;
+  }
+  .fs-shipbar[hidden] { display: none; }
+  .fs-shipbar__text {
+    margin: 0 0 0.6rem;
+    font-size: var(--font-size--sm, 0.875rem);
+    line-height: 1.35;
+    text-align: center;
+    color: #3F5974;
+  }
+  .fs-shipbar__text strong { font-weight: 700; color: #3F5974; }
+  .fs-shipbar__track {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(93, 127, 167, 0.20);
+    overflow: hidden;
+  }
+  .fs-shipbar__fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #5D7FA7, #3F5974);
+    transition: width 400ms ease;
+  }
+  .fs-shipbar__ship {
+    margin: 0.55rem 0 0;
+    font-size: var(--font-size--xs, 0.75rem);
+    line-height: 1.3;
+    text-align: center;
+    color: rgba(63, 89, 116, 0.85);
+  }
+  .fs-shipbar__ship strong { font-weight: 700; color: #3F5974; }
+  .fs-shipbar--reached .fs-shipbar__track { background: rgba(26, 143, 76, 0.18); }
+  .fs-shipbar--reached .fs-shipbar__fill { background: #1a8f4c; }
+  .fs-shipbar--reached .fs-shipbar__text,
+  .fs-shipbar--reached .fs-shipbar__text strong { color: #1a8f4c; }
+  .fs-shipbar--reached .fs-shipbar__ship { display: none; }
+
+  /* Auschecken-Button im Futurespin-Blau (Cart-Seite + Drawer). id-Selektor schlaegt Theme-Default. */
+  #checkout.cart__checkout-button {
+    background: #5D7FA7;
+    color: #ffffff;
+    transition: background 200ms ease;
+  }
+  #checkout.cart__checkout-button:hover,
+  #checkout.cart__checkout-button:focus-visible {
+    background: #3F5974;
+    color: #ffffff;
+  }
+  #checkout.cart__checkout-button .button-text { color: #ffffff; }
+</style>
+
+<script>
+  if (!customElements.get('free-shipping-bar')) {
+    customElements.define('free-shipping-bar', class extends HTMLElement {
+      connectedCallback() {
+        this._threshold = parseInt(this.dataset.threshold, 10) || 6900;
+        this._render(parseInt(this.dataset.current, 10) || 0, parseInt(this.dataset.weight, 10) || 0);
+        document.addEventListener('cart:update', () => this._refetch());
+      }
+      _refetch() {
+        fetch(window.Shopify.routes.root + 'cart.js', { headers: { 'Accept': 'application/json' } })
+          .then(r => r.json()).then(c => this._render(c.total_price, c.total_weight)).catch(function(){});
+      }
+      _fmt(cents) {
+        try {
+          return new Intl.NumberFormat('de-DE', { style: 'currency', currency: '{{ cart.currency.iso_code | default: "EUR" }}' }).format(cents / 100);
+        } catch (e) { return (cents / 100).toFixed(2) + ' EUR'; }
+      }
+      _render(current, weight) {
+        var t = this._threshold;
+        var remaining = Math.max(0, t - current);
+        var pct = Math.min(100, t > 0 ? Math.round(current * 100 / t) : 0);
+        var fill = this.querySelector('[ref="fill"]');
+        var text = this.querySelector('[ref="text"]');
+        var ship = this.querySelector('[ref="ship"]');
+        var track = this.querySelector('.fs-shipbar__track');
+        if (fill) fill.style.width = pct + '%';
+        if (track) track.setAttribute('aria-valuenow', String(pct));
+        if (current <= 0) { this.setAttribute('hidden', ''); return; }
+        this.removeAttribute('hidden');
+        if (remaining <= 0) {
+          this.classList.add('fs-shipbar--reached');
+          if (text) text.innerHTML = 'Geschafft! Dein Versand ist <strong>kostenlos</strong>.';
+          if (ship) ship.style.display = 'none';
+        } else {
+          this.classList.remove('fs-shipbar--reached');
+          if (text) text.innerHTML = 'Noch <strong>' + this._fmt(remaining) + '</strong> bis zum kostenlosen Versand';
+          if (ship) {
+            ship.style.display = '';
+            if (weight > 31500) {
+              ship.innerHTML = 'Versand wird im Checkout berechnet';
+            } else if (weight < 1000) {
+              ship.innerHTML = 'Versand innerhalb DE: <strong>ca. 3,90&nbsp;€</strong> &middot; gratis ab 69&nbsp;€';
+            } else {
+              ship.innerHTML = 'Versand innerhalb DE: <strong>ca. 5,90&nbsp;€</strong> &middot; gratis ab 69&nbsp;€';
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
