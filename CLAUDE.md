@@ -538,6 +538,31 @@
     `layout/theme.liquid` wird bei „Theme aktualisieren" zurückgesetzt → aus Repo wiederherstellen (inkl. des
     `{% render 'fs-config-note-sync' %}`-Aufrufs).
 
+## Warenkorb-Kommentarfeld (Kunden-Notiz, 2026-08-01)
+
+- **Aktiviert per Theme-Einstellung, kein Custom-Code:** Horizon hat das Feld bereits eingebaut
+  (`snippets/cart-summary.liquid`, `{% if settings.show_cart_note %}` → `<textarea name="note">`), es war nur
+  ausgeschaltet. In `config/settings_data.json` gesetzt: **`show_cart_note: true`** + **`cart_note_open_by_default: true`**
+  (sonst steckt das Feld hinter einem zugeklappten Akkordeon und wird übersehen). Erscheint dadurch im
+  **Cart-Drawer UND** auf der `/cart`-Seite; Shopify übernimmt `cart.note` beim Checkout automatisch in `order.note`.
+- 🚨 **`config/settings_data.json` NIE blind abtippen** (CLAUDE.md-Warnung: Farbschemata/App-Embeds). Verfahren, das
+  die Korrektheit beweist: Datei per `theme.files(...) { body { content } }` lesen, **exakt** rekonstruieren, ändern,
+  und **vor dem Upload** verifizieren — Shopify meldet in `size` die **minifizierte** Größe **mit escapten Slashes**
+  (`\/`). Prüfformel: `len(json.dumps(d, separators=(',',':'))) + Anzahl '/'` muss die gemeldete `size` exakt treffen
+  (hier 6718 punktgenau → nichts verloren). Nach dem Upload erneut lesen: erwartete neue `size` war 6750 → bestätigt.
+  ⚠️ Der Store-Token hat **kein `write_themes`** → nur über MCP `themeFilesUpsert` möglich, nicht per Action.
+  Repo-Mirror liegt jetzt unter `config/settings_data.json` (wird bei „Theme aktualisieren" zurückgesetzt).
+- 🚨 **Kollision Kundenkommentar ↔ Konfigurator-Notiz (beide nutzen `cart.note`) — gelöst:** Vorher überschrieb
+  `konfigurator.liquid` die Notiz komplett (Kundenkommentar weg), und das native Notizfeld überschrieb umgekehrt
+  den Konfigurator-Block. **Jetzt trennt `fs-config-note-sync.liquid` beide Teile:** `stripConfigBlock()` schneidet
+  den Block zwischen `note_header`/`note_footer` heraus → **alles davor/danach ist der Kundenkommentar und bleibt
+  unangetastet**; der Konfigurator-Block wird aus dem aktuellen `/cart.js` neu gebaut und wieder angehängt
+  (`Kommentar \n\n Konfig-Block`). Der Konfigurator schreibt **nicht mehr selbst**, sondern ruft die zentrale
+  `window.fsConfigNoteSync()` — eine einzige Implementierung, kein Duplikat. Mit 5 Szenarien verifiziert
+  (Kommentar vor/nach Konfigurator, Teil-/Vollentfernung, Idempotenz).
+- **Packzettel:** zeigt den Kommentar automatisch — die Vorlage „Packzettel neu" rendert `order.note` bereits in der
+  gelben Box über der Artikeltabelle (mit `newline_to_br`, daher auch mehrzeilig korrekt). Kein weiterer Eingriff nötig.
+
 ## Hauspreis (dauerhafte −10 % im Artikel, 2026-07-07)
 
 - **Was:** Alle aktiven Artikel dauerhaft im Artikel reduziert: **Preis = UVP × 0,9, abgerundet auf x,90**,
