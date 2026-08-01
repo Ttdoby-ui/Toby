@@ -61,6 +61,17 @@
     }).then(function () { busy = false; }, function () { busy = false; });
   }
 
+  // Entfernt NUR unseren Konfigurator-Block aus der Notiz. Was uebrig bleibt,
+  // ist der vom KUNDEN im Warenkorb eingegebene Kommentar - der muss erhalten
+  // bleiben (Notizfeld im Warenkorb, settings.show_cart_note).
+  function stripConfigBlock(s) {
+    var i = s.indexOf(T.header);
+    if (i === -1) return s.trim();
+    var j = s.indexOf(T.footer, i);
+    var end = j === -1 ? s.length : j + T.footer.length;
+    return (s.slice(0, i) + s.slice(end)).trim();
+  }
+
   function sync() {
     fetch('/cart.js', { headers: { 'Accept': 'application/json' } })
       .then(function (r) { return r.json(); })
@@ -75,15 +86,15 @@
             kan = byRole.kantenband, kle = byRole.klebeservice, ver = byRole.versiegelung;
         var hasAny = !!(holz || vor || rue || kan);
 
-        // Nur EIGENE Notiz anfassen: leer oder von uns geschrieben (Header-Zeile).
         var currentNote = cart.note || '';
-        var ownNote = currentNote === '' || currentNote.indexOf(T.header) === 0;
-        if (!ownNote) return;
+        // Kundenkommentar = Notiz ohne unseren Block. Wird IMMER erhalten,
+        // egal ob der Kunde ihn vor oder nach dem Konfigurator eingegeben hat.
+        var customerPart = stripConfigBlock(currentNote);
 
-        var note = '';
+        var configBlock = '';
         var attrs = {};
         if (hasAny) {
-          note = [
+          configBlock = [
             T.header,
             T.holz       + (nm(holz) || T.none),
             T.vorhand    + (nm(vor)  || T.none),
@@ -93,19 +104,26 @@
             T.versiegelung + (ver ? T.yes : T.no),
             T.footer
           ].join('\n');
-          attrs[T.attr_holz]         = nm(holz) || '';
-          attrs[T.attr_vorhand]      = nm(vor)  || '';
-          attrs[T.attr_rueckhand]    = nm(rue)  || '';
-          attrs[T.attr_klebeservice] = kle ? T.yes : '';
-          attrs[T.attr_kantenband]   = nm(kan)  || '';
-          attrs[T.attr_versiegelung] = ver ? T.yes : '';
         }
+        // Attribute spiegeln immer den aktuellen Warenkorb (leer, wenn kein Baustein).
+        attrs[T.attr_holz]         = hasAny ? (nm(holz) || '') : '';
+        attrs[T.attr_vorhand]      = hasAny ? (nm(vor)  || '') : '';
+        attrs[T.attr_rueckhand]    = hasAny ? (nm(rue)  || '') : '';
+        attrs[T.attr_klebeservice] = hasAny && kle ? T.yes : '';
+        attrs[T.attr_kantenband]   = hasAny ? (nm(kan)  || '') : '';
+        attrs[T.attr_versiegelung] = hasAny && ver ? T.yes : '';
+
+        var note = [customerPart, configBlock].filter(Boolean).join('\n\n');
 
         if (note === currentNote) return; // schon aktuell, nichts zu tun
         write(note, attrs);
       })
       .catch(function () {});
   }
+
+  // Zentral verfuegbar machen: der Konfigurator ruft das nach dem Hinzufuegen
+  // auf, statt die Notiz selbst (und damit den Kundenkommentar) zu ueberschreiben.
+  window.fsConfigNoteSync = sync;
 
   function scheduleSync() {
     if (busy) return;

@@ -1540,54 +1540,19 @@ window.ProductBadges = {};
     ].join('\n');
   }
 
-  // Packzettel-Notiz + Warenkorb-Attribute NUR aus den tatsächlich in den
-  // Warenkorb gelegten Zeilen bauen (Antwort von /cart/add.js, gefiltert über
-  // _kfg/_rolle). So kann die Notiz keine Bausteine mehr behaupten, die gar
-  // nicht im Warenkorb liegen.
-  function writeConfigNote(added) {
-    var byRole = {};
-    (added || []).forEach(function(it) {
-      var p = it.properties || {};
-      if (!p._kfg || !p._rolle || byRole[p._rolle]) return;
-      byRole[p._rolle] = it;
-    });
-    function nm(it) {
-      if (!it) return null;
-      var base = it.product_title || it.title || '';
-      var vt = it.variant_title && it.variant_title !== 'Default Title' ? it.variant_title : '';
-      return vt ? base + ' (' + vt + ')' : base;
+  // Packzettel-Notiz + Warenkorb-Attribute werden zentral von
+  // snippets/fs-config-note-sync.liquid aus dem AKTUELLEN Warenkorb (/cart.js,
+  // gefiltert über _kfg/_rolle) gebaut. Wichtig: dieselbe Stelle erhält dabei
+  // einen vom Kunden eingegebenen Warenkorb-Kommentar (Notizfeld im Warenkorb) –
+  // deshalb hier NICHT mehr selbst die Notiz überschreiben (sonst wäre der
+  // Kundenkommentar nach dem Hinzufügen weg).
+  function writeConfigNote() {
+    if (typeof window.fsConfigNoteSync === 'function') {
+      window.fsConfigNoteSync();
     }
-    var holz = byRole.holz, vor = byRole.vorhand, rue = byRole.rueckhand,
-        kan = byRole.kantenband, kle = byRole.klebeservice, ver = byRole.versiegelung;
-
-    // Kein Konfigurator-Baustein im Warenkorb → Notiz NICHT anfassen
-    // (verhindert veraltete Packzettel wie bei #9260).
-    if (!holz && !vor && !rue && !kan) return;
-
-    var lines = [
-      KonfigT.note_header,
-      KonfigT.note_holz      + (nm(holz) || KonfigT.note_none),
-      KonfigT.note_vorhand   + (nm(vor)  || KonfigT.note_none),
-      KonfigT.note_rueckhand + (nm(rue)  || KonfigT.note_none),
-      KonfigT.note_kantenband + (nm(kan) || KonfigT.note_none),
-      KonfigT.note_klebeservice + (kle ? KonfigT.note_klebeservice_val : KonfigT.no),
-      KonfigT.note_versiegelung + (ver ? KonfigT.yes : KonfigT.no),
-      KonfigT.note_footer,
-    ];
-
-    var attrs = {};
-    attrs[KonfigT.attr_holz]         = nm(holz) || '';
-    attrs[KonfigT.attr_vorhand]      = nm(vor)  || '';
-    attrs[KonfigT.attr_rueckhand]    = nm(rue)  || '';
-    attrs[KonfigT.attr_klebeservice] = kle ? KonfigT.yes : '';
-    attrs[KonfigT.attr_kantenband]   = nm(kan) || '';
-    attrs[KonfigT.attr_versiegelung] = ver ? KonfigT.yes : '';
-
-    fetch('/cart/update.js', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ note: lines.join('\n'), attributes: attrs }),
-    }).catch(function() {});
+    // Ohne das Snippet (z. B. wenn layout/theme.liquid nach einem Theme-Update
+    // zurückgesetzt wurde) passiert nichts – die Zeilen tragen ihre Angaben
+    // ohnehin selbst als sichtbare Line-Item-Properties.
   }
 
   /* ---- Helpers ---- */
