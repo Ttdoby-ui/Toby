@@ -588,6 +588,21 @@
   mit **Rabatt in %** zur UVP (z. B. „Sale -30%") → PDP zeigt es ohne Theme-Änderung. Vorzustand in
   `pre_sale_*`-Metafeldern gesichert → beim Ablauf exakte Wiederherstellung inkl. Hauspreis. ⚠️ Alt: setzte
   `sale_badge_*` (vom Theme NICHT gelesen) + compareAt=Hauspreis (falsche UVP) — behoben.
+- 🚨 **Angebot wurde still ignoriert — `discount_type` leer (Bug 2026-08-01, Eintrag „Fastarc"):** Der Preis-Zweig
+  lief nur bei gesetztem **`discount_type`** (`fixed`/`percentage`). Beim Eintrag „Fastarc" war `sale_price`=38,90
+  gesetzt, `discount_type` aber **leer** und zusätzlich `collection` befüllt → die Schutzabfrage
+  (`if (!collectionId && !discountType) skip`) griff **nicht**, der Job lief in den Kollektions-Zweig, meldete
+  „2 Produkt(e) in Kollektion bestätigt" + **`success`** — und ließ die Preise unverändert (46,90 Hauspreis).
+  4 Nachtläufe hintereinander „erfolgreich", ohne dass das Angebot je aktiv wurde.
+  - **Fix:** `discount_type` wird jetzt **automatisch abgeleitet**, wenn leer: `sale_price` → `fixed`,
+    `discount_percentage` → `percentage` (Log-Zeile `[AUTO]`). Nur wenn **weder** Preis **noch** Prozent gesetzt
+    sind, bleibt es reine Kollektionsverwaltung. Das Feld ist im Admin-Formular damit faktisch optional.
+  - 🚨 **Cron lief gegen `main`, Skripte liegen aber auf dem Feature-Branch:** `process-scheduled-items.yml` hatte
+    als einziger Skript-Workflow **kein `ref:`** beim Checkout → nahm den (veralteten) `main`-Stand. Auf
+    `ref: claude/shopify-adhesive-service-vkfNR` umgestellt, konsistent zu den übrigen Skript-Workflows.
+    **Merke:** Neue Skript-Workflows IMMER mit `ref:` auf den Feature-Branch anlegen, sonst laufen sie gegen main.
+  - Verifiziert 2026-08-01: alle 8 Fastarc-Varianten (C-1 + G-1) auf 38,90 €, compareAt 52,90 € (echte UVP),
+    Badge „Angebot -26%" rot, `pre_sale_price`=46,90 gesichert → Rückstellung am 15.09.2026 exakt.
 - **Kachel-Badge = echtes Produkt-Badge (2026-07-08):** Die Filter-Panel-Kacheln (`filter-panel-main.js`)
   schrieben hart **„Angebot"** für jeden reduzierten Artikel und lasen `price_badge_text` NICHT → Hauspreis-
   Artikel zeigten auf Kacheln „Angebot" statt „Hauspreis" (PDP war korrekt). Fix ohne Eingriff in die
