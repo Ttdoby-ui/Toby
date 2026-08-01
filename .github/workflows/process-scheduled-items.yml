@@ -1,4 +1,4 @@
-name: Process Scheduled Sales & Collections
+name: Process Scheduled Sales &amp; Collections
 
 on:
   schedule:
@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
 
       - uses: actions/setup-node@v4
         with:
