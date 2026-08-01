@@ -1022,6 +1022,36 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   (Horizon 4.1.1 `200523612508` + Entwurf-Futurespin `200580792668`) deployt (Read-back md5 verifiziert).
   Nur Entwurf → live bei der nächsten Rotation.
 
+## Rückgabe & Umtausch (Weg 1: Notizfeld-Hinweis, 2026-08-01)
+
+- **Ausgangslage:** Shopifys Selbstbedienungs-Rückgabe im Kundenkonto fragt **nur den Grund** ab, die Auflösung
+  ist immer eine **Erstattung** – einen „Umtausch"-Button für den Kunden gibt es nativ **nicht**. Die Gründe
+  stammen aus einer **festen Shopify-Bibliothek** (`returnReasonDefinitions`, mehrere hundert standardisierte
+  Einträge, u. a. „Zu groß"/`too-big`, „Zu klein"/`too-small`) → **eigene Gründe wie „Umtausch gewünscht" sind
+  nicht anlegbar** (keine Create-Mutation).
+- **Händlerseitig kann Shopify Umtausch nativ:** `Return` trägt neben `returnLineItems` auch **`exchangeLineItems`**
+  (`returnCreate` → `ReturnInput.exchangeLineItems`). Ein Umtauschartikel erzeugt **keinen neuen Auftrag**, sondern
+  einen **neuen FulfillmentOrder auf derselben Bestellung**; der Wert der Rückware wird verrechnet, ein Restbetrag
+  hält die Auslieferung bis zur Zahlung. Seit API 2025-07 muss zusätzlich **`returnProcess`** aufgerufen werden
+  (bestätigt Mengen, erzeugt die Fulfillment-Orders). ⚠️ Exchange-Zeilen hängen an der **Erstellung** der Rückgabe;
+  eine Mutation „Umtausch nachträglich zu einer bestehenden Anfrage hinzufügen" ist nicht exponiert.
+- **Weg 1 (umgesetzt, kostenlos):** Kunde schreibt seinen Umtauschwunsch in das **Notizfeld** der Rückgabeanfrage
+  (`ReturnLineItem.returnReasonNote`), wir legen den Umtausch im Admin an. Das Feld ist nachweislich befüllbar
+  (Beleg: Rückgabe `#8583-R1` mit `returnReasonNote: "Falsch berechnet"`). Hinweise dazu an drei Stellen:
+  1. **Packzettel** (`order-printer-templates/futurespin-packzettel-neu.html`, Block `.pz-retoure` vor der Fußzeile) –
+     liegt jedem Paket bei, inkl. E-Mail-Fallback `versand@futurespin.de` + Bestellnummer.
+  2. **Rückerstattungsrichtlinie** – Abschnitt „Umtausch" ersetzt (Shopify-Standardtext „…in einem separaten Kauf
+     erwerben" → Notizfeld-Anleitung).
+  3. **Versandbestätigungs-Mail** – optionaler Hinweisblock.
+- 🚨 **Was ich NICHT per API kann (verifiziert 2026-08-01 über `currentAppInstallation { accessScopes }`):**
+  Der MCP-Token hat nur **`read_legal_policies`**, kein `write_legal_policies` → **`shopPolicyUpdate` geht nicht**,
+  Policy-Texte müssen im Admin (Einstellungen → Richtlinien) eingefügt werden. **Benachrichtigungs-Vorlagen
+  (E-Mails) haben gar keine Admin-API** – weder Query noch Mutation → ebenfalls nur im Admin
+  (Einstellungen → Benachrichtigungen). Wie beim Order Printer gilt: ich liefere den Code, der User fügt ihn ein.
+- **Wenn Umtausch häufiger wird → Weg 3:** Retouren-App (Return Prime, Rich Returns, AfterShip Returns, ReturnGO)
+  oder Eigenbau über die **Customer Account API** (`build-self-serve-returns`). Beide hängen sich an dieselbe native
+  Returns-API, Bestellung/Lager/Buchhaltung bleiben sauber.
+
 ## Order Printer (Packzettel/Rechnung)
 
 - 🚨 **Templates liegen in der Order-Printer-App selbst, NICHT im Theme.** Die App (Shopify „Order Printer",
