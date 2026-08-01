@@ -992,6 +992,36 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
       plus **mobil größere Kacheln** (Titel 1rem, Preis 1.1rem, engerer Grid-Gap) – CSS im
       `{% style %}`-Block von `sections/filter-panel.liquid`. Entwurf-Theme.
 
+## Lieferzeit / Zustelltermine (Nachbestell-Artikel „gelb", 2026-08-01)
+
+- **Problem (User):** Shopify zeigt in der Bestellung „Ausführen bis …" und dem Kunden im Checkout einen
+  konkreten Zustelltermin. Liegt ein **gelber** Artikel im Warenkorb (Nachbestellung), ist dieses Versprechen
+  zu kurz – der Kunde geht von 1–3 Werktagen aus, obwohl 3–5 gelten.
+- 🚨 **Ursache: Shopifys Lieferversprechen ist GLOBAL, nicht artikelbezogen.** Es kommt aus
+  `deliveryPromiseSettings { deliveryDatesEnabled, processingTime }` (Shop-Ebene, aktuell `true` / **`P1D`**
+  = 1 Werktag Bearbeitungszeit) plus der Carrier-Transitzeit. Der **Lagerstatus einzelner Positionen geht
+  NICHT ein**. Verifiziert an Bestellung #10055 (`fulfillBy` 2026-08-04, `maxDeliveryDateTime` 2026-08-05,
+  ein einziges Standard-Versandprofil).
+- ⚠️ **`deliveryDatesEnabled` ist per API NICHT schaltbar** – es gibt nur die *Query* `deliveryPromiseSettings`,
+  keine passende Mutation (`deliverySettingUpdate` kann nur `legacyModeProfiles`;
+  `deliveryPromiseParticipantsUpdate`/`deliveryPromiseProvider*` gehören zu **Branded Promises** von
+  Drittanbietern, brauchen einen `brandedPromiseHandle` und sind hier nicht anwendbar).
+  → **Abschalten nur im Admin:** Einstellungen → **Versand und Zustellung** → Abschnitt **„Zustelltermine"**
+  → *Verwalten* → voraussichtliche Zustelltermine deaktivieren. (Alternative, falls man sie behalten will:
+  dort die **Bearbeitungszeit** von 1 Tag hochsetzen – gilt dann aber für ALLE Artikel, auch grüne.)
+- **Theme-seitiger Hinweis (umgesetzt):** Neues Snippet **`snippets/fs-lieferzeit-hinweis.liquid`** zählt die
+  „gelben" Positionen im Warenkorb und zeigt eine bernsteinfarbene Box („… wird für dich bestellt – Lieferung
+  deiner Bestellung in 3–5 Werktagen"). **„Gelb" = exakt die Ampel-Definition** aus
+  `blocks/product-inventory.liquid` (`inventory_management == 'shopify'` **und** `inventory_quantity <= 0`
+  **und** `inventory_policy == 'continue'`); Farbe `#b25e09` = `--color-lowstock`, konsistent zur PDP-Ampel.
+  **Bei Änderung der Ampel-Logik beide Dateien synchron halten.**
+- **Einhängepunkt:** `{% render 'fs-lieferzeit-hinweis' %}` steht **oben in `snippets/fs-free-shipping-bar.liquid`**
+  – dieses Snippet wird bereits vom **nativen** `snippets/cart-summary.liquid` gerendert → der Hinweis erscheint
+  in **Cart-Drawer UND /cart-Seite**, ohne die große native Datei anzufassen (die bei „Theme aktualisieren"
+  ohnehin zurückgesetzt würde). Beide Snippets liegen im Repo unter `snippets/` und sind in **beide Entwürfe**
+  (Horizon 4.1.1 `200523612508` + Entwurf-Futurespin `200580792668`) deployt (Read-back md5 verifiziert).
+  Nur Entwurf → live bei der nächsten Rotation.
+
 ## Order Printer (Packzettel/Rechnung)
 
 - 🚨 **Templates liegen in der Order-Printer-App selbst, NICHT im Theme.** Die App (Shopify „Order Printer",
