@@ -5,7 +5,10 @@
  * scheduled_sale fields (kombiniertes Formular für Preis-Sale + Kollektions-Mitgliedschaft):
  *   - variants (required)           – list of product variant references
  *   - collection (optional)         – if set, parent products are added to/removed from this collection
- *   - discount_type (optional)      – "fixed" or "percentage"; if empty, only collection membership is managed
+ *   - discount_type (optional)      – "fixed" or "percentage". WIRD AUTOMATISCH ABGELEITET, wenn leer:
+ *                                     sale_price gesetzt -> "fixed", discount_percentage gesetzt -> "percentage".
+ *                                     (Nur wenn WEDER Preis NOCH Prozent gesetzt sind, wird ausschliesslich
+ *                                     die Kollektions-Mitgliedschaft verwaltet.)
  *   - sale_price (optional)         – fixed sale price (used when discount_type=fixed)
  *   - discount_percentage (optional)– percentage off, e.g. 20 for 20% (used when discount_type=percentage)
  *   - end_date (required)           – sale ends before this date (YYYY-MM-DD)
@@ -164,9 +167,21 @@ async function processScheduledSales() {
   for (const entry of entries) {
     const variantIds   = JSON.parse(field(entry.fields, 'variants') || '[]');
     const collectionId = field(entry.fields, 'collection');
-    const discountType = field(entry.fields, 'discount_type');
     const salePrice    = field(entry.fields, 'sale_price');
     const discountPct  = field(entry.fields, 'discount_percentage');
+    // discount_type ist im Admin-Formular leicht zu uebersehen. Wer einen Angebotspreis
+    // (oder einen Rabatt-%) eintraegt, will offensichtlich einen Preis-Sale -> Typ ableiten,
+    // statt den Preis stillschweigend zu ignorieren (Bug 2026-08-01, Eintrag "Fastarc":
+    // sale_price=38.90 gesetzt, discount_type leer, collection gesetzt -> Job machte NUR
+    // die Kollektion und meldete "success", Preise blieben unveraendert).
+    let discountType   = field(entry.fields, 'discount_type');
+    if (!discountType) {
+      if (salePrice)        discountType = 'fixed';
+      else if (discountPct) discountType = 'percentage';
+      if (discountType) {
+        console.log(`  [AUTO] "${field(entry.fields, 'note') || entry.id}" — discount_type leer, aus ${discountType === 'fixed' ? 'sale_price' : 'discount_percentage'} abgeleitet: ${discountType}`);
+      }
+    }
     const endDate      = field(entry.fields, 'end_date');
     const startDate    = field(entry.fields, 'start_date');
     const note         = field(entry.fields, 'note') || entry.id;
