@@ -40,6 +40,14 @@
   .pz-variante { color: #555; font-size: 12px; }
   .pz-ean { color: #888; font-size: 11px; }
 
+  /* Kundenhinweis Rueckgabe/Umtausch. Shopifys Selbstbedienungs-Formular kennt nur
+     "Rueckgabe" (Erstattung) - einen Umtausch-Button gibt es dort nicht. Der Kunde muss
+     seinen Umtauschwunsch daher ins Notizfeld der Rueckgabeanfrage schreiben; wir legen
+     den Umtausch dann im Admin an. Deshalb steht die Anleitung hier im Paket. */
+  .pz-retoure { margin-top: 22px; padding: 10px 14px; border: 1px dashed #5D7FA7;
+                border-radius: 6px; font-size: 12px; line-height: 1.5; color: #1f2733; }
+  .pz-retoure b { color: #3F5974; }
+
   .pz-fuss { margin-top: 26px; padding-top: 10px; border-top: 1px solid #c9d3e0;
              font-size: 11px; color: #666; display: flex; justify-content: space-between; }
 </style>
@@ -153,6 +161,18 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <!-- Kundenhinweis: Rückgabe & Umtausch -->
+  <div class="pz-retoure">
+    <b>Etwas passt nicht?</b> Rückgabe und Umtausch startest du in deinem Kundenkonto unter
+    <b>„Bestellungen“ → „Rückgabe beantragen“</b>.<br>
+    <b>Du möchtest umtauschen</b> – zum Beispiel dieselbe Ware in einer anderen Größe oder Farbe?
+    Schreib deinen Wunsch einfach in das <b>Notizfeld</b> der Rückgabeanfrage, z.&nbsp;B.
+    <em>„Bitte Größe L statt XL“</em>. Wir tauschen dann direkt um – du musst nichts neu bestellen.
+    Ist der Wunschartikel nicht mehr verfügbar, erstatten wir dir den Betrag.
+    Kein Notizfeld zu sehen? Dann schreib uns einfach kurz an <b>versand@futurespin.de</b>
+    unter Angabe deiner Bestellnummer <b>{{ order.name }}</b>.
+  </div>
 
   <!-- Fußzeile -->
   <div class="pz-fuss">
