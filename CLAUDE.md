@@ -144,6 +144,14 @@
     lädt die weiteren Seiten per `?page=N` im Hintergrund nach und mergt in `CATALOG` (dedupe per Handle),
     während der Nutzer noch das 11-Schritt-Quiz beantwortet. Zwei paginate-Blöcke teilen sich denselben
     `?page`-Param – beide liefern ihre Seite N. Repo-Mirror unter `theme-horizon/…`.
+  - ✅ **`sections/konfigurator.liquid` (2026-08-05 gefixt) – im Audit 2026-07-09 ÜBERSEHEN:** `loadProducts()`
+    holte `/collections/<handle>/products.json?limit=250` und wollte Folgeseiten über den **`Link: rel="next"`**-
+    Header nachladen. 🚨 **Den Header sendet der Storefront-JSON-Endpunkt NICHT** (nur die Admin-API tut das) →
+    `link.match(...)` war immer `null`, die Schleife brach nach Seite 1 ab. Im Konfigurator fehlten dadurch alle
+    Beläge/Hölzer ab Position 251. Fix: explizit `?page=N` durchzählen, bis eine Seite < 250 Treffer liefert
+    (Cap 20 Seiten), Dedupe per Produkt-ID; bei Fehler **nicht** cachen, damit ein späterer Aufruf neu versucht.
+    **Merke:** `Link: rel=next` ist Admin-API-only – für `/collections/*/products.json` und `/products.json`
+    immer `?page=N` zählen und am „< limit"-Ergebnis abbrechen, nie auf einen Header warten.
   - ⚠️ `sections/schlaeger-berater.liquid` (KI-Chat-Widget) fetcht `products.json?limit=250`, **aber**
     `buildProductList()` macht `arr.slice(0, 60)` → nur 60 Produkte gehen an die Claude-API. Der 250-Cap
     ist durch den engeren 60er-Sample **maskiert** (kein Produktverlust-Symptom wie beim Finder); Erweitern
