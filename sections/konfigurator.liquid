@@ -1014,25 +1014,34 @@ window.ProductBadges = {};
     });
   }
 
-  /* ---- Load (paginated collection fetch) ---- */
+  /* ---- Load (paginated collection fetch) ----
+     250-Produkte-Falle (siehe CLAUDE.md): /collections/<handle>/products.json liefert
+     pro Seite MAX. 250 Produkte und sendet – anders als die Admin-API – KEINEN
+     "Link: rel=next"-Header. Die alte Version wartete genau darauf und blieb deshalb
+     immer bei Seite 1 stehen: Beläge (>430) und Hölzer (>330) waren im Konfigurator
+     ab Marke D–Z abgeschnitten. Deshalb jetzt explizit ?page=N durchzählen, bis eine
+     Seite weniger als 250 Treffer liefert. MAX_PAGES ist reiner Endlosschutz. */
+  var K_PAGE_SIZE = 250, K_MAX_PAGES = 20;
   function loadProducts(handle) {
     if (_cache[handle] !== undefined) return Promise.resolve(_cache[handle]);
-    function fetchPage(url, acc) {
-      return fetch(url)
-        .then(function(r) {
-          var link = r.headers.get('Link') || '';
-          return r.json().then(function(d) { return { products: d.products || [], link: link }; });
-        })
-        .then(function(res) {
-          var all = acc.concat(res.products);
-          var m = res.link.match(/<([^>]+)>;\s*rel="next"/);
-          if (m && res.products.length === 250) return fetchPage(m[1], all);
+    var base = '/collections/' + encodeURIComponent(handle) + '/products.json?limit=' + K_PAGE_SIZE;
+    var all = [], seen = {};
+    function fetchPage(page) {
+      return fetch(base + '&page=' + page)
+        .then(function(r) { return r.ok ? r.json() : { products: [] }; })
+        .then(function(d) {
+          var ps = d.products || [];
+          // Dedupe per ID: schuetzt vor Doppelten, falls sich die Kollektions-
+          // Sortierung waehrend des Nachladens aendert.
+          ps.forEach(function(p) { if (p && !seen[p.id]) { seen[p.id] = 1; all.push(p); } });
+          if (ps.length === K_PAGE_SIZE && page < K_MAX_PAGES) return fetchPage(page + 1);
           _cache[handle] = all;
           return all;
         });
     }
-    return fetchPage('/collections/' + encodeURIComponent(handle) + '/products.json?limit=250', [])
-      .catch(function() { _cache[handle] = []; return []; });
+    // Bei einem Fehler NICHT cachen -> ein spaeterer Aufruf darf es neu versuchen,
+    // und was bereits geladen wurde, wird trotzdem angezeigt.
+    return fetchPage(1).catch(function() { return all; });
   }
 
   function spinner() { return '<div class="k-loading"><div class="k-spinner"></div></div>'; }
