@@ -152,10 +152,13 @@
     (Cap 20 Seiten), Dedupe per Produkt-ID; bei Fehler **nicht** cachen, damit ein späterer Aufruf neu versucht.
     **Merke:** `Link: rel=next` ist Admin-API-only – für `/collections/*/products.json` und `/products.json`
     immer `?page=N` zählen und am „< limit"-Ergebnis abbrechen, nie auf einen Header warten.
-  - ⚠️ `sections/schlaeger-berater.liquid` (KI-Chat-Widget) fetcht `products.json?limit=250`, **aber**
-    `buildProductList()` macht `arr.slice(0, 60)` → nur 60 Produkte gehen an die Claude-API. Der 250-Cap
-    ist durch den engeren 60er-Sample **maskiert** (kein Produktverlust-Symptom wie beim Finder); Erweitern
-    wäre eine Kosten-/Design-Entscheidung (größerer Prompt), kein Bugfix. **Nicht** blind „gefixt".
+  - ✅ **`sections/schlaeger-berater.liquid` (KI-Chat-Widget, 2026-08-05 gefixt):** fetchte
+    `products.json?limit=250` ohne Seitenschleife **und** kürzte in `buildProductList()` per
+    `arr.slice(0, 60)`. Beides ist raus: `loadCollection()` zählt `?page=N` durch (Cap 20 Seiten, Dedupe
+    per Produkt-ID), das `slice` entfällt → der **komplette** Katalog geht in den Prompt.
+    ⚠️ **Merke: die beiden Caps mussten zusammen fallen** – Paginierung allein wäre wirkungslos gewesen,
+    weil 60 < 250. Kosten: ~21.500 Input-Token ≈ **2 US-Cent pro Beratung** (Haiku 4.5, $1/$5 pro Mio.),
+    vorher ~0,5 Cent. Verifiziert gegen einen simulierten Endpunkt: 343/343 Hölzer + 446/446 Beläge.
   - ✅ Bewusst klein/gebunden (kein 250-Bug): `collection-topseller` (Metafeld-Liste, `limit: 6`),
     `snippets/cross-sell.liquid` (`break` bei ~6), `snippets/fs-cart-crosssell.liquid` (fester ~6-Handle-Pool),
     `produkt-vergleich.liquid` (nur Einzelprodukt-PDP-Daten).
@@ -439,6 +442,36 @@
   ⚠️ **`collection_id:` lässt sich in der Produktsuche NICHT mit `-tag:` kombinieren** – die Kombination liefert
   fälschlich 0 Treffer. Über `product_type`/`tag` filtern (oder die Kollektion paginieren und lokal prüfen).
   Der Suchindex hinkt nach einem `tagsAdd` ebenfalls kurz hinterher.
+
+## 🚨 Anthropic-API-Key NIE im Theme (KI-Proxy, 2026-08-05)
+
+- **Vorher (beide KI-Features kaputt bzw. unsicher):**
+  1. `sections/schlaeger-berater.liquid` rief `api.anthropic.com` **direkt aus dem Browser** auf
+     (`x-api-key` aus der Section-Einstellung `claude_api_key` + `anthropic-dangerous-allow-browser`).
+     Der Key stand damit im **öffentlichen Shop-Quelltext** – jeder Besucher konnte ihn auslesen und
+     auf unsere Rechnung nutzen. (Die Section-Beschreibung sagte das sogar selbst.)
+  2. `assets/schlaeger-finder.js` → `getAiNote()` (Freitext-Hinweis in Quiz-Frage 11) rief dieselbe API
+     **ganz ohne Key** auf → immer 401, der `catch` schluckte es, der Kasten wurde ausgeblendet.
+     Das Feature war seit jeher **tot**, ohne dass es auffiel.
+- **Jetzt: eigener Proxy.** `proxy/berater-worker.js` (Cloudflare Worker, Free-Tier) + `proxy/wrangler.toml`.
+  Der Key liegt dort als **Secret** (`wrangler secret put ANTHROPIC_API_KEY`) und verlässt Cloudflare nie.
+  Der Browser schickt nur `{ task, prompt }`; **Modell und `max_tokens` stehen ausschließlich im Worker**
+  (`TASKS`: `berater` → Haiku 4.5/600, `finder_note` → Sonnet 4.6/500) – der Endpunkt ist damit kein
+  allgemeiner LLM-Zugang. Zusätzlich: Origin-Allowlist, Prompt-Längenlimit (120k Zeichen), optionales
+  KV-Rate-Limit. Getestet: erlaubte Origin 200 mit injiziertem Key, fremde Origin 403 **ohne**
+  Upstream-Aufruf, Modell-Override durch den Client wirkungslos, unbekannter Task/`__proto__` → 400.
+- 🔑 **Konfiguration an EINER Stelle: Shop-Metafeld `custom.ai_proxy_url`**
+  (`gid://shopify/MetafieldDefinition/464008773980`, `single_line_text_field`, storefront-lesbar).
+  Berater-Section **und** Finder-Snippet lesen `shop.metafields.custom.ai_proxy_url.value`.
+  ⚠️ Bewusst **kein** Theme-Setting: Shop-Daten überleben die Go-Live-Rotation, Theme-Einstellungen nicht.
+  ⚠️ Immer `.value` benutzen (wie bei `custom.announcement_banner`) – ohne `.value` serialisiert `| json`
+  den Metafeld-Drop statt des Strings.
+- **Ohne gesetztes Metafeld** verhält sich alles wie vorher: Finder-Hinweis bleibt aus, Berater meldet
+  „kein Proxy konfiguriert". Das Feature schaltet sich also erst mit dem Eintrag scharf.
+- ⚠️ **Zusätzlich im Anthropic-Dashboard ein Ausgabenlimit auf den Key setzen** – die Origin-Prüfung
+  schützt Browser-Aufrufe, ein `Origin`-Header lässt sich außerhalb eines Browsers aber fälschen.
+- ℹ️ Der Berater ist in `templates/page.konfigurator.json` derzeit `"disabled": true` – solange kostet er
+  nichts und ruft nichts auf.
 
 ## Store-Fakten (verifiziert 2026-06-27)
 
