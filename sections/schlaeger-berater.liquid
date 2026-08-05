@@ -250,7 +250,7 @@
 (function () {
   'use strict';
 
-  var API_KEY          = {{ section.settings.claude_api_key | default: '' | json }};
+  var PROXY_URL        = {{ section.settings.proxy_url | default: '' | json }};
   var HANDLE_HOLZ      = {{ section.settings.collection_holz | default: 'holzer' | json }};
   var HANDLE_BELAG     = {{ section.settings.collection_belag | default: 'belage' | json }};
   var KONFIGURATOR_URL = {{ section.settings.konfigurator_url | default: '/' | json }};
@@ -388,15 +388,41 @@
     });
   }
 
+  /* ---- Katalog laden (alle Seiten) ----
+     250-Produkte-Falle (siehe CLAUDE.md): /collections/<handle>/products.json
+     liefert MAX. 250 Produkte pro Seite und sendet - anders als die Admin-API -
+     keinen "Link: rel=next"-Header. Deshalb ?page=N explizit durchzaehlen, bis
+     eine Seite weniger als 250 Treffer liefert. Ohne das sah der Berater bei
+     446 Belaegen und 343 Hoelzern nur die erste Seite. */
+  var B_PAGE_SIZE = 250, B_MAX_PAGES = 20;
+  function loadCollection(handle) {
+    var base = '/collections/' + encodeURIComponent(handle) + '/products.json?limit=' + B_PAGE_SIZE;
+    var all = [], seen = {};
+    function fetchPage(page) {
+      return fetch(base + '&page=' + page)
+        .then(function (r) { return r.ok ? r.json() : { products: [] }; })
+        .then(function (d) {
+          var ps = d.products || [];
+          ps.forEach(function (p) { if (p && !seen[p.id]) { seen[p.id] = 1; all.push(p); } });
+          if (ps.length === B_PAGE_SIZE && page < B_MAX_PAGES) return fetchPage(page + 1);
+          return all;
+        });
+    }
+    return fetchPage(1);
+  }
+
   /* ---- Fetch & recommend ---- */
   function loadAndRecommend() {
     var thinking = addThinking();
     Promise.all([
-      fetch('/collections/' + encodeURIComponent(HANDLE_HOLZ) + '/products.json?limit=250').then(function (r) { return r.json(); }),
-      fetch('/collections/' + encodeURIComponent(HANDLE_BELAG) + '/products.json?limit=250').then(function (r) { return r.json(); })
+      loadCollection(HANDLE_HOLZ),
+      loadCollection(HANDLE_BELAG)
     ]).then(function (res) {
-      prods.holz  = (res[0] && res[0].products) || [];
-      prods.belag = (res[1] && res[1].products) || [];
+      prods.holz  = res[0] || [];
+      prods.belag = res[1] || [];
+      // Lagernde Produkte nach vorne sortieren - Claude soll sie zuerst lesen.
+      prods.holz.sort(byStock);
+      prods.belag.sort(byStock);
       return callClaude();
     }).then(function (rec) {
       thinking.remove();
@@ -409,15 +435,21 @@
     });
   }
 
+  function inStock(p) { return (p.variants || []).some(function (v) { return v.available; }); }
+  function byStock(a, b) { return (inStock(b) ? 1 : 0) - (inStock(a) ? 1 : 0); }
+
+  // Kein slice() mehr: der komplette Katalog geht in den Prompt (~21.500 Input-
+  // Token bei 343 Hoelzern + 446 Belaegen, rund 2 US-Cent pro Beratung).
   function buildProductList(arr) {
-    return arr.slice(0, 60).map(function (p) {
+    return arr.map(function (p) {
       var price = parseFloat(p.variants && p.variants[0] ? p.variants[0].price : '0').toFixed(2);
-      return p.title + ' | €' + price + ' | Tags: ' + (p.tags || '');
+      var stock = inStock(p) ? '✓ auf Lager' : '✗ nicht auf Lager';
+      return p.title + ' | €' + price + ' | ' + stock + ' | Tags: ' + (p.tags || '');
     }).join('\n');
   }
 
   function callClaude() {
-    if (!API_KEY) return Promise.reject(new Error('Kein Claude API-Key konfiguriert.'));
+    if (!PROXY_URL) return Promise.reject(new Error('Kein Berater-Proxy konfiguriert.'));
 
     var prompt = [
       'Du bist ein Experte für Tischtennisschläger. Empfehle einen kompletten Schläger-Aufbau.',
@@ -428,14 +460,15 @@
       '- Holztyp: ' + answers.holzart,
       '- Maximalbudget gesamt: €' + answers.budget,
       '',
-      'VERFÜGBARE HÖLZER (Titel | Preis | Tags):',
+      'VERFÜGBARE HÖLZER (Titel | Preis | Lager | Tags):',
       buildProductList(prods.holz),
       '',
-      'VERFÜGBARE BELÄGE (Titel | Preis | Tags):',
+      'VERFÜGBARE BELÄGE (Titel | Preis | Lager | Tags):',
       buildProductList(prods.belag),
       '',
       'REGELN:',
       '- Wähle NUR Produkte aus den Listen oben (exakte Titel).',
+      '- Bevorzuge Produkte, die auf Lager sind (mit ✓ markiert). Wähle ein mit ✗ markiertes Produkt nur, wenn es keine passende Alternative auf Lager gibt.',
       '- Gesamtpreis (Holz + Vorhand + Rückhand) muss ≤ €' + answers.budget + ' sein.',
       '- Holztyp muss zum Kundenwunsch passen (Vollholz oder Carbon).',
       '- Beläge müssen zum Spielstil passen.',
@@ -450,19 +483,14 @@
       '}'
     ].join('\n');
 
-    return fetch('https://api.anthropic.com/v1/messages', {
+    // Der Aufruf geht an unseren eigenen Proxy, NICHT direkt an api.anthropic.com.
+    // Der API-Key liegt dort als Secret und taucht nirgends im Quelltext auf.
+    // Modell und max_tokens setzt ebenfalls der Proxy - der Browser schickt nur
+    // den Prompt, damit ein fremder Aufrufer den Endpunkt nicht zweckentfremden kann.
+    return fetch(PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-allow-browser': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 600,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt })
     })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -542,9 +570,9 @@
   "settings": [
     {
       "type": "text",
-      "id": "claude_api_key",
-      "label": "Claude API Key (Anthropic)",
-      "info": "Anthropic API Key – erstelle einen eingeschränkten Key unter console.anthropic.com. Achtung: Der Key ist im Quelltext sichtbar."
+      "id": "proxy_url",
+      "label": "Berater-Proxy URL",
+      "info": "URL des eigenen Proxys (z. B. https://berater.<name>.workers.dev). Der Anthropic-API-Key liegt dort als Secret und ist im Shop-Quelltext NICHT sichtbar. Code: proxy/berater-worker.js im Repo."
     },
     {
       "type": "text",

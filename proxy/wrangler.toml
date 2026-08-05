@@ -1,0 +1,10 @@
+name = "futurespin-berater"
+main = "berater-worker.js"
+compatibility_date = "2026-08-05"
+
+# Optionales Rate-Limit: KV-Namespace anlegen und die id hier eintragen, dann
+# den Block einkommentieren. Ohne Bindung läuft der Worker ohne Limit.
+#   wrangler kv namespace create RATE_LIMIT
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT"
+# id = "<id aus dem Befehl oben>"
