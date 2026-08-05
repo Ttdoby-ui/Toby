@@ -460,8 +460,14 @@
   allgemeiner LLM-Zugang. Zusätzlich: Origin-Allowlist, Prompt-Längenlimit (120k Zeichen), optionales
   KV-Rate-Limit. Getestet: erlaubte Origin 200 mit injiziertem Key, fremde Origin 403 **ohne**
   Upstream-Aufruf, Modell-Override durch den Client wirkungslos, unbekannter Task/`__proto__` → 400.
+- ✅ **LIVE seit 2026-08-05:** Worker deployt unter `https://futurespin-berater.tobias-koelle.workers.dev`
+  (Cloudflare-Konto des Users). Verifiziert: GET im Browser → `{"error":{"message":"Method not allowed"}}`
+  = eigener Code läuft (Hello-World-Template würde „Hello World!" liefern); Quiz-Freitext in Frage 11
+  liefert den KI-Hinweis. ⚠️ **Merke:** Die Methoden-Prüfung steht im Worker **vor** der Origin-Prüfung,
+  ein Browser-GET ergibt daher 405 und nicht 403 – beides ist ein gültiger „läuft"-Nachweis.
 - 🔑 **Konfiguration an EINER Stelle: Shop-Metafeld `custom.ai_proxy_url`**
-  (`gid://shopify/MetafieldDefinition/464008773980`, `single_line_text_field`, storefront-lesbar).
+  (`gid://shopify/MetafieldDefinition/464008773980`, `single_line_text_field`, storefront-lesbar,
+  Wert gesetzt 2026-08-05).
   Berater-Section **und** Finder-Snippet lesen `shop.metafields.custom.ai_proxy_url.value`.
   ⚠️ Bewusst **kein** Theme-Setting: Shop-Daten überleben die Go-Live-Rotation, Theme-Einstellungen nicht.
   ⚠️ Immer `.value` benutzen (wie bei `custom.announcement_banner`) – ohne `.value` serialisiert `| json`
