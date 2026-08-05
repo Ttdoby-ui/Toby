@@ -78,6 +78,7 @@
       {%- endfor -%}
     {%- endpaginate -%}
   ],
+  "proxy": {{ shop.metafields.custom.ai_proxy_url.value | default: '' | json }},
   "pages": {{ fs_b_pages | at_least: fs_h_pages }}
 }
 </script>

@@ -250,7 +250,7 @@
 (function () {
   'use strict';
 
-  var PROXY_URL        = {{ section.settings.proxy_url | default: '' | json }};
+  var PROXY_URL        = {{ shop.metafields.custom.ai_proxy_url.value | default: '' | json }};
   var HANDLE_HOLZ      = {{ section.settings.collection_holz | default: 'holzer' | json }};
   var HANDLE_BELAG     = {{ section.settings.collection_belag | default: 'belage' | json }};
   var KONFIGURATOR_URL = {{ section.settings.konfigurator_url | default: '/' | json }};
@@ -449,7 +449,7 @@
   }
 
   function callClaude() {
-    if (!PROXY_URL) return Promise.reject(new Error('Kein Berater-Proxy konfiguriert.'));
+    if (!PROXY_URL) return Promise.reject(new Error('Kein Berater-Proxy konfiguriert (Shop-Metafeld custom.ai_proxy_url).'));
 
     var prompt = [
       'Du bist ein Experte für Tischtennisschläger. Empfehle einen kompletten Schläger-Aufbau.',
@@ -490,7 +490,7 @@
     return fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt })
+      body: JSON.stringify({ task: 'berater', prompt: prompt })
     })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -569,10 +569,8 @@
   "name": "KI Schläger-Berater",
   "settings": [
     {
-      "type": "text",
-      "id": "proxy_url",
-      "label": "Berater-Proxy URL",
-      "info": "URL des eigenen Proxys (z. B. https://berater.<name>.workers.dev). Der Anthropic-API-Key liegt dort als Secret und ist im Shop-Quelltext NICHT sichtbar. Code: proxy/berater-worker.js im Repo."
+      "type": "paragraph",
+      "content": "Die Proxy-URL steht im Shop-Metafeld custom.ai_proxy_url (Einstellungen → Benutzerdefinierte Daten → Shop). Dort einmal eintragen – Berater und Schläger-Finder lesen dieselbe Stelle, und sie überlebt die Go-Live-Rotation. Der Anthropic-API-Key liegt im Proxy als Secret und ist im Shop-Quelltext nicht sichtbar. Code: proxy/berater-worker.js im Repo."
     },
     {
       "type": "text",

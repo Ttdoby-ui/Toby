@@ -17,6 +17,10 @@ const KONFIG_URL = "https://www.futurespin.de/pages/schlaeger-konfigurator";
 
 // ----- Katalog laden -------------------------------------------------------
 let CATALOG = { belage: [], holzer: [] };
+// URL unseres eigenen Anthropic-Proxys (Shop-Metafeld custom.ai_proxy_url, vom
+// Snippet schlaeger-finder-data.liquid ins JSON gerendert). Leer = kein Proxy
+// eingerichtet -> der KI-Hinweis unten bleibt einfach aus.
+let AI_PROXY = "";
 (function loadCatalog(){
   try {
     const el = document.getElementById("sf-catalog-data");
@@ -24,6 +28,7 @@ let CATALOG = { belage: [], holzer: [] };
       const parsed = JSON.parse(el.textContent);
       if (parsed && parsed.belage) CATALOG.belage = parsed.belage;
       if (parsed && parsed.holzer) CATALOG.holzer = parsed.holzer;
+      if (parsed && parsed.proxy) AI_PROXY = parsed.proxy;
     }
   } catch(e){ /* Fallback: leeres Sortiment, Quiz zeigt Hinweis */ }
 })();
@@ -74,6 +79,9 @@ function num(v){
   return isNaN(n) ? NaN : n;
 }
 function hasVals(p){ return !isNaN(num(p.tempo)) || !isNaN(num(p.kontrolle)) || !isNaN(num(p.effet)); }
+// Verfuegbarkeit: lieferbar, wenn das Liquid-Feld available !== false ist.
+// Fehlt das Feld (aeltere gecachte Seite), gilt das Produkt als lieferbar.
+function isAvail(p){ return !(p && p.available === false); }
 
 // Schwammhärte-Wort -> grober Zahlenwert (0-100), nur als Zusatzsignal
 const HAERTE_WORD = { "soft":25, "soft-medium":40, "medium":55, "medium-hard":70, "hard":85 };
@@ -314,10 +322,10 @@ function recommendBelage(level, target, side, material, budgetPerBelag, n){
     }
     return { p: p, s: s };
   });
-  scored.sort((a,b)=> a.s - b.s || num(a.p.price) - num(b.p.price));
+  scored.sort((a,b)=> (isAvail(a.p)?0:1) - (isAvail(b.p)?0:1) || a.s - b.s || num(a.p.price) - num(b.p.price));
 
   if (isSpecial){
-    scored.sort((a,b)=> (num(a.p.price)||999) - (num(b.p.price)||999));
+    scored.sort((a,b)=> (isAvail(a.p)?0:1) - (isAvail(b.p)?0:1) || (num(a.p.price)||999) - (num(b.p.price)||999));
   }
   return scored.slice(0, n).map(x => toCard(x.p, "belag"));
 }
@@ -338,7 +346,7 @@ function recommendHolzer(level, n){
     if (order >= 0) s += order * 2;
     return { p: p, s: s };
   });
-  scored.sort((a,b)=> a.s - b.s || num(a.p.price) - num(b.p.price));
+  scored.sort((a,b)=> (isAvail(a.p)?0:1) - (isAvail(b.p)?0:1) || a.s - b.s || num(a.p.price) - num(b.p.price));
   return scored.slice(0, n).map(x => toCard(x.p, "holz"));
 }
 
@@ -351,7 +359,8 @@ function toCard(p, cat){
     note: autoNote(p, cat),
     img: p.img || "",
     url: p.url || ("/products/" + p.handle),
-    type: p.type || ""
+    type: p.type || "",
+    avail: isAvail(p)
   };
 }
 function brandOf(title){
@@ -567,6 +576,7 @@ function makePickCard(slot,prod){
         <div class="pick-brand">${esc(prod.brand)}</div>
         <div class="pick-note">${esc(prod.note)}</div>
         <div class="pick-price">${fmt(prod.price)}</div>
+        ${prod.avail===false?`<div class="pick-soldout" style="margin-top:4px;font-size:12px;font-weight:600;color:#b00;">Zzt. nicht lieferbar</div>`:""}
       </div>
     </div>
     <div class="pick-opts" id="opts-${slot}-${prod.handle}"></div>
@@ -769,9 +779,13 @@ Kundenprofil:
 - Materialseite: ${matLabel[material]||"beidseitig Noppen-Innen"}
 - Freitext: "${freetext}"
 Analysiere den Freitext und gib in 2-3 prägnanten deutschen Sätzen eine persönliche Ergänzung zur Equipment-Empfehlung. Gehe konkret auf das ein, was der Kunde erwähnt hat. Nur die Ergänzung, keine Anrede, keine Überschrift.`;
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+    // Frueher ging dieser Aufruf direkt an api.anthropic.com - ohne API-Key, also
+    // immer 401: der Hinweis-Kasten erschien nie. Jetzt laeuft er ueber unseren
+    // Proxy, der den Key als Secret haelt und das Modell selbst setzt.
+    if(!AI_PROXY) return null;
+    const resp=await fetch(AI_PROXY,{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:prompt}]})
+      body:JSON.stringify({task:"finder_note",prompt:prompt})
     });
     const data=await resp.json();
     return (data.content&&data.content[0]&&data.content[0].text)||null;
