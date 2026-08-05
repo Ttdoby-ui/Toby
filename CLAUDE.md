@@ -399,6 +399,39 @@
 - Scopes im Dev Dashboard unter **Konfiguration → Admin-API-Bereiche** setzen, dann App auf Store installieren
 - Das "Schlüssel"-Feld im Dev Dashboard ist der **Client Secret** (nicht direkt als Access Token verwendbar)
 
+## 🚨 Warengruppen-Tags `Belag` / `Holz` / `Textil` sind PFLICHT (Vorfall 2026-08-05)
+
+- **Symptom:** „GEWO Belag Iconixx Hybrid HXT Pro 45.0" zeigte auf der Kachel **keine Mengenrabatt-Staffeln**,
+  die Schwester-Beläge 48.0/50.0/55.0 dagegen schon.
+- **Ursache:** Dem Produkt fehlte der Tag **`Belag`** (es hatte nur `Beläge` im Plural, dazu `Offensivbelag` und
+  productType `Tischtennisbelag`). Die Abfrage ist überall **exakt und Singular**:
+  `sections/filter-panel.liquid:95` (`"isBelag"`), `snippets/price.liquid:172`, `snippets/cross-sell.liquid:26`,
+  `snippets/schlaeger-konfigurieren-btn.liquid:123/124` (dort auch `Holz`). **Kollektions-Zugehörigkeit ersetzt
+  den Tag NICHT** – die Artikel lagen korrekt in „Beläge", nur der Tag fehlte.
+- 🚨 **Zweiter, teurerer Schaden:** Die VIP-Smart-Kollektion (`664158142812`) schließt Beläge über die Regel
+  **`TAG NOT_EQUALS Belag`** aus. Ohne den Tag blieben die Artikel **gleichzeitig** in der VIP- **und** der
+  Beläge-Kollektion → sie wurden von **zwei** Rabatt-Functions erfasst (VIP-only + Belag-Mengenrabatt), was die
+  Architektur-Regel „höchster Rabatt gewinnt, kein Stapeln" aushebelt. Der fehlende Tag ist also nicht nur ein
+  Anzeigefehler.
+- **Behoben 2026-08-05** (`tagsAdd`, Produktdaten → sofort live in allen Themes): `Belag` auf
+  `GEWO Belag Iconixx Hybrid HXT Pro 45.0` (`15668409794908`), `VICTAS Belag Xegna` (`15670227108188`),
+  `VICTAS Belag Xegna Spin` (`15670257451356`); `Holz` auf `VICTAS Holz Magnass` (`15670281371996`).
+  VIP-Kollektion danach 579 → 576 Produkte, die drei Beläge sind raus (Smart-Collection-Neuberechnung läuft
+  **asynchron**, direkt nach dem `tagsAdd` steht die alte Mitgliedschaft noch da → später nochmal prüfen).
+- **Root Cause:** Der Skill `futurespin-produkt-anlegen` (liegt unter `~/.claude/skills/`, NICHT im Repo)
+  dokumentierte nur `for_vip`/`Hauspreis` und kannte die Warengruppen-Tags nicht → neu angelegte Produkte
+  erfanden `Beläge`/`Offensivbelag`. Skill-Referenz `references/futurespin-shopify.md` wurde um einen Abschnitt
+  **„Pflicht-Tags nach Warengruppe"** inkl. Prüfquery ergänzt.
+- **Prüfquery nach jedem Anlegen (leeres Ergebnis = ok):**
+  ```
+  products(query: "(tag:'Beläge' OR product_type:Tischtennisbelag OR tag:Offensivbelag OR tag:Allroundbelag
+                    OR tag:Defensivbelag) AND -tag:Belag")
+  products(query: "(tag:'Hölzer' OR product_type:Tischtennisholz OR tag:Offensivholz) AND -tag:Holz")
+  ```
+  ⚠️ **`collection_id:` lässt sich in der Produktsuche NICHT mit `-tag:` kombinieren** – die Kombination liefert
+  fälschlich 0 Treffer. Über `product_type`/`tag` filtern (oder die Kollektion paginieren und lokal prüfen).
+  Der Suchindex hinkt nach einem `tagsAdd` ebenfalls kurz hinterher.
+
 ## Store-Fakten (verifiziert 2026-06-27)
 
 - Store: **Futurespin**
