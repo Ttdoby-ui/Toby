@@ -443,6 +443,50 @@
   fälschlich 0 Treffer. Über `product_type`/`tag` filtern (oder die Kollektion paginieren und lokal prüfen).
   Der Suchindex hinkt nach einem `tagsAdd` ebenfalls kurz hinterher.
 
+## 🚨 Textilien: 86 Artikel haben Größen verloren (2026-08-07)
+
+- **Symptom (User):** Bei vielen Textilien fehlen plötzlich Größen – mal nur 4XL, mal alles
+  außer einer einzigen Größe („Xiom Shirt Bentley" hat heute **nur noch 2XL"**).
+- 🚨 **Shopify protokolliert Varianten-Löschungen NICHT.** `Product.events` kennt nur Produkt-/
+  Kanal-Ereignisse; für gelöschte Varianten gibt es weder Event noch `deletionEvents`-Subject.
+  **Zwei Spuren überleben die Löschung:**
+  1. **Taxonomie-Metafeld `shopify.size`** (Liste `shopify--size`-Metaobjekte, Labels über
+     `metaobjects(type:"shopify--size")` auflösen). Shopify füllt es aus den Varianten und
+     **räumt es beim Löschen NICHT auf** → Abzug des ursprünglichen Größenlaufs. Kontrolle:
+     bei unversehrten Artikeln stimmt es **exakt** mit den heutigen Optionswerten überein
+     (inkl. Kindergrößen 140/152). ⚠️ Nicht 100 % zuverlässig: bei Sammel-Anlagen wird es
+     mitkopiert (`andro Headband Pro` hat Größen, obwohl ein Stirnband nie welche hatte).
+  2. **`lineItem.variantTitle` in Bestellungen** – bleibt erhalten, auch wenn die Variante weg
+     ist (`lineItem.variant` ist dann null). Das ist der **harte Beweis** inkl. Datum.
+     Belegt: `andro Shirt Dexar schwarz` „M / Schwarz" in #1884; `andro T-Shirt Tylos`
+     „M / Schwarz" in #5488 + #6775.
+- **Wahrscheinliche Ursache = fehlerhafter Massen-Import/Bulk-Edit, kein Verschleiß:** Bei **10
+  Shorts-Artikeln sind die Optionsnamen zerschossen** – die Option heißt „**2XS**"/„**schwarz**"
+  statt „Größe"/„Farbe" (der erste *Wert* steht im *Namen*) = Signatur einer verrutschten
+  CSV-Spalte. Und ein Produkt-CSV-Import **ersetzt** die Variantenliste eines Produkts durch
+  genau die Zeilen der Datei → eine unvollständige Datei löscht Varianten still. Betroffen:
+  andro Shorts Tarox/Cuso/2-in-1 Nebro, Donic Shorts Beam/Dive/Velora, Tibhar Shorts
+  Mundo/Osmium/L2 River/L2 Underbrush blau/pink. Drei der schwersten Verluste sind ebenfalls
+  Shorts. Zeitfenster: `product.updatedAt` überwiegend **Mitte Juli 2026**, teils sekundengleich
+  in Paaren (Batch); die überlebenden Varianten tragen als `updatedAt` noch den Hauspreis-Lauf
+  (07-07) → geändert wurde die **Variantenliste**, nicht der Preis.
+  ⚠️ Keiner unserer Repo-Workflows kann das: `productVariantsBulkUpdate`/`tagsAdd`/
+  `productCreateMedia` löschen keine Varianten. Der Farb-Merge nutzt zwar das **deklarative**
+  `productSet` (das löscht nicht gelistete Varianten!), betrifft aber nur die 137 gemergten
+  Farb-Sets – die hier betroffenen Artikel sind großteils nicht gemergt.
+- **Vollständige Liste + Methode: `docs/textil-groessen-verlust.md`.** Kern: 86 von 201 aktiven
+  Textilien betroffen; Schwerpunkt Randgrößen 4XS/3XS/4XL/5XL + Kindergrößen 140/152, aber auch
+  **Mittelgrößen** (Joola Shirt Centrela: L+XL weg; andro Shirt Dexar: M weg). Entwarnung für
+  Artikel, die den Größenlauf nie hatten (Donic Hemd Caliber nur M/L/XL, Mizuno DryLite nur M/L,
+  Donic Hemd Rafter nur 2XL …) – die stehen in der Doku separat.
+- **Werkzeug:** `scripts/audit-textil-groessen.mjs` + Workflow **„Textil-Größen-Audit"**
+  (rein lesend; scannt zusätzlich die Bestellhistorie → je verlorener Größe die letzte Bestellung
+  mit Datum). ⚠️ Muss wie die übrigen Skript-Workflows auf `main` liegen, sonst nicht per
+  `workflow_dispatch` auslösbar (GitHub findet nur Workflows des Default-Branch).
+- **Merke für die Zukunft:** Produkt-CSV-Importe und `productSet` sind **deklarativ** – was nicht
+  in der Datei/Payload steht, wird gelöscht. Vor jedem Massen-Schreiben auf Varianten die
+  Variantenzahl vorher/nachher vergleichen und ein Rollback-Artefakt schreiben.
+
 ## 🚨 Anthropic-API-Key NIE im Theme (KI-Proxy, 2026-08-05)
 
 - **Vorher (beide KI-Features kaputt bzw. unsicher):**
