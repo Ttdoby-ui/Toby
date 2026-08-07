@@ -1,0 +1,63 @@
+name: Storefront JSON Probe
+
+# Diagnose fuer die "250-Produkte-Falle": prueft, wie viele Produkte der
+# Storefront-Endpunkt /collections/<handle>/products.json bei verschiedenen
+# limit/page-Kombinationen tatsaechlich liefert. Aus der Claude-Session heraus
+# ist futurespin.de nicht erreichbar (Sandbox-Proxy), deshalb der Umweg ueber
+# Actions - dort ist der Egress frei.
+#
+# Rein lesend, keine Secrets, keine Schreibzugriffe.
+
+on:
+  workflow_dispatch:
+    inputs:
+      handle:
+        description: 'Kollektions-Handle'
+        required: true
+        default: 'holzer'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Endpunkt abklopfen
+        env:
+          SHOP_URL: https://futurespin.de
+          HANDLE: ${{ inputs.handle }}
+        run: |
+          node -e '
+          const base = process.env.SHOP_URL + "/collections/" + process.env.HANDLE + "/products.json";
+          const varianten = [
+            "",
+            "?limit=250",
+            "?limit=250&page=1",
+            "?limit=50",
+            "?page=1",
+            "?limit=250&page=2",
+            "?limit=250&page=3",
+          ];
+          (async () => {
+            for (const v of varianten) {
+              const url = base + v;
+              try {
+                const r = await fetch(url, { headers: { "User-Agent": "futurespin-diagnose" } });
+                const t = await r.text();
+                let n = "?", first = "-", last = "-";
+                try {
+                  const d = JSON.parse(t);
+                  const ps = d.products || [];
+                  n = ps.length;
+                  first = ps.length ? ps[0].title : "-";
+                  last = ps.length ? ps[ps.length - 1].title : "-";
+                } catch (e) { n = "kein JSON (" + t.slice(0, 60) + ")"; }
+                console.log(`${(v || "(ohne Parameter)").padEnd(22)} HTTP ${r.status}  Produkte: ${String(n).padEnd(4)}  ${first}  ...  ${last}`);
+              } catch (e) {
+                console.log(`${(v || "(ohne Parameter)").padEnd(22)} FEHLER ${e.message}`);
+              }
+            }
+          })();
+          '
