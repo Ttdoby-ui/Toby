@@ -1,0 +1,50 @@
+name: Textil-Größen-Audit
+
+# Findet Textilien, denen Größen fehlen, die es nachweislich einmal gab.
+# Zwei unabhängige Spuren: das Taxonomie-Metafeld `shopify.size` (wird beim
+# Löschen von Varianten NICHT aufgeräumt) und `lineItem.variantTitle` aus
+# Bestellungen (überlebt die Variante). Rein lesend.
+
+on:
+  workflow_dispatch:
+    inputs:
+      textil_tag:
+        description: "Warengruppen-Tag"
+        required: false
+        default: "Textil"
+      scan_orders:
+        description: "Bestellhistorie scannen (Beweis + Datum)"
+        type: boolean
+        required: false
+        default: true
+      orders_since:
+        description: "Bestellungen ab (ISO-Datum)"
+        required: false
+        default: "2025-01-01"
+
+jobs:
+  audit:
+    name: Größen-Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/shopify-adhesive-service-vkfNR
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Audit
+        env:
+          SHOPIFY_STORE_DOMAIN: ${{ secrets.SHOPIFY_STORE_DOMAIN || 'e7ee88-2.myshopify.com' }}
+          SHOPIFY_ACCESS_TOKEN: ${{ secrets.SHOPIFY_ACCESS_TOKEN }}
+          TEXTIL_TAG: ${{ inputs.textil_tag }}
+          SCAN_ORDERS: ${{ inputs.scan_orders }}
+          ORDERS_SINCE: ${{ inputs.orders_since }}
+          OUT: textil-groessen-audit.json
+        run: node scripts/audit-textil-groessen.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: textil-groessen-audit
+          path: textil-groessen-audit.json
+          if-no-files-found: warn
