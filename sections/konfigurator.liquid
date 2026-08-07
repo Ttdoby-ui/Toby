@@ -1034,7 +1034,11 @@ window.ProductBadges = {};
           // Dedupe per ID: schuetzt vor Doppelten, falls sich die Kollektions-
           // Sortierung waehrend des Nachladens aendert.
           ps.forEach(function(p) { if (p && !seen[p.id]) { seen[p.id] = 1; all.push(p); } });
-          if (ps.length === K_PAGE_SIZE && page < K_MAX_PAGES) return fetchPage(page + 1);
+          // Weiter, solange ueberhaupt etwas kommt - NICHT nur bei exakt
+          // K_PAGE_SIZE. Wird ?limit ignoriert (Antwort dann 30 statt 250),
+          // haette die strengere Bedingung nach Seite 1 abgebrochen und der
+          // Katalog waere still auf 30 Produkte geschrumpft.
+          if (ps.length > 0 && page < K_MAX_PAGES) return fetchPage(page + 1);
           _cache[handle] = all;
           return all;
         });

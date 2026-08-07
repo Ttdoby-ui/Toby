@@ -404,7 +404,9 @@
         .then(function (d) {
           var ps = d.products || [];
           ps.forEach(function (p) { if (p && !seen[p.id]) { seen[p.id] = 1; all.push(p); } });
-          if (ps.length === B_PAGE_SIZE && page < B_MAX_PAGES) return fetchPage(page + 1);
+          // Weiter, solange etwas kommt (nicht nur bei exakt B_PAGE_SIZE) -
+          // sonst bricht der Lader ab, falls ?limit ignoriert wird.
+          if (ps.length > 0 && page < B_MAX_PAGES) return fetchPage(page + 1);
           return all;
         });
     }
