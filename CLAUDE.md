@@ -486,6 +486,19 @@
 - **Merke für die Zukunft:** Produkt-CSV-Importe und `productSet` sind **deklarativ** – was nicht
   in der Datei/Payload steht, wird gelöscht. Vor jedem Massen-Schreiben auf Varianten die
   Variantenzahl vorher/nachher vergleichen und ein Rollback-Artefakt schreiben.
+- ✅ **WIEDERHERGESTELLT 2026-08-08:** 83 Artikel haben ihre Größen zurück, 10 Shorts zusätzlich
+  ihre Optionsnamen („2XS"/„schwarz" → „Größe"/„Farbe" via `productOptionUpdate`, `LEAVE_AS_IS`).
+  **Rezept (reproduzierbar):** `productOptionUpdate(optionValuesToAdd:[…], variantStrategy: MANAGE)`
+  legt je fehlender Größe automatisch eine Variante pro bestehender Farb-/Stoff-Kombination an und
+  **übernimmt Preis, Vergleichspreis, Gewicht, `tracked` und die Lagerpolitik je Kombination**
+  (verifiziert: *andro Shirt Benzon* blau/gelb `CONTINUE`, andere Farben `DENY`); Bestand 0.
+  Danach `productOptionsReorder` – Shopify hängt neue Werte **hinten** an.
+  🚨 **Fallen:** (a) `productVariantsBulkCreate` kann **keine neuen taxonomie-gebundenen Optionswerte**
+  anlegen (ohne `name` → „id oder name muss angegeben werden", mit `name` →
+  `CANNOT_SET_NAME_FOR_LINKED_OPTION_VALUE`) → immer über `productOptionUpdate`. (b) Ist die Option
+  `linkedMetafield.key == "size"`, MUSS `{linkedMetafieldValue:"gid://shopify/Metaobject/…"}` rein
+  statt `{name:"5XL"}` (GIDs über `metaobjects(type:"shopify--size")`). (c) `productOptionsReorder`
+  verlangt **alle** Optionen des Produkts, sonst `MISSING_OPTION_NAME`.
 
 ## 🚨 Anthropic-API-Key NIE im Theme (KI-Proxy, 2026-08-05)
 

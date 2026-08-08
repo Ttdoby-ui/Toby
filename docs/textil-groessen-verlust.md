@@ -2,6 +2,45 @@
 
 Auswertung aller **201 aktiven Textilien** (Tag `Textil`).
 
+## ✅ WIEDERHERGESTELLT am 2026-08-08
+
+**83 Artikel** haben ihre verlorenen Größen zurück, **10 Shorts** zusätzlich ihre
+korrekten Optionsnamen. Die unten stehenden Listen dokumentieren den Schadensstand
+**vor** der Reparatur.
+
+**Wie:** `productOptionUpdate(optionValuesToAdd: …, variantStrategy: MANAGE)`. MANAGE legt
+für jede fehlende Größe automatisch eine Variante je bestehender Farb-/Stoff-Kombination an
+und **übernimmt dabei Preis, Vergleichspreis, Gewicht, `tracked` und die Lagerpolitik von den
+vorhandenen Varianten derselben Kombination** – bei mehrfarbigen Artikeln also je Farbe
+korrekt (verifiziert an *andro Shirt Benzon*: blau/gelb `CONTINUE`, die anderen `DENY`).
+Bestand aller neuen Varianten: **0**. Danach `productOptionsReorder`, weil Shopify neue Werte
+hinten anhängt; Sortierung 140, 152, 4XS, 3XS, 2XS, XS, S, M, L, XL, 2XL, 3XL, 4XL, 5XL.
+
+⚠️ **Zwei Sorten Größen-Optionen:** die meisten sind Freitext (`optionValuesToAdd:[{name:"5XL"}]`),
+einige hängen an der Taxonomie (`linkedMetafield.key == "size"`) – dort MUSS
+`{linkedMetafieldValue: "gid://shopify/Metaobject/…"}` rein, `name` wird abgelehnt
+(`CANNOT_SET_NAME_FOR_LINKED_OPTION_VALUE`). Betroffen waren u. a. *andro Shirt Dexar schwarz*,
+*andro Sukaria Sweatpullover*, *Xiom Shirt Bentley* und vier Mizuno-Tees.
+
+⚠️ **`productVariantsBulkCreate` kann keine NEUEN taxonomie-gebundenen Optionswerte anlegen** –
+ohne `name` kommt „id oder name muss angegeben werden", mit `name` kommt
+`CANNOT_SET_NAME_FOR_LINKED_OPTION_VALUE`. Deshalb immer der Weg über `productOptionUpdate`.
+
+⚠️ **`productOptionsReorder` verlangt ALLE Optionen des Produkts** in der Payload, sonst
+`MISSING_OPTION_NAME`. Reihenfolge der Optionen dabei unverändert lassen.
+
+**Nicht angefasst:** `andro Headband Pro` (Größen-Metafeld vorhanden, aber ein Stirnband hatte
+nie Größen – Fehlalarm der Methode) sowie alle Artikel aus dem Abschnitt „Entwarnung".
+
+**Bestand/Verfügbarkeit:** Die neuen Varianten stehen auf 0 und übernehmen die Lagerpolitik
+des jeweiligen Artikels – bei `DENY` erscheinen sie als „ausverkauft", bei `CONTINUE` als
+gelbe Nachbestell-Größe. Wer eine Größe generell bestellbar machen will, muss ihre Policy
+auf `CONTINUE` setzen.
+
+**Rückgängig machen:** Die wiederhergestellten Varianten haben alle Bestand 0 und sind an
+ihrer Größe erkennbar; einzeln über den Admin oder per `productOptionUpdate` mit
+`optionValuesToDelete` + `variantStrategy: MANAGE` entfernbar.
+
 ## Methode
 
 Shopify protokolliert **gelöschte Varianten nicht** – `Product.events` kennt nur
