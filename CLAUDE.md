@@ -157,11 +157,34 @@
       strenge Gleichheitsprüfung nach Seite 1 ab und der Katalog schrumpft **still auf 30 Produkte**.
       Richtig ist `ps.length > 0 && page < MAX_PAGES`. Gilt für `konfigurator.liquid` und
       `schlaeger-berater.liquid`.
-    - 🚨 **STAND 2026-08-11: Das LIVE-Theme („Futurespin Live", MAIN) hat noch die ALTE Bedingung**
+    - **Stand 2026-08-11: Das LIVE-Theme („Futurespin Live", MAIN) hat noch die alte Bedingung**
       (`ps.length === K_PAGE_SIZE`, `sections/konfigurator.liquid`, 67365 statt 67643 Bytes) – die
-      Rotation am 05./06.08. lief vor dem Fix. **Deshalb finden Kunden im Live-Konfigurator weiterhin
-      nicht alle Beläge/Hölzer.** Beide Entwürfe haben den Fix; er wird mit der nächsten Rotation live.
+      Rotation am 05./06.08. lief vor dem Fix. ⚠️ **Das ist aber KEIN akuter Fehler:** solange der
+      Endpunkt die angeforderten 250 liefert, paginiert auch die alte Fassung vollständig. Sie ist
+      fragil, nicht kaputt. (Ich hatte daraus 2026-08-11 voreilig geschlossen, das erkläre die
+      Kundenmeldungen „finde manche Beläge/Hölzer nicht" – **falsch**, die echte Ursache waren
+      unveröffentlichte Produkte, siehe unten.) Der Fix liegt in beiden Entwürfen und geht mit der
+      nächsten Rotation live.
       Prüfen mit: `theme(id:…MAIN…){ files(filenames:["sections/konfigurator.liquid"]){ nodes{ size } } }`.
+
+- 🚨 **ERSTE DIAGNOSE BEI „Produkt fehlt im Konfigurator/Shop": Verkaufskanal prüfen, nicht den Code.**
+  `/collections/<handle>/products.json` liefert **nur im Onlineshop veröffentlichte** Produkte. Ein
+  aktives Produkt mit korrekten Tags und korrekter Kollektion ist im Admin voll sichtbar, existiert
+  auf der Storefront aber **gar nicht** – kein Konfigurator, kein Filter-Panel, keine Suche, keine
+  Produktseite. **Vorfall 2026-08-11:** 91 aktive **Butterfly**-Artikel (43 Beläge + 48 Hölzer, alle
+  angelegt am 09.08.) waren in **keinem** Kanal veröffentlicht (`onlineStoreUrl: null`) – inklusive
+  der bekanntesten Beläge überhaupt (Tenergy 05, Dignics 05/09c, Zyre-03) und der Fan-Zhendong-/
+  Timo-Boll-Hölzer. Bilder, Beschreibungen, Preise, Varianten und Tags waren vollständig.
+  **Prüfquery (leeres Ergebnis = ok):**
+  ```
+  products(query: "tag:Belag AND status:active AND published_status:unpublished")
+  products(query: "tag:Holz  AND status:active AND published_status:unpublished")
+  ```
+  ⚠️ Beim Veröffentlichen mitdenken: Bestand 0 + `tracked` + `DENY` heißt „sichtbar, aber
+  ausverkauft". Für bestellbar entweder Bestände einpflegen oder auf `CONTINUE` (gelbe
+  Nachbestell-Ampel) stellen.
+  ⚠️ `-collection_id:` in der Produktsuche bleibt unzuverlässig (siehe Warengruppen-Tags-Abschnitt) –
+  Kollektionszugehörigkeit über `product.collections` je Produkt prüfen, nicht per Negativ-Suche.
   - ✅ **`sections/schlaeger-berater.liquid` (KI-Chat-Widget, 2026-08-05 gefixt):** fetchte
     `products.json?limit=250` ohne Seitenschleife **und** kürzte in `buildProductList()` per
     `arr.slice(0, 60)`. Beides ist raus: `loadCollection()` zählt `?page=N` durch (Cap 20 Seiten, Dedupe
