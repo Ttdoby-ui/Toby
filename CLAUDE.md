@@ -157,15 +157,40 @@
       strenge Gleichheitsprüfung nach Seite 1 ab und der Katalog schrumpft **still auf 30 Produkte**.
       Richtig ist `ps.length > 0 && page < MAX_PAGES`. Gilt für `konfigurator.liquid` und
       `schlaeger-berater.liquid`.
-    - **Stand 2026-08-11: Das LIVE-Theme („Futurespin Live", MAIN) hat noch die alte Bedingung**
-      (`ps.length === K_PAGE_SIZE`, `sections/konfigurator.liquid`, 67365 statt 67643 Bytes) – die
-      Rotation am 05./06.08. lief vor dem Fix. ⚠️ **Das ist aber KEIN akuter Fehler:** solange der
-      Endpunkt die angeforderten 250 liefert, paginiert auch die alte Fassung vollständig. Sie ist
-      fragil, nicht kaputt. (Ich hatte daraus 2026-08-11 voreilig geschlossen, das erkläre die
-      Kundenmeldungen „finde manche Beläge/Hölzer nicht" – **falsch**, die echte Ursache waren
-      unveröffentlichte Produkte, siehe unten.) Der Fix liegt in beiden Entwürfen und geht mit der
-      nächsten Rotation live.
+    - 🚨 **ROOT CAUSE gefunden (2026-08-11): `?limit=undefined` durch `var`-Hoisting.**
+      In `sections/konfigurator.liquid` stand `var K_PAGE_SIZE = 250, K_MAX_PAGES = 20;` erst bei
+      `loadProducts()` (Zeile ~1024) – der **Init-Block ruft `loadProducts()` aber schon in Zeile
+      ~846 auf**. `var` hebt nur die *Deklaration* hoch, nicht die *Zuweisung* → beim Aufruf war
+      `K_PAGE_SIZE` **`undefined`**, die URL lautete `?limit=undefined`, und Shopify fällt bei
+      ungültigem `limit` auf seine **Default-Seitengröße 30** zurück.
+      Zusammen mit der alten Abbruchbedingung (`ps.length === K_PAGE_SIZE`, also `30 === undefined`
+      → false) brach die Paginierung **nach Seite 1** ab: **nur 30 Hölzer / 30 Beläge** im
+      Konfigurator. Symptom beim Kunden: „Produkte sind grundsätzlich drin, aber die Suche findet
+      nichts" – Donic/Tibhar/Victas lagen einfach nie im geladenen Satz.
+      **Fix:** Deklaration nach ganz oben (neben `var _cache = {}`) verschoben. Der `ps.length > 0`-
+      Fix von 08-05 rettete das Symptom bereits (paginiert dann in 30er-Schritten weiter), war aber
+      nur das Pflaster – erst beide zusammen ergeben wieder 2 statt 13 Requests.
+      **Verifiziert** im Headless-Chromium gegen einen Shopify-ähnlichen Stub (extrahiertes echtes
+      Section-JS): alter Stand → 30 Kacheln, Suche „Donic" 0 Treffer; neuer Stand → 394 Kacheln,
+      „Donic" 74 Treffer, `limit=250`.
+      **Merke:** In diesen langen Section-Skripten IMMER prüfen, ob eine `var`-Zuweisung *vor* dem
+      ersten Aufruf steht. Funktionsdeklarationen werden vollständig gehoben, `var`-Werte nicht –
+      der Aufruf klappt also, liest aber `undefined`. Symptom hier: `?limit=undefined` in der URL.
+    - **Stand 2026-08-11: Das LIVE-Theme („Futurespin Live", MAIN) hat beide Fehler noch**
+      (`sections/konfigurator.liquid`, 67365 Bytes statt 68421) – die Rotation am 05./06.08. lief vor
+      den Fixes. **Deshalb finden Kunden im Live-Konfigurator per Suche keine späteren Marken.**
+      Beide Entwürfe sind korrigiert; live mit der nächsten Rotation.
       Prüfen mit: `theme(id:…MAIN…){ files(filenames:["sections/konfigurator.liquid"]){ nodes{ size } } }`.
+
+- 🧪 **Werkzeug für genau solche Fälle: Section-JS lokal im Headless-Chromium testen.** Aus der
+  Session ist futurespin.de nicht erreichbar (Proxy), aber Playwright/Chromium liegen bereit
+  (`/opt/node22/lib/node_modules/playwright`, `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`, **kein**
+  `playwright install`). Rezept: den großen `<script>`-Block aus der Section extrahieren, die
+  Liquid-Ausgaben durch Literale ersetzen (danach per Regex prüfen, dass **keine** `{{ }}`/`{% %}`
+  übrig sind), eine Minimal-HTML mit dem Panel-Markup bauen, `window.fetch` durch einen
+  Shopify-ähnlichen Stub ersetzen (**ungültiges `limit` → 30**, das ist das entscheidende Detail)
+  und `unhandledrejection` mitloggen – Fehler in `loadProducts().then(render)` schluckt die Promise
+  sonst spurlos. Damit ließ sich der `?limit=undefined`-Bug reproduzieren UND der Fix beweisen.
 
 - 🚨 **ERSTE DIAGNOSE BEI „Produkt fehlt im Konfigurator/Shop": Verkaufskanal prüfen, nicht den Code.**
   `/collections/<handle>/products.json` liefert **nur im Onlineshop veröffentlichte** Produkte. Ein
