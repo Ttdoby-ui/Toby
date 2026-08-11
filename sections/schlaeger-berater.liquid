@@ -6,9 +6,15 @@
 {%- enddoc -%}
 
 {% stylesheet %}
+  /* Der Shopify-Inbox-Chat-Button sitzt unten rechts (bottom-right/lowest, siehe
+     config/settings_data.json). Ohne Versatz liegt der Berater-Button exakt darauf
+     und verdeckt ihn – auf dem Handy besonders deutlich. Deshalb stapeln wir:
+     Chat bleibt unten, der Berater sitzt eine Bubble-Höhe darüber.
+     --berater-offset = Höhe der Inbox-Bubble (~60px) + ihr eigener Abstand. */
   .berater-toggle {
     position: fixed;
-    bottom: 1.5rem;
+    --berater-offset: 5.5rem;
+    bottom: var(--berater-offset);
     right: 1.5rem;
     z-index: 9000;
     background: var(--color-primary, #111);
@@ -31,10 +37,14 @@
 
   .berater-panel {
     position: fixed;
-    bottom: 5.5rem;
+    /* Muss über dem verschobenen Toggle liegen: dessen bottom (5.5rem) plus
+       Button-Höhe (~2.6rem) plus Abstand. Die max-height deckelt zusätzlich
+       gegen die Viewport-Höhe, damit das Panel auf kleinen Displays nicht oben
+       herausläuft. */
+    bottom: 9rem;
     right: 1.5rem;
     width: min(380px, calc(100vw - 2rem));
-    max-height: 72vh;
+    max-height: min(72vh, calc(100vh - 11rem));
     background: #fff;
     border-radius: 1.25rem;
     box-shadow: 0 8px 48px rgba(0,0,0,0.22);
