@@ -602,6 +602,14 @@
   schützt Browser-Aufrufe, ein `Origin`-Header lässt sich außerhalb eines Browsers aber fälschen.
 - ℹ️ Der Berater ist in `templates/page.konfigurator.json` derzeit `"disabled": true` – solange kostet er
   nichts und ruft nichts auf.
+- ⚠️ **Zwei fixierte Widgets unten rechts (2026-08-11):** Der Berater-Button (`.berater-toggle`) lag auf
+  `bottom/right: 1.5rem` – exakt auf dem **Shopify-Inbox-Chat-Button** (bottom-right/lowest, siehe
+  `config/settings_data.json`) und verdeckte ihn, mobil besonders auffällig. Jetzt gestapelt:
+  Toggle `bottom: 5.5rem` (eine Inbox-Bubble höher), Panel `bottom: 9rem` mit
+  `max-height: min(72vh, calc(100vh - 11rem))`, damit es auf kleinen Displays nicht oben herausläuft.
+  Im Headless-Chromium auf iPhone 14 / iPhone SE / Desktop nachgemessen (keine Überlappung, Panel im
+  Viewport). **Merke:** Bei jedem neuen `position: fixed`-Element unten rechts prüfen, ob Inbox-Chat
+  oder Berater schon dort sitzen – Shopify-Apps platzieren ihre Launcher fast immer dort.
 
 ## Store-Fakten (verifiziert 2026-06-27)
 
