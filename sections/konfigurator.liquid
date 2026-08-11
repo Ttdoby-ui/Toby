@@ -809,6 +809,16 @@ window.ProductBadges = {};
   /* ---- Cache ---- */
   var _cache = {};
 
+  /* 🚨 Diese beiden MUESSEN hier oben stehen, NICHT bei loadProducts() weiter unten.
+     `var` hebt nur die Deklaration hoch, nicht die Zuweisung: der Init-Block ruft
+     loadProducts() bereits ein paar Zeilen weiter unten auf, waehrend eine spaeter
+     im Skript stehende Zuweisung noch nicht gelaufen waere. K_PAGE_SIZE waere dann
+     `undefined` -> die URL lautet `?limit=undefined` -> Shopify faellt auf seine
+     Default-Seitengroesse 30 zurueck. Genau das war der Grund, warum im Konfigurator
+     nur ~30 Hoelzer/Belaege ankamen und die Suche nach spaeteren Marken (Donic,
+     Tibhar, Victas ...) leer blieb. */
+  var K_PAGE_SIZE = 250, K_MAX_PAGES = 20;
+
   /* ---- DOM shortcuts ---- */
   function ge(id) { return document.getElementById(id); }
   var panels   = [0,1,2,3,4,5].map(function(i){ return ge('kp-' + i); });
@@ -1020,8 +1030,9 @@ window.ProductBadges = {};
      "Link: rel=next"-Header. Die alte Version wartete genau darauf und blieb deshalb
      immer bei Seite 1 stehen: Beläge (>430) und Hölzer (>330) waren im Konfigurator
      ab Marke D–Z abgeschnitten. Deshalb jetzt explizit ?page=N durchzählen, bis eine
-     Seite weniger als 250 Treffer liefert. MAX_PAGES ist reiner Endlosschutz. */
-  var K_PAGE_SIZE = 250, K_MAX_PAGES = 20;
+     Seite weniger als 250 Treffer liefert. MAX_PAGES ist reiner Endlosschutz.
+     K_PAGE_SIZE/K_MAX_PAGES sind bewusst ganz oben deklariert (siehe Kommentar dort) –
+     hier duerfen sie NICHT noch einmal zugewiesen werden. */
   function loadProducts(handle) {
     if (_cache[handle] !== undefined) return Promise.resolve(_cache[handle]);
     var base = '/collections/' + encodeURIComponent(handle) + '/products.json?limit=' + K_PAGE_SIZE;
