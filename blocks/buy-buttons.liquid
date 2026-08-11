@@ -221,6 +221,14 @@
               </div>
             </volume-pricing>
           {%- endif -%}
+
+          {%- comment -%}
+            Futurespin: Holzversiegelung als Add-on. Rendert nur bei Produkten
+            aus der Hölzer-Kollektion; legt den Service beim Kauf als zweite
+            Position dazu. Siehe snippets/fs-holzversiegelung.liquid.
+          {%- endcomment -%}
+          {%- render 'fs-holzversiegelung', product: product -%}
+
           {% content_for 'block',
             type: 'add-to-cart',
             id: 'add-to-cart',
@@ -242,6 +250,11 @@
     </product-form-component>
     {% render 'vip-hint', product: product %}
     {% render 'schlaeger-konfigurieren-btn', product: product, block: block %}
+    {%- comment -%}
+      Futurespin: Klebeservice separat buchbar (Beläge + Hölzer), mit Freitextfeld
+      für die Belag-Zuordnung. Siehe snippets/klebe-service-addon.liquid.
+    {%- endcomment -%}
+    {% render 'klebe-service-addon', product: product %}
     {% render 'cross-sell', product: product, block: block %}
   {%- else -%}
     <div class="product-form-buttons">

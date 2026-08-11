@@ -1,0 +1,321 @@
+{%- comment -%}
+  ============================================================================
+  fs klebe-service-addon — Klebeservice separat buchbar (Beläge + Hölzer)
+  ----------------------------------------------------------------------------
+  Bietet den bestehenden Service „Klebe-Service" (Handle klebe-service-1,
+  5,00 EUR) auch beim Einzelkauf über die Produktseite an — bisher ging das
+  NUR über den Schläger-Konfigurator (sections/konfigurator.liquid legt ihn
+  dort automatisch mit dazu).
+
+  WO: wird in blocks/buy-buttons.liquid nach dem Konfigurator-Button
+  gerendert, also AUSSERHALB des Produktformulars.
+
+  WANN: auf jedem Produkt mit Warengruppen-Tag `Belag` ODER `Holz` (exakt und
+  Singular — dieselbe Abfrage wie in filter-panel.liquid, price.liquid und
+  schlaeger-konfigurieren-btn.liquid). Fehlt der Tag, fehlt auch dieses
+  Angebot — siehe CLAUDE.md, Abschnitt „Warengruppen-Tags sind PFLICHT".
+
+  🚨 WARUM EIGENER BUTTON UND KEINE CHECKBOX IM FORMULAR
+  `snippets/fs-holzversiegelung.liquid` klinkt sich bereits in der
+  Capture-Phase in den Submit des Produktformulars ein: preventDefault →
+  Service per /cart/add.js → bypass-Flag → erneut submitten. Ein ZWEITER
+  Interceptor nach demselben Muster würde auf Holz-Seiten (Tag `Holz` UND
+  Kollektion `holzer`) mit dem ersten kollidieren: `stopImmediatePropagation`
+  unterdrückt den jeweils anderen Handler, und beim Re-Submit ist dessen
+  bypass-Flag längst wieder false → der Service würde ein zweites Mal
+  hinzugefügt bzw. die Schleife bräche nicht sauber ab. Deshalb legt dieses
+  Snippet den Klebeservice über einen EIGENEN Button direkt in den Warenkorb
+  und fasst das Produktformular nicht an. Nebeneffekt: Es funktioniert auch,
+  wenn der Artikel selbst schon im Warenkorb liegt.
+
+  ABGRENZUNG ZUM KONFIGURATOR (wichtig)
+  Die Zeile bekommt bewusst KEINE `_kfg`/`_rolle`-Properties.
+  `snippets/fs-config-note-sync.liquid` gruppiert die Warenkorb-Notiz genau
+  über diese beiden Felder (`if (!p._kfg || !p._rolle) return`); ohne sie
+  bleibt die separat gebuchte Zeile für die Notiz-Synchronisierung unsichtbar
+  und kann den Konfigurator-Block im Packzettel nicht durcheinanderbringen.
+
+  LINE-ITEM-PROPERTIES
+  Sichtbar: „Belag-Zuordnung" (Freitext des Kunden, steht damit im Warenkorb,
+  in der Bestellung und auf dem Packzettel) und „Für" (Produkttitel — gleiche
+  Konvention wie bei der Holzversiegelung; sorgt außerdem dafür, dass zwei
+  Schläger zwei getrennte Positionen statt Menge 2 ergeben).
+
+  FAILSAFE: Fällt der Service-Artikel weg (Handle geändert, deaktiviert),
+  rendert das Snippet NICHTS — lieber kein Angebot als ein Button, der beim
+  Klick einen Fehler wirft.
+  ============================================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign ks_is_target = false
+  if product.tags contains 'Belag' or product.tags contains 'Holz'
+    assign ks_is_target = true
+  endif
+
+  assign ks_service = all_products['klebe-service-1']
+  assign ks_variant = ks_service.selected_or_first_available_variant
+
+  assign ks_ok = false
+  if ks_is_target and ks_service != blank and ks_variant != blank and ks_service.available
+    assign ks_ok = true
+  endif
+
+  assign ks_en = false
+  if request.locale.iso_code == 'en'
+    assign ks_en = true
+  endif
+
+  if ks_en
+    assign ks_summary = 'Add assembly service'
+    assign ks_intro = 'We glue your rubbers onto the blade and trim them to size.'
+    assign ks_label = 'Which rubber goes on which side?'
+    assign ks_ph = 'e.g. Forehand: andro Hexer Duro red 2.1 mm — Backhand: Tibhar Evolution MX-P black 2.0 mm'
+    assign ks_err = 'Please tell us which rubber goes on which side – otherwise we cannot glue.'
+    assign ks_cta = 'Add assembly service'
+    assign ks_busy = 'Adding …'
+    assign ks_done = 'Added to cart'
+    assign ks_note = 'Please order the blade and rubbers together – we will match the service to your order. Book once per bat.'
+    assign ks_tip_strong = 'The configurator is the smoother way:'
+    assign ks_tip = 'there you pick blade, forehand and backhand rubber step by step, the assembly service is included automatically and you do not have to type anything.'
+    assign ks_tip_link = 'Go to the configurator →'
+  else
+    assign ks_summary = 'Klebeservice hinzufügen'
+    assign ks_intro = 'Wir kleben deine Beläge auf das Holz und schneiden sie passgenau zu.'
+    assign ks_label = 'Welcher Belag soll auf welche Seite?'
+    assign ks_ph = 'z. B. Vorhand: andro Hexer Duro rot 2,1 mm — Rückhand: Tibhar Evolution MX-P schwarz 2,0 mm'
+    assign ks_err = 'Bitte trag kurz ein, welcher Belag auf welche Seite soll – sonst können wir nicht kleben.'
+    assign ks_cta = 'Klebeservice in den Warenkorb'
+    assign ks_busy = 'Wird hinzugefügt …'
+    assign ks_done = 'Im Warenkorb'
+    assign ks_note = 'Bitte Holz und Beläge in derselben Bestellung mitbestellen – wir ordnen den Klebeservice dann deiner Bestellung zu. Pro Schläger einmal buchen.'
+    assign ks_tip_strong = 'Eleganter geht’s über den Schläger-Konfigurator:'
+    assign ks_tip = 'dort wählst du Holz, Vorhand- und Rückhandbelag Schritt für Schritt aus, der Klebeservice ist automatisch dabei und du musst nichts eintippen.'
+    assign ks_tip_link = 'Zum Konfigurator →'
+  endif
+-%}
+
+{%- if ks_ok -%}
+  {%- assign ks_uid = product.id -%}
+
+  <details class="fs-glue" id="fs-glue-{{ ks_uid }}">
+    <summary class="fs-glue__summary">
+      <span class="fs-glue__title">🛠️ {{ ks_summary }}</span>
+      <span class="fs-glue__price">+ {{ ks_variant.price | money }}</span>
+    </summary>
+
+    <div class="fs-glue__body">
+      <p class="fs-glue__intro">{{ ks_intro }}</p>
+
+      <label class="fs-glue__label" for="fs-glue-txt-{{ ks_uid }}">{{ ks_label }}</label>
+      <textarea
+        class="fs-glue__textarea"
+        id="fs-glue-txt-{{ ks_uid }}"
+        rows="3"
+        placeholder="{{ ks_ph | escape }}"
+      ></textarea>
+      <p class="fs-glue__error" id="fs-glue-err-{{ ks_uid }}">{{ ks_err }}</p>
+
+      <button
+        type="button"
+        class="fs-glue__btn"
+        id="fs-glue-btn-{{ ks_uid }}"
+        data-variant-id="{{ ks_variant.id }}"
+        data-product-title="{{ product.title | escape }}"
+        data-label-idle="{{ ks_cta | escape }} · {{ ks_variant.price | money }}"
+        data-label-busy="{{ ks_busy | escape }}"
+        data-label-done="✓ {{ ks_done | escape }}"
+      >
+        {{ ks_cta }} · {{ ks_variant.price | money }}
+      </button>
+
+      <p class="fs-glue__note">{{ ks_note }}</p>
+
+      <p class="fs-glue__tip">
+        💡 <strong>{{ ks_tip_strong }}</strong> {{ ks_tip }}
+        <a href="/pages/schlaeger-konfigurator">{{ ks_tip_link }}</a>
+      </p>
+    </div>
+  </details>
+
+  <style>
+    .fs-glue {
+      margin-block-start: 0.85rem;
+      border: 1px solid rgba(93, 127, 167, 0.35);
+      border-radius: 12px;
+      background: rgba(93, 127, 167, 0.06);
+    }
+    .fs-glue__summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      line-height: 1.3;
+      min-height: var(--minimum-touch-target, 44px);
+    }
+    .fs-glue__summary::-webkit-details-marker { display: none; }
+    .fs-glue__summary::after {
+      content: '+';
+      font-size: 1.3rem;
+      font-weight: 400;
+      line-height: 1;
+      color: #5d7fa7;
+      flex: none;
+    }
+    .fs-glue[open] .fs-glue__summary::after { content: '−'; }
+    .fs-glue__summary:focus-visible { outline: 2px solid #5d7fa7; outline-offset: 2px; }
+    .fs-glue__price { color: #5d7fa7; white-space: nowrap; margin-left: auto; }
+
+    .fs-glue__body { padding: 0 1rem 1rem; }
+    .fs-glue__intro { margin: 0 0 0.9rem; font-size: 0.875rem; line-height: 1.5; }
+    .fs-glue__label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    .fs-glue__textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 5.5rem;
+      padding: 0.6rem 0.7rem;
+      border: 1px solid rgba(93, 127, 167, 0.45);
+      border-radius: 8px;
+      font: inherit;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      resize: vertical;
+      background: var(--color-background, #fff);
+      color: var(--color-foreground, #111);
+    }
+    .fs-glue__textarea:focus-visible { outline: 2px solid #5d7fa7; outline-offset: 1px; }
+    .fs-glue__textarea.is-invalid { border-color: #b3261e; }
+
+    .fs-glue__error {
+      display: none;
+      margin: 0.4rem 0 0;
+      font-size: 0.8125rem;
+      color: #b3261e;
+    }
+    .fs-glue__error.is-visible { display: block; }
+
+    .fs-glue__btn {
+      width: 100%;
+      margin-top: 0.85rem;
+      padding: 0.75rem 1rem;
+      background: #5d7fa7;
+      color: #fff;
+      border: 2px solid #5d7fa7;
+      border-radius: var(--buttons-radius, 4px);
+      font: inherit;
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.16s ease;
+      min-height: var(--minimum-touch-target, 44px);
+    }
+    .fs-glue__btn:hover:not(:disabled) { opacity: 0.85; }
+    .fs-glue__btn:disabled { opacity: 0.6; cursor: default; }
+    .fs-glue__btn.is-ok { background: #2e7d32; border-color: #2e7d32; }
+    .fs-glue__btn.is-err { background: #b3261e; border-color: #b3261e; }
+
+    .fs-glue__note {
+      margin: 0.85rem 0 0;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      opacity: 0.72;
+    }
+    .fs-glue__tip {
+      margin: 0.85rem 0 0;
+      padding: 0.7rem 0.8rem;
+      border-radius: 8px;
+      background: rgba(93, 127, 167, 0.11);
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    .fs-glue__tip a { color: #5d7fa7; font-weight: 700; }
+  </style>
+
+  <script>
+    (function () {
+      var btn = document.getElementById('fs-glue-btn-{{ ks_uid }}');
+      var txt = document.getElementById('fs-glue-txt-{{ ks_uid }}');
+      var err = document.getElementById('fs-glue-err-{{ ks_uid }}');
+      if (!btn || !txt || !err || btn.dataset.fsGlueBound) return;
+      btn.dataset.fsGlueBound = '1';
+
+      txt.addEventListener('input', function () {
+        txt.classList.remove('is-invalid');
+        err.classList.remove('is-visible');
+      });
+
+      btn.addEventListener('click', function () {
+        var hinweis = txt.value.trim();
+        if (hinweis.length < 3) {
+          txt.classList.add('is-invalid');
+          err.classList.add('is-visible');
+          txt.focus();
+          return;
+        }
+
+        btn.disabled = true;
+        btn.classList.remove('is-err');
+        btn.textContent = btn.dataset.labelBusy;
+
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            items: [
+              {
+                id: Number(btn.dataset.variantId),
+                quantity: 1,
+                // Sichtbare Properties -> Warenkorb, Bestellung, Packzettel.
+                properties: {
+                  'Belag-Zuordnung': hinweis,
+                  'Für': btn.dataset.productTitle || '',
+                },
+              },
+            ],
+          }),
+        })
+          .then(function (r) {
+            if (!r.ok) {
+              return r.json().then(function (d) {
+                throw new Error(d.description || d.message || 'HTTP ' + r.status);
+              });
+            }
+            return r.json();
+          })
+          .then(function () {
+            btn.textContent = btn.dataset.labelDone;
+            btn.classList.add('is-ok');
+            // Gleicher Weg wie im Konfigurator: Cart-Drawer/Bubble aktualisieren.
+            document.dispatchEvent(
+              new CustomEvent('cart:update', {
+                bubbles: true,
+                detail: { data: { source: 'klebe-service-addon' } },
+              })
+            );
+            setTimeout(function () {
+              btn.textContent = btn.dataset.labelIdle;
+              btn.classList.remove('is-ok');
+              btn.disabled = false;
+            }, 3000);
+          })
+          .catch(function (e) {
+            btn.textContent = e.message;
+            btn.classList.add('is-err');
+            btn.disabled = false;
+          });
+      });
+    })();
+  </script>
+{%- endif -%}
