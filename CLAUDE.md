@@ -176,9 +176,15 @@
       **Merke:** In diesen langen Section-Skripten IMMER prüfen, ob eine `var`-Zuweisung *vor* dem
       ersten Aufruf steht. Funktionsdeklarationen werden vollständig gehoben, `var`-Werte nicht –
       der Aufruf klappt also, liest aber `undefined`. Symptom hier: `?limit=undefined` in der URL.
-    - **Stand 2026-08-11: Das LIVE-Theme („Futurespin Live", MAIN) hat beide Fehler noch**
-      (`sections/konfigurator.liquid`, 67365 Bytes statt 68421) – die Rotation am 05./06.08. lief vor
-      den Fixes. **Deshalb finden Kunden im Live-Konfigurator per Suche keine späteren Marken.**
+    - **Stand 2026-08-11, 14:00: live sind beide Fehler noch drin.** MAIN ist seit 13:44 das neue
+      Saison-Theme **„Futurespin – Mariä Himmelfahrt 2026"** (`gid://shopify/OnlineStoreTheme/202554343772`)
+      – eine Kopie des *alten* Live-Themes, nicht des korrigierten Entwurfs (`konfigurator.liquid`
+      67365 Bytes / `22a0c08039b1c4443a342b5952009232`). Mein Fix ging um 13:58 in die Entwürfe,
+      also 14 Minuten nach dem Veröffentlichen. **Deshalb finden Kunden im Live-Konfigurator per
+      Suche weiterhin keine späteren Marken.** Ebenfalls noch nicht live: `klebe-service-addon`
+      (Snippet fehlt, `buy-buttons.liquid` 21305 statt 21566).
+      ⚠️ **Lehre:** Vor jeder Ansage „ist gefixt" das **aktuelle MAIN-Theme frisch abfragen** – die
+      Theme-IDs UND der MAIN-Zeiger wechseln hier oft und mitten in der Sitzung.
       Beide Entwürfe sind korrigiert; live mit der nächsten Rotation.
       Prüfen mit: `theme(id:…MAIN…){ files(filenames:["sections/konfigurator.liquid"]){ nodes{ size } } }`.
 
@@ -205,8 +211,11 @@
   products(query: "tag:Belag AND status:active AND published_status:unpublished")
   products(query: "tag:Holz  AND status:active AND published_status:unpublished")
   ```
-  ⚠️ Beim Veröffentlichen mitdenken: Bestand 0 + `tracked` + `DENY` heißt „sichtbar, aber
-  ausverkauft". Für bestellbar entweder Bestände einpflegen oder auf `CONTINUE` (gelbe
+  ✅ **ENTSCHEIDUNG DES USERS (2026-08-11): Die Butterfly-Artikel bleiben bewusst unveröffentlicht.**
+  NICHT „reparieren" – weder veröffentlichen noch Bestände setzen. Der Zustand ist gewollt.
+  Die Prüfquery bleibt trotzdem sinnvoll, nur muss man Butterfly als erwartetes Ergebnis abziehen.
+  ⚠️ Beim Veröffentlichen anderer Artikel mitdenken: Bestand 0 + `tracked` + `DENY` heißt „sichtbar,
+  aber ausverkauft". Für bestellbar entweder Bestände einpflegen oder auf `CONTINUE` (gelbe
   Nachbestell-Ampel) stellen.
   ⚠️ `-collection_id:` in der Produktsuche bleibt unzuverlässig (siehe Warengruppen-Tags-Abschnitt) –
   Kollektionszugehörigkeit über `product.collections` je Produkt prüfen, nicht per Negativ-Suche.
