@@ -1,0 +1,341 @@
+{%- comment -%}
+  Feiertags-Hinweis (Futurespin) — großer Schließungs-Banner für die Startseite.
+
+  Anlass: Futurespin liegt in einer überwiegend katholischen Gemeinde, in der
+  Mariä Himmelfahrt (15. August) gesetzlicher Feiertag ist. In vielen
+  Nachbargemeinden gilt der Feiertag nicht — Kundinnen und Kunden rechnen
+  deshalb nicht mit geschlossenem Laden. Der Banner macht das unübersehbar.
+
+  Alle Texte und Daten sind im Theme-Editor pflegbar, der Banner ist also für
+  jeden weiteren Feiertag wiederverwendbar.
+
+  "Automatisch ausblenden ab" blendet die Section nach dem Feiertag von selbst
+  aus (Datum im Format JJJJ-MM-TT, ausgewertet in der Shop-Zeitzone). Leer
+  lassen = dauerhaft sichtbar.
+{%- endcomment -%}
+
+{%- liquid
+  assign show_banner = true
+  assign hide_after = section.settings.hide_after | strip
+
+  if hide_after != blank
+    assign today_num = 'now' | date: '%Y%m%d' | plus: 0
+    assign hide_num = hide_after | date: '%Y%m%d' | plus: 0
+    if hide_num > 0 and today_num > hide_num
+      assign show_banner = false
+    endif
+  endif
+-%}
+
+{%- if show_banner -%}
+  <aside class="fhb" role="note" aria-label="{{ section.settings.badge | default: 'Wichtiger Hinweis' | escape }}">
+    <div class="fhb__inner">
+      {%- if section.settings.date_day != blank or section.settings.date_num != blank -%}
+        <div class="fhb__date" aria-hidden="true">
+          <span class="fhb__date-day">{{ section.settings.date_day }}</span>
+          <span class="fhb__date-num">{{ section.settings.date_num }}</span>
+          <span class="fhb__date-month">{{ section.settings.date_month }}</span>
+        </div>
+      {%- endif -%}
+
+      <div class="fhb__body">
+        {%- if section.settings.badge != blank -%}
+          <p class="fhb__badge">{{ section.settings.badge }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.heading != blank -%}
+          <h2 class="fhb__title">{{ section.settings.heading }}</h2>
+        {%- endif -%}
+
+        {%- if section.settings.subheading != blank -%}
+          <p class="fhb__sub">{{ section.settings.subheading }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.text != blank -%}
+          <div class="fhb__text">{{ section.settings.text }}</div>
+        {%- endif -%}
+
+        <ul class="fhb__facts">
+          {%- if section.settings.fact_closed != blank -%}
+            <li class="fhb__fact fhb__fact--closed">{{ section.settings.fact_closed }}</li>
+          {%- endif -%}
+          {%- if section.settings.fact_open != blank -%}
+            <li class="fhb__fact fhb__fact--open">{{ section.settings.fact_open }}</li>
+          {%- endif -%}
+          {%- if section.settings.fact_back != blank -%}
+            <li class="fhb__fact fhb__fact--back">{{ section.settings.fact_back }}</li>
+          {%- endif -%}
+        </ul>
+
+        {%- if section.settings.link_label != blank and section.settings.link_url != blank -%}
+          <a class="fhb__link" href="{{ section.settings.link_url }}">{{ section.settings.link_label }}</a>
+        {%- endif -%}
+      </div>
+    </div>
+  </aside>
+{%- endif -%}
+
+{% stylesheet %}
+  .fhb {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    padding: clamp(0.8rem, 2vw, 1.4rem) 0;
+  }
+
+  .fhb *,
+  .fhb *::before,
+  .fhb *::after {
+    box-sizing: border-box;
+  }
+
+  .fhb__inner {
+    display: flex;
+    align-items: stretch;
+    gap: clamp(0.9rem, 2.4vw, 1.8rem);
+    max-width: var(--page-width, 1200px);
+    margin-inline: auto;
+    padding: clamp(1.1rem, 2.8vw, 1.9rem) clamp(1rem, 2.6vw, 1.9rem);
+    border-radius: 12px;
+    border-inline-start: 8px solid #c19a3e;
+    background-color: #2c4460;
+    background-image: linear-gradient(135deg, #35516f 0%, #24384f 100%);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(20, 34, 48, 0.18);
+  }
+
+  /* Datumsblock */
+  .fhb__date {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: clamp(4.6rem, 11vw, 6.4rem);
+    padding: 0.55em 0.7em;
+    border-radius: 10px;
+    background-color: #c19a3e;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.16) 0 9px,
+      transparent 9px 18px
+    );
+    color: #1e2f42;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .fhb__date-day {
+    font-size: clamp(0.72rem, 1.3vw, 0.9rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .fhb__date-num {
+    margin: 0.12em 0;
+    font-size: clamp(1.9rem, 4.4vw, 2.9rem);
+    font-weight: 800;
+  }
+
+  .fhb__date-month {
+    font-size: clamp(0.72rem, 1.3vw, 0.9rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Textblock */
+  .fhb__body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .fhb__badge {
+    display: inline-block;
+    margin: 0 0 0.5rem;
+    padding: 0.3em 0.85em;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+    font-size: clamp(0.68rem, 1.1vw, 0.8rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    line-height: 1.2;
+  }
+
+  .fhb__title {
+    margin: 0 0 0.35rem;
+    font-size: clamp(1.25rem, 3.1vw, 2.05rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+    text-wrap: balance;
+  }
+
+  .fhb__sub {
+    margin: 0 0 0.7rem;
+    font-size: clamp(0.95rem, 1.8vw, 1.2rem);
+    font-weight: 700;
+    line-height: 1.25;
+    color: #f0d69a;
+  }
+
+  .fhb__text {
+    margin: 0 0 0.9rem;
+    max-width: 62ch;
+    font-size: clamp(0.88rem, 1.4vw, 1rem);
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .fhb__text > :first-child {
+    margin-top: 0;
+  }
+
+  .fhb__text > :last-child {
+    margin-bottom: 0;
+  }
+
+  /* Fakten-Chips */
+  .fhb__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fhb__facts:empty {
+    display: none;
+  }
+
+  .fhb__fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    max-width: 100%;
+    padding: 0.42em 0.95em;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    font-size: clamp(0.8rem, 1.3vw, 0.94rem);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .fhb__fact::before {
+    flex: 0 0 auto;
+    font-weight: 800;
+  }
+
+  .fhb__fact--closed {
+    background-color: rgba(193, 154, 62, 0.28);
+    box-shadow: inset 0 0 0 1px rgba(240, 214, 154, 0.6);
+  }
+
+  .fhb__fact--closed::before {
+    content: "\2716";
+  }
+
+  .fhb__fact--open::before {
+    content: "\2714";
+  }
+
+  .fhb__fact--back::before {
+    content: "\21BB";
+  }
+
+  .fhb__link {
+    display: inline-block;
+    margin-top: 0.9rem;
+    color: #f0d69a;
+    font-weight: 700;
+    font-size: clamp(0.82rem, 1.3vw, 0.94rem);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .fhb__link:hover,
+  .fhb__link:focus-visible {
+    color: #fff;
+  }
+
+  /* Mobil: Datum über den Text, volle Breite */
+  @media screen and (max-width: 749px) {
+    .fhb__inner {
+      flex-direction: column;
+      gap: 0.9rem;
+      border-inline-start-width: 6px;
+    }
+
+    .fhb__date {
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: center;
+      gap: 0.4em;
+      width: 100%;
+      padding: 0.5em 0.7em;
+    }
+
+    .fhb__date-num {
+      margin: 0;
+      font-size: clamp(1.5rem, 7vw, 2rem);
+    }
+
+    .fhb__facts {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .fhb__inner {
+      animation: fhb-in 0.45s ease-out both;
+    }
+  }
+
+  @keyframes fhb-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Feiertags-Hinweis",
+  "tag": "section",
+  "settings": [
+    { "type": "header", "content": "Datumsblock" },
+    { "type": "text", "id": "date_day", "label": "Wochentag (kurz)", "default": "Sa" },
+    { "type": "text", "id": "date_num", "label": "Tag", "default": "15." },
+    { "type": "text", "id": "date_month", "label": "Monat", "default": "August" },
+    { "type": "header", "content": "Texte" },
+    { "type": "text", "id": "badge", "label": "Kennzeichnung", "default": "Wichtiger Hinweis" },
+    { "type": "text", "id": "heading", "label": "Überschrift", "default": "Am Samstag, 15. August, bleibt unser Ladengeschäft geschlossen" },
+    { "type": "text", "id": "subheading", "label": "Unterzeile", "default": "Mariä Himmelfahrt – bei uns ein gesetzlicher Feiertag" },
+    { "type": "richtext", "id": "text", "label": "Fließtext", "default": "<p>Futurespin liegt in einer überwiegend katholischen Gemeinde. Mariä Himmelfahrt ist hier gesetzlicher Feiertag, wir dürfen deshalb nicht öffnen. In vielen Nachbargemeinden gilt der Feiertag nicht – bitte plant euren Besuch entsprechend und kommt nicht umsonst.</p>" },
+    { "type": "header", "content": "Kurz-Infos" },
+    { "type": "text", "id": "fact_closed", "label": "Info 1 (geschlossen)", "default": "Ladengeschäft & Abholung: Samstag geschlossen" },
+    { "type": "text", "id": "fact_open", "label": "Info 2 (geöffnet)", "default": "Onlineshop: rund um die Uhr geöffnet" },
+    { "type": "text", "id": "fact_back", "label": "Info 3 (wieder da)", "default": "Versand & Beratung wieder ab Montag, 17. August" },
+    { "type": "header", "content": "Link" },
+    { "type": "text", "id": "link_label", "label": "Link-Text", "default": "Alle Öffnungszeiten ansehen" },
+    { "type": "url", "id": "link_url", "label": "Link-Ziel" },
+    { "type": "header", "content": "Sichtbarkeit" },
+    { "type": "text", "id": "hide_after", "label": "Automatisch ausblenden ab", "info": "Datum im Format JJJJ-MM-TT. Der Banner verschwindet am Tag nach diesem Datum von selbst. Leer lassen = dauerhaft sichtbar." }
+  ],
+  "presets": [
+    { "name": "Feiertags-Hinweis" }
+  ]
+}
+{% endschema %}
