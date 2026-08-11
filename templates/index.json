@@ -9,6 +9,17 @@
  */
 {
   "sections": {
+    "feiertag_hinweis": {
+      "type": "custom-liquid",
+      "name": "Mariä Himmelfahrt 2026",
+      "settings": {
+        "custom_liquid": "<div class=\"fs-mariae-banner\"><picture><source media=\"(max-width: 749px)\" srcset=\"https://cdn.shopify.com/s/files/1/0780/9607/3052/files/futurespin-mariae-himmelfahrt-geschlossen-2026-mobil.png?v=1786455274\"><img src=\"https://cdn.shopify.com/s/files/1/0780/9607/3052/files/futurespin-mariae-himmelfahrt-geschlossen-2026.png?v=1786455141\" alt=\"Mariä Himmelfahrt: Am Samstag, den 15.8., bleibt unser Ladengeschäft in Adelsdorf geschlossen.\" width=\"1672\" height=\"941\" loading=\"eager\"></picture></div><style>.fs-mariae-banner{width:100%;background:#2c4460}.fs-mariae-banner picture,.fs-mariae-banner img{display:block;width:100%;height:auto}</style>",
+        "background_color": "",
+        "section_width": "full-width",
+        "padding-block-start": 0,
+        "padding-block-end": 0
+      }
+    },
     "rabatt_stufen": {
       "type": "rabatt-stufen",
       "settings": {
@@ -1373,6 +1384,7 @@
     }
   },
   "order": [
+    "feiertag_hinweis",
     "rabatt_stufen",
     "hero_konfigurator",
     "collection_list_7RrB6x",
