@@ -152,6 +152,16 @@
     (Cap 20 Seiten), Dedupe per Produkt-ID; bei Fehler **nicht** cachen, damit ein späterer Aufruf neu versucht.
     **Merke:** `Link: rel=next` ist Admin-API-only – für `/collections/*/products.json` und `/products.json`
     immer `?page=N` zählen und am „< limit"-Ergebnis abbrechen, nie auf einen Header warten.
+    - 🚨 **Nachtrag 2026-08-07: Abbruchbedingung `ps.length === PAGE_SIZE` ist selbst eine Falle.**
+      Ignoriert der Storefront-Endpunkt das `?limit=250` (Antwort dann 30 statt 250), bricht die
+      strenge Gleichheitsprüfung nach Seite 1 ab und der Katalog schrumpft **still auf 30 Produkte**.
+      Richtig ist `ps.length > 0 && page < MAX_PAGES`. Gilt für `konfigurator.liquid` und
+      `schlaeger-berater.liquid`.
+    - 🚨 **STAND 2026-08-11: Das LIVE-Theme („Futurespin Live", MAIN) hat noch die ALTE Bedingung**
+      (`ps.length === K_PAGE_SIZE`, `sections/konfigurator.liquid`, 67365 statt 67643 Bytes) – die
+      Rotation am 05./06.08. lief vor dem Fix. **Deshalb finden Kunden im Live-Konfigurator weiterhin
+      nicht alle Beläge/Hölzer.** Beide Entwürfe haben den Fix; er wird mit der nächsten Rotation live.
+      Prüfen mit: `theme(id:…MAIN…){ files(filenames:["sections/konfigurator.liquid"]){ nodes{ size } } }`.
   - ✅ **`sections/schlaeger-berater.liquid` (KI-Chat-Widget, 2026-08-05 gefixt):** fetchte
     `products.json?limit=250` ohne Seitenschleife **und** kürzte in `buildProductList()` per
     `arr.slice(0, 60)`. Beides ist raus: `loadCollection()` zählt `?page=N` durch (Cap 20 Seiten, Dedupe
@@ -674,6 +684,39 @@
     fremde Notiz → unangetastet, bereits synchron → kein Schreibvorgang). ⚠️ Nur Entwurf → live bei Rotation;
     `layout/theme.liquid` wird bei „Theme aktualisieren" zurückgesetzt → aus Repo wiederherstellen (inkl. des
     `{% render 'fs-config-note-sync' %}`-Aufrufs).
+
+## Service-Add-ons auf der Produktseite (Versiegelung + Klebeservice)
+
+Beide Services lagen ursprünglich **nur** im Schläger-Konfigurator. Auf den Produktseiten gibt es
+sie jetzt einzeln – über zwei Snippets, beide eingehängt in `blocks/buy-buttons.liquid`:
+
+- **`snippets/fs-holzversiegelung.liquid`** (Bestand, 2026-08 im Theme vorgefunden): Checkbox
+  **innerhalb** des Produktformulars, direkt vor dem Kaufen-Button. Bedingung: Produkt liegt in der
+  Kollektion **`holzer`**. Klinkt sich in der **Capture-Phase** in den Form-Submit ein
+  (`preventDefault` → Service per `/cart/add.js` → `bypass`-Flag → erneut submitten). Property `Für`
+  = Produkttitel. ⚠️ **Lag NICHT im Repo** → wäre bei „Theme aktualisieren" ersatzlos weg gewesen;
+  2026-08-11 aus dem Theme gespiegelt (md5 verifiziert).
+- **`snippets/klebe-service-addon.liquid`** (neu 2026-08-11): aufklappbarer Kasten auf **jedem
+  Produkt mit Tag `Belag` oder `Holz`**, mit Pflicht-Freitextfeld („Welcher Belag auf welche
+  Seite?"), eigenem Warenkorb-Button (Service `klebe-service-1`, 5,00 €) und Hinweis, dass der
+  Konfigurator der elegantere Weg ist (Link auf `/pages/schlaeger-konfigurator`). DE/EN.
+  - 🚨 **Bewusst ein EIGENER Button, keine zweite Checkbox im Formular:** ein zweiter
+    Capture-Phase-Submit-Interceptor würde auf Holz-Seiten (Tag `Holz` **und** Kollektion `holzer`)
+    mit `fs-holzversiegelung` kollidieren – `stopImmediatePropagation` unterdrückt den jeweils
+    anderen Handler, und beim Re-Submit ist dessen `bypass` längst wieder `false` → doppelter
+    Service bzw. Schleife. Der eigene Button liegt **außerhalb** des Formulars und kann nichts stören.
+  - 🚨 **Kein `_kfg`/`_rolle` an der Zeile!** `snippets/fs-config-note-sync.liquid` gruppiert die
+    Warenkorb-Notiz genau über diese beiden Felder (`if (!p._kfg || !p._rolle) return`). Ohne sie
+    bleibt die separat gebuchte Zeile für die Notiz-Synchronisierung unsichtbar und kann den
+    Konfigurator-Block im Packzettel nicht durcheinanderbringen.
+  - Properties: sichtbar `Belag-Zuordnung` (Kundentext → Warenkorb/Bestellung/Packzettel) und `Für`
+    (Produkttitel, gleiche Konvention wie bei der Versiegelung → zwei Schläger = zwei Positionen).
+  - Failsafe: fehlt der Service-Artikel (Handle geändert/deaktiviert), rendert das Snippet **nichts**.
+- ⚠️ **Repo-Spiegel-Falle (2026-08-11 real passiert):** `blocks/buy-buttons.liquid` lag im Repo
+  **349 Bytes hinter** dem Theme – der `{%- render 'fs-holzversiegelung' -%}`-Aufruf fehlte. Ein
+  blinder Upsert der Repo-Fassung hätte die Holzversiegelung stillschweigend abgeschaltet.
+  **Immer** erst die Theme-Datei lesen, lokal exakt rekonstruieren, per **md5 gegen `checksumMd5`
+  beweisen** und erst dann die eigene Änderung einsetzen.
 
 ## Warenkorb-Kommentarfeld (Kunden-Notiz, 2026-08-01)
 

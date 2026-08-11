@@ -1,0 +1,180 @@
+{%- comment -%}
+  ============================================================================
+  fs-holzversiegelung — Add-on-Checkbox auf Holz-Produktseiten
+  ----------------------------------------------------------------------------
+  Bietet den bestehenden Service "Schlägerversiegelung" (Handle
+  schlagerversiegelung, 5,00 EUR) auch beim Kauf eines EINZELNEN Holzes an —
+  bisher gab es das nur im Schläger-Konfigurator.
+
+  WO: wird in blocks/buy-buttons.liquid direkt VOR dem Add-to-Cart-Button
+  gerendert, liegt also innerhalb des Produktformulars.
+
+  WANN: nur wenn das Produkt in der Kollektion 'holzer' (Hölzer, ID
+  607791219036, manuell gepflegt, 340 Produkte) liegt UND der Service
+  verfügbar ist. Kommt ein neues Holz dazu, muss es — wie bisher auch —
+  manuell in die Hölzer-Kollektion aufgenommen werden, dann greift die
+  Option automatisch.
+
+  WIE (wichtig, Shopify-Eigenheit): Ein Produktformular kann immer nur EINE
+  Position in den Warenkorb legen. Fuer die zweite Position (den Service)
+  faengt das Script den Submit ab, legt den Service per /cart/add.js dazu und
+  laesst danach das normale Theme-Handling das Holz hinzufuegen. Sequenziell,
+  nicht parallel — gleichzeitige Cart-Requests kann Shopify abweisen.
+  Bei einem Fehler des Service-Requests wird trotzdem normal fortgefahren:
+  lieber Holz ohne Versiegelung im Warenkorb als ein toter Kaufen-Button.
+
+  LINE-ITEM-PROPERTY: Der Service bekommt die Eigenschaft "Fuer" mit dem
+  Produkttitel. Dadurch ist in der Bestellung eindeutig, WELCHES Holz
+  versiegelt werden soll — und zwei verschiedene Hölzer mit Versiegelung
+  erzeugen zwei getrennte Positionen statt einer Menge 2.
+
+  RABATTE: Der Ausschluss von Rabatten passiert NICHT hier, sondern in der
+  Rabatt-Konfiguration im Admin (Service-Produkt aus den beguenstigten
+  Kollektionen heraushalten). Siehe Changelog-Eintrag zu diesem Feature.
+  ============================================================================
+{%- endcomment -%}
+
+{%- liquid
+  assign fsv_handles = product.collections | map: 'handle'
+  assign fsv_is_holz = false
+  if fsv_handles contains 'holzer'
+    assign fsv_is_holz = true
+  endif
+
+  assign fsv_service = all_products['schlagerversiegelung']
+  assign fsv_variant = fsv_service.selected_or_first_available_variant
+
+  assign fsv_ok = false
+  if fsv_is_holz and fsv_service != blank and fsv_variant != blank and fsv_service.available
+    assign fsv_ok = true
+  endif
+
+  assign fsv_en = false
+  if request.locale.iso_code == 'en'
+    assign fsv_en = true
+  endif
+
+  if fsv_en
+    assign fsv_title = 'Add wood sealing'
+    assign fsv_note = 'We seal the blade surface before shipping – protects against moisture and stops the veneer from fraying when you change rubbers.'
+  else
+    assign fsv_title = 'Mit Holzversiegelung'
+    assign fsv_note = 'Wir versiegeln die Holzoberfläche vor dem Versand – schützt vor Feuchtigkeit und verhindert Ausfransen beim Belagwechsel.'
+  endif
+-%}
+
+{%- if fsv_ok -%}
+  <label class="fs-seal" data-fs-seal>
+    <input
+      type="checkbox"
+      class="fs-seal__box"
+      data-fs-seal-input
+      data-variant-id="{{ fsv_variant.id }}"
+      data-product-title="{{ product.title | escape }}"
+    >
+    <span class="fs-seal__body">
+      <span class="fs-seal__title">
+        {{ fsv_title }}
+        <span class="fs-seal__price">+ {{ fsv_variant.price | money }}</span>
+      </span>
+      <span class="fs-seal__note">{{ fsv_note }}</span>
+    </span>
+  </label>
+
+  <style>
+    .fs-seal {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.85rem;
+      border: 1px solid rgba(93, 127, 167, 0.35);
+      border-radius: 12px;
+      background: rgba(93, 127, 167, 0.06);
+      cursor: pointer;
+      transition: border-color 0.16s ease, background 0.16s ease;
+    }
+    .fs-seal:hover {
+      border-color: #5D7FA7;
+      background: rgba(93, 127, 167, 0.11);
+    }
+    .fs-seal:focus-within {
+      outline: 2px solid #5D7FA7;
+      outline-offset: 2px;
+    }
+    .fs-seal__box {
+      flex: none;
+      width: 1.15rem;
+      height: 1.15rem;
+      margin-top: 0.15rem;
+      accent-color: #5D7FA7;
+      cursor: pointer;
+    }
+    .fs-seal__body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+    }
+    .fs-seal__title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      line-height: 1.3;
+    }
+    .fs-seal__price {
+      color: #5D7FA7;
+      margin-left: 0.35rem;
+      white-space: nowrap;
+    }
+    .fs-seal__note {
+      font-size: 0.82rem;
+      line-height: 1.45;
+      opacity: 0.72;
+    }
+    .fs-seal--busy {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  </style>
+
+  <script>
+    (function () {
+      var input = document.querySelector('[data-fs-seal-input]');
+      if (!input) return;
+      var form = input.closest('form[data-type="add-to-cart-form"]');
+      if (!form) return;
+      var label = input.closest('[data-fs-seal]');
+
+      // Verhindert Endlosschleife: der zweite (echte) Submit wird durchgelassen.
+      var bypass = false;
+
+      form.addEventListener('submit', function (e) {
+        if (bypass) { bypass = false; return; }
+        if (!input.checked) return;
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (label) label.classList.add('fs-seal--busy');
+
+        var proceed = function () {
+          if (label) label.classList.remove('fs-seal--busy');
+          bypass = true;
+          if (form.requestSubmit) { form.requestSubmit(); } else { form.submit(); }
+        };
+
+        var payload = {
+          items: [{
+            id: Number(input.getAttribute('data-variant-id')),
+            quantity: 1,
+            properties: { 'Für': input.getAttribute('data-product-title') || '' }
+          }]
+        };
+
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(proceed).catch(proceed);
+      }, true);
+    })();
+  </script>
+{%- endif -%}
