@@ -40,7 +40,38 @@ from shopify_api import ShopifyError
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "einstellungen.db"
 
+class PrefixMiddleware:
+    """
+    Macht die App unter einem Unterpfad lauffaehig (z. B. /einstellungen).
+
+    Ohne das erzeugt url_for() Links wie /login - hinter einem Reverse-Proxy,
+    der die App unter app.futurespin.de/einstellungen/ ausliefert, landet man
+    damit in der Logistik-App auf Port 5000 statt hier.
+
+    Caddy schickt den Prefix als X-Forwarded-Prefix mit. Wir setzen daraus
+    SCRIPT_NAME - dann baut Flask alle Links korrekt und legt das
+    Session-Cookie auf denselben Pfad, kollidiert also auch nicht mit dem
+    Cookie der Logistik-App.
+
+    Funktioniert mit beiden Caddy-Varianten: handle_path (schneidet den Prefix
+    schon ab) und handle (schickt ihn mit) - deshalb die Laengenpruefung.
+    """
+
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        prefix = (environ.get("HTTP_X_FORWARDED_PREFIX") or "").rstrip("/")
+        if prefix:
+            environ["SCRIPT_NAME"] = prefix
+            pfad = environ.get("PATH_INFO", "")
+            if pfad.startswith(prefix):
+                environ["PATH_INFO"] = pfad[len(prefix):] or "/"
+        return self.wsgi_app(environ, start_response)
+
+
 app = Flask(__name__)
+app.wsgi_app = PrefixMiddleware(app.wsgi_app)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(32)
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
