@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block titel %}{{ d.title }}{% endblock %}
+{% block inhalt %}
+  <h1>{{ d.title }}</h1>
+  <p class="meta">Status {{ d.status }} · aktiv seit {{ d.startsAt[:10] if d.startsAt }}</p>
+
+  <form method="post">
+    <h2>Mengenstaffeln</h2>
+    <p class="meta">Leere Zeilen werden ignoriert. Die hoechste passende Staffel gewinnt.
+       Ganz ohne Staffel wird daraus ein reiner VIP-Rabatt.</p>
+    {% for i in range(1, 6) %}
+      {% set t = config.tiers[i-1] if config.tiers|length >= i else none %}
+      <div class="paar">
+        <label>ab Menge
+          <input type="number" min="1" name="menge{{ i }}" value="{{ t.quantity if t else '' }}">
+        </label>
+        <label>Rabatt in %
+          <input type="text" name="prozent{{ i }}" value="{{ '%g'|format(t.percentage) if t else '' }}">
+        </label>
+      </div>
+    {% endfor %}
+
+    <h2>VIP-Stufen</h2>
+    <p class="meta">Pro Artikel gilt der hoehere Wert aus Mengenstaffel und VIP – kein Stapeln.</p>
+    {% for i in range(1, 6) %}
+      {% set v = config.vipTiers[i-1] if config.vipTiers|length >= i else none %}
+      <div class="paar">
+        <label>Kunden-Tag
+          <input type="text" name="viptag{{ i }}" value="{{ v.tag if v else '' }}" placeholder="z. B. VIP1">
+        </label>
+        <label>Rabatt in %
+          <input type="text" name="vipprozent{{ i }}" value="{{ '%g'|format(v.percentage) if v else '' }}">
+        </label>
+      </div>
+    {% endfor %}
+
+    <div class="warnkasten">
+      <strong>Achtung:</strong> Rabatt-Functions kennen kein Entwurf/Live.
+      Was du speicherst, gilt sofort im Warenkorb aller Kunden.
+      Du bekommst vorher noch eine Zusammenfassung zum Bestaetigen.
+    </div>
+
+    <p>
+      <button class="btn" type="submit">Weiter</button>
+      <a class="btn btn--still" href="{{ url_for('index') }}">Abbrechen</a>
+    </p>
+  </form>
+{% endblock %}

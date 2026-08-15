@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anmelden · Futurespin Einstellungen</title>
+<style>
+ body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f5f6f8;
+      font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+ form{background:#fff;border:1px solid #e3e6ea;border-radius:10px;padding:1.5rem;width:min(340px,92vw)}
+ h1{font-size:1.1rem;margin:0 0 1rem;color:#486A8F}
+ input{width:100%;box-sizing:border-box;padding:.55rem .65rem;border:1px solid #c9cfd6;
+       border-radius:6px;font:inherit;margin-bottom:.9rem}
+ button{width:100%;background:#486A8F;color:#fff;border:none;border-radius:6px;
+        padding:.6rem;font:inherit;font-weight:700;cursor:pointer}
+ .fehler{background:#fdeceb;border:1px solid #b3261e;color:#8c1c16;border-radius:6px;
+         padding:.55rem .8rem;margin-bottom:.9rem;font-size:.9rem}
+</style></head><body>
+<form method="post">
+  <h1>Futurespin · Einstellungen</h1>
+  {% with m = get_flashed_messages() %}{% for t in m %}<div class="fehler">{{ t }}</div>{% endfor %}{% endwith %}
+  <input type="password" name="passwort" placeholder="Passwort" autofocus required>
+  <button type="submit">Anmelden</button>
+</form>
+</body></html>

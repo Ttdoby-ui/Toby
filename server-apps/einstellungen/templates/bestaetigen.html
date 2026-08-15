@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titel %}Bestaetigen{% endblock %}
+{% block inhalt %}
+  <h1>Aenderung bestaetigen</h1>
+  <p class="meta">{{ d.title }}</p>
+
+  <div class="diff">{% for zeile in diff %}{{ zeile }}
+{% endfor %}</div>
+
+  <div class="warnkasten">
+    Nach dem Speichern gilt der neue Rabatt <strong>sofort</strong> – es gibt keine
+    Vorschau und kein Zurueck per Knopfdruck. Der vorherige Stand wird aber im
+    Protokoll festgehalten.
+  </div>
+
+  <form method="post">
+    {% for t in tiers %}
+      <input type="hidden" name="menge{{ loop.index }}" value="{{ t.quantity }}">
+      <input type="hidden" name="prozent{{ loop.index }}" value="{{ '%g'|format(t.percentage) }}">
+    {% endfor %}
+    {% for v in vip %}
+      <input type="hidden" name="viptag{{ loop.index }}" value="{{ v.tag }}">
+      <input type="hidden" name="vipprozent{{ loop.index }}" value="{{ '%g'|format(v.percentage) }}">
+    {% endfor %}
+    <input type="hidden" name="bestaetigt" value="ja">
+    <button class="btn btn--warn" type="submit">Jetzt speichern</button>
+    <a class="btn btn--still" href="{{ url_for('rabatt_bearbeiten', node_id=d.id) }}">Zurueck</a>
+  </form>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block titel %}Rabatte{% endblock %}
+{% block inhalt %}
+  <h1>Kollektionsrabatte</h1>
+  <p class="meta">Diese Rabatte laufen ueber die Function <code>kollektionsrabatt</code>.
+     Ihre Staffeln stehen in einem Metafeld und lassen sich hier ohne Deploy aendern.</p>
+
+  {% for d in discounts %}
+    <div class="karte">
+      <h3>{{ d.title }} <span class="status {{ d.status }}">{{ d.status }}</span></h3>
+      <p class="meta">
+        {% for gid in d.config.collectionIds %}
+          {% set k = kollektionen.get(gid) %}
+          Kollektion: {{ k.title if k else gid }}{% if k and k.count is not none %} ({{ k.count }} Produkte){% endif %}
+        {% else %}Keine Kollektion hinterlegt{% endfor %}
+      </p>
+      <table>
+        <tr><th>Mengenstaffeln</th><td>
+          {% if d.config.tiers %}
+            {% for t in d.config.tiers %}ab {{ t.quantity }} Stk. {{ '%g'|format(t.percentage) }} %{% if not loop.last %} · {% endif %}{% endfor %}
+          {% else %}<em>keine – reiner VIP-Rabatt</em>{% endif %}
+        </td></tr>
+        <tr><th>VIP-Stufen</th><td>
+          {% if d.config.vipTiers %}
+            {% for t in d.config.vipTiers %}{{ t.tag }} {{ '%g'|format(t.percentage) }} %{% if not loop.last %} · {% endif %}{% endfor %}
+          {% else %}<em>keine</em>{% endif %}
+        </td></tr>
+      </table>
+      <p style="margin:.8rem 0 0">
+        <a class="btn" href="{{ url_for('rabatt_bearbeiten', node_id=d.id) }}">Bearbeiten</a>
+      </p>
+    </div>
+  {% else %}
+    <div class="karte"><p>Kein Rabatt mit <code>kollektionsrabatt</code>-Konfiguration gefunden.</p></div>
+  {% endfor %}
+
+  {% if letzte %}
+    <h2>Zuletzt geaendert</h2>
+    <table>
+      {% for e in letzte %}
+        <tr><td class="meta" style="white-space:nowrap">{{ e.zeit[:16].replace('T',' ') }}</td>
+            <td>{{ e.titel }}</td><td class="meta">{{ e.diff }}</td></tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+{% endblock %}

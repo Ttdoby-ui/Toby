@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titel %}Protokoll{% endblock %}
+{% block inhalt %}
+  <h1>Aenderungsprotokoll</h1>
+  <table>
+    <tr><th>Zeitpunkt (UTC)</th><th>Rabatt</th><th>Aenderung</th></tr>
+    {% for e in eintraege %}
+      <tr><td style="white-space:nowrap">{{ e.zeit[:16].replace('T',' ') }}</td>
+          <td>{{ e.titel }}</td><td>{{ e.diff }}</td></tr>
+    {% else %}
+      <tr><td colspan="3" class="meta">Noch nichts geaendert.</td></tr>
+    {% endfor %}
+  </table>
+{% endblock %}

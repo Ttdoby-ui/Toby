@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block titel %}Fehler{% endblock %}
+{% block inhalt %}
+  <h1>Da ging etwas schief</h1>
+  <div class="melden fehler">{{ meldung }}</div>
+  <p><a class="btn btn--still" href="{{ url_for('index') }}">Zurueck</a></p>
+{% endblock %}
