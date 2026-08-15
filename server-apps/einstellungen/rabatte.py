@@ -30,13 +30,16 @@ from shopify_api import ShopifyError, gql
 NAMESPACE = "kollektionsrabatt"
 KEY = "config"
 
+# Achtung auf den Feldnamen: discountNodes liefert DiscountNode, dort heisst das
+# Feld `discount`. `automaticDiscount` gibt es nur auf DiscountAutomaticNode
+# (also bei nodes(ids:) oder dem veralteten automaticDiscountNodes).
 _LIST_QUERY = """
 query($first: Int!) {
   discountNodes(first: $first, query: "type:app") {
     nodes {
       id
       metafield(namespace: "kollektionsrabatt", key: "config") { type value }
-      automaticDiscount {
+      discount {
         __typename
         ... on DiscountAutomaticApp {
           title
@@ -84,7 +87,7 @@ def list_discounts() -> list[dict]:
     data = gql(_LIST_QUERY, {"first": 50})
     out = []
     for node in data["discountNodes"]["nodes"]:
-        discount = node.get("automaticDiscount") or {}
+        discount = node.get("discount") or {}
         if discount.get("__typename") != "DiscountAutomaticApp":
             continue
         config = _parse_config((node.get("metafield") or {}).get("value"))
