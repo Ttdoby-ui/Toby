@@ -35,7 +35,7 @@ hole() {
 }
 
 echo "==> Dateien laden"
-for f in app.py rabatte.py shopify_api.py requirements.txt einstellungen.service; do hole "$f"; done
+for f in app.py rabatte.py shopify_api.py selftest.py requirements.txt einstellungen.service; do hole "$f"; done
 for f in base.html login.html index.html rabatt.html bestaetigen.html protokoll.html fehler.html; do
   hole "templates/$f"
 done
