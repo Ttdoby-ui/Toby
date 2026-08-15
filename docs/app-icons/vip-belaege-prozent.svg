@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" width="1200" height="1200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5A7FA8"/>
+      <stop offset="1" stop-color="#3C5A79"/>
+    </linearGradient>
+    <radialGradient id="belag" cx="0.38" cy="0.32" r="0.78">
+      <stop offset="0" stop-color="#C0392B"/>
+      <stop offset="1" stop-color="#9E2E22"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0BC63"/>
+      <stop offset="1" stop-color="#C19A3E"/>
+    </linearGradient>
+    <filter id="weich" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#bg)"/>
+  <!-- dezenter Lichtfleck oben links, nimmt dem Blau die Flaechigkeit -->
+  <circle cx="330" cy="270" r="430" fill="#FFFFFF" opacity="0.06"/>
+
+  <!-- Schatten unter dem Schlaeger -->
+  <ellipse cx="592" cy="1062" rx="250" ry="44" fill="#1E2E3E" opacity="0.32" filter="url(#weich)"/>
+
+  <g transform="rotate(-16 600 560)">
+    <!-- Griff: Schulter am Blatt, leichte Taille, ausgestellter Abschluss.
+         Ein duenner gerader Stiel liesse den Schlaeger wie eine Lupe wirken,
+         ein zu kurzer wie einen Korken - daher diese Laenge. -->
+    <path d="M 516 690
+             C 508 760, 524 786, 524 852
+             C 524 906, 516 946, 512 986
+             C 508 1024, 532 1044, 600 1044
+             C 668 1044, 692 1024, 688 986
+             C 684 946, 676 906, 676 852
+             C 676 786, 692 760, 684 690 Z"
+          fill="#F2E6D2"/>
+    <!-- Griffband: deckt den Grossteil des Griffs, sonst wirkt es wie ein Korken -->
+    <path d="M 522 774 C 560 786, 640 786, 678 774
+             L 686 1000 C 640 1012, 560 1012, 514 1000 Z"
+          fill="#D9C4A3"/>
+    <!-- Blatt: schmale Holzkante, darauf der Belag -->
+    <ellipse cx="600" cy="452" rx="268" ry="280" fill="#F2E6D2"/>
+    <ellipse cx="600" cy="452" rx="246" ry="258" fill="url(#belag)"/>
+    <!-- Glanzkante auf dem Belag -->
+    <path d="M 600 194 A 246 258 0 0 0 354 452" fill="none" stroke="#FFFFFF"
+          stroke-opacity="0.20" stroke-width="22" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(812 168)">
+    <circle cx="96" cy="96" r="112" fill="#3C5A79" opacity="0.35"/>
+    <circle cx="96" cy="96" r="95" fill="url(#gold)"/>
+    <circle cx="62" cy="62" r="24" fill="none" stroke="#3C5A79" stroke-width="17"/>
+    <circle cx="130" cy="130" r="24" fill="none" stroke="#3C5A79" stroke-width="17"/>
+    <line x1="140" y1="46" x2="52" y2="146" stroke="#3C5A79"
+          stroke-width="19" stroke-linecap="round"/>
+  </g>
+</svg>
