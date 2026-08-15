@@ -1,6 +1,12 @@
 name = "VIP Beläge Discount"
 client_id = "9fe6aa2d03cc52e54d29fdba8ee8d823"
-application_url = "https://futurespin.de"
+# Ziel beim Klick auf die App im Shopify-Admin - und beim Klick auf einen ihrer
+# Rabatte. Zeigte bis 2026-08-15 auf futurespin.de, weil es keine Oberflaeche
+# gab; man landete dadurch auf der Shop-Startseite statt in einer Einstellmaske.
+# Seit es die Einstellungs-App auf dem eigenen Server gibt, zeigt sie dorthin.
+# Der Schraegstrich am Ende ist noetig - ohne ihn greift der Caddy-Block
+# handle_path /einstellungen/* nicht.
+application_url = "https://app.futurespin.de/einstellungen/"
 embedded = false
 
 [access_scopes]

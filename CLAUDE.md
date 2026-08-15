@@ -950,7 +950,13 @@ So baut/deployt eine JS-Discount-Function sauber (heute verifiziert):
   Shopify-Admin einen Function-Rabatt dieser App an (oder will über „Rabatt erstellen → App-Funktion"
   einen neuen anlegen), springt der Browser **sofort zur Homepage futurespin.de** – KEINE Einstellmaske.
   Grund: Die App „VIP Beläge Discount" hat **keine Admin-UI-Extension**; Shopify leitet auf ihre
-  `application_url` (= futurespin.de) um. **Anlegen/Ändern dieser Rabatte geht daher NUR per API**
+  `application_url` um. ✅ **Seit 2026-08-15 zeigt die `application_url` auf
+  `https://app.futurespin.de/einstellungen/`** (Einstellungs-App auf dem eigenen Server, siehe
+  `server-apps/einstellungen/`) – der Klick landet also in einer echten Einstellmaske für die
+  Staffeln. ⚠️ Die URL steht an **zwei** Stellen: in `vip-discount-function/shopify.app.toml`
+  **und** im Dev Dashboard. Ändert man nur das Dashboard, setzt der nächste `shopify app deploy`
+  sie wieder zurück. Historisch (vor der Oberfläche) zeigte sie auf futurespin.de, weshalb man
+  auf der Shop-Startseite landete. **Anlegen/Ändern dieser Rabatte geht weiterhin NUR per API**
   (Workflows mit App-Client-Credentials: „Kollektionsrabatt anlegen", „POS-Abrundung anlegen",
   „Rabatte kombinierbar machen"; Staffel-Konfig via `metafieldsSet`). Nie über den Admin-Editor versuchen.
 - `discountAutomaticAppCreate` muss von der **besitzenden App** (hier „VIP Beläge
