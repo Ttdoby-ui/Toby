@@ -17,8 +17,13 @@ path = "dist/function.wasm"
 typegen_command = "node --version"
 
 # Bindet das Konfigurations-Metafeld an die Input-Query.
-# Die JSON-Felder `collectionIds` und `vipTags` werden so zu den
-# Query-Variablen $collectionIds und $vipTags.
+# Die JSON-Felder werden dabei zu gleichnamigen Query-Variablen:
+#   collectionIds -> $collectionIds
+#   vipTags       -> $vipTags
+#   vereinTags    -> $vereinTags     (seit 2026-08-15)
+#   gruppenTags   -> $gruppenTags    (Warengruppen-Tags der Produkte)
+# Neue Felder brauchen deshalb KEINE Toml-Aenderung, nur die Variable in
+# run.graphql.
 [extensions.input.variables]
 namespace = "kollektionsrabatt"
 key = "config"

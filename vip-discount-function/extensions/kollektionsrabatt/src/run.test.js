@@ -17,7 +17,13 @@ const DEFAULT_CONFIG = {
   ],
 };
 
-const makeInput = ({ config = DEFAULT_CONFIG, lines = [], vipTags = [], retailLocation = null } = {}) => ({
+const makeInput = ({
+  config = DEFAULT_CONFIG,
+  lines = [],
+  vipTags = [],
+  vereinTags = [],
+  retailLocation = null,
+} = {}) => ({
   discount: {
     discountClasses: ["PRODUCT"],
     metafield: config == null ? null : { jsonValue: config },
@@ -26,9 +32,13 @@ const makeInput = ({ config = DEFAULT_CONFIG, lines = [], vipTags = [], retailLo
     retailLocation,
     buyerIdentity: {
       customer: {
-        hasTags: (DEFAULT_CONFIG.vipTags ?? []).map((tag) => ({
+        vip: (DEFAULT_CONFIG.vipTags ?? []).map((tag) => ({
           tag,
           hasTag: vipTags.includes(tag),
+        })),
+        verein: (config?.vereinTags ?? []).map((tag) => ({
+          tag,
+          hasTag: vereinTags.includes(tag),
         })),
       },
     },
@@ -44,7 +54,7 @@ function opsCount(result) {
 }
 
 /** n Artikel der Kollektion (je Menge 1). Optional Angebot, VIP-Fähigkeit, Ausschluss. */
-function collectionLines(count, price = 33.9, compareAt = null, forVip = true, noVolume = false) {
+function collectionLines(count, price = 33.9, compareAt = null, forVip = true, noVolume = false, gruppen = []) {
   return Array.from({ length: count }, (_, i) => ({
     id: `gid://shopify/CartLine/coll-${i}`,
     quantity: 1,
@@ -54,7 +64,12 @@ function collectionLines(count, price = 33.9, compareAt = null, forVip = true, n
     },
     merchandise: {
       __typename: "ProductVariant",
-      product: { inAnyCollection: true, isVip: forVip, noVolume: noVolume },
+      product: {
+        inAnyCollection: true,
+        isVip: forVip,
+        noVolume: noVolume,
+        gruppen: gruppen.map((g) => ({ tag: g, hasTag: true })),
+      },
     },
   }));
 }
@@ -66,7 +81,7 @@ function otherLine(id = "other-1", quantity = 1) {
     cost: { amountPerQuantity: { amount: 50 }, compareAtAmountPerQuantity: null },
     merchandise: {
       __typename: "ProductVariant",
-      product: { inAnyCollection: false, isVip: false, noVolume: false },
+      product: { inAnyCollection: false, isVip: false, noVolume: false, gruppen: [] },
     },
   };
 }
@@ -298,5 +313,151 @@ describe("VIP-only (tiers: [])", () => {
     // Zielpreis 39,90×0,75 = 29,925 → Abzug 35,00−29,925 = 5,075 → 5.08
     assert.equal(cands[0].value.fixedAmount.amount, "5.08");
     assert.equal(cands[0].value.fixedAmount.appliesToEachItem, true);
+  });
+});
+
+/* ------------------------------------------------------------------ Vereine */
+
+const VEREIN_CONFIG = {
+  ...DEFAULT_CONFIG,
+  gruppenTags: ["Belag", "Holz", "Textil"],
+  vereinTags: ["Verein-A", "Verein-B", "Verein-NurTextil"],
+  vereine: [
+    // Standard 10 % auf alles, Beläge abweichend 18 %
+    { tag: "Verein-A", standard: 10, gruppen: { Belag: 18 } },
+    { tag: "Verein-B", standard: 5 },
+    // ohne standard: bekommt ausschliesslich Textilien
+    { tag: "Verein-NurTextil", gruppen: { Textil: 20 } },
+  ],
+};
+
+const vereinInput = (opts) => makeInput({ config: VEREIN_CONFIG, ...opts });
+
+describe("Vereinsrabatt", () => {
+  it("ohne Vereins-Tag aendert sich nichts", () => {
+    const result = run(vereinInput({ lines: collectionLines(1, 33.9, null, true, false, ["Belag"]) }));
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("Warengruppe Belag: 18 % statt Standard", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 33.9, null, true, false, ["Belag"]),
+      vereinTags: ["Verein-A"],
+    }));
+    assert.equal(candidates(result)[0].value.percentage.value, "18");
+    assert.match(candidates(result)[0].message, /Vereinsrabatt/);
+  });
+
+  it("Produkt ohne passende Gruppe: Standardsatz", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 33.9, null, true, false, ["Holz"]),
+      vereinTags: ["Verein-A"],
+    }));
+    assert.equal(candidates(result)[0].value.percentage.value, "10");
+  });
+
+  it("Produkt ganz ohne Gruppen-Tag: ebenfalls Standardsatz", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 33.9, null, true, false, []),
+      vereinTags: ["Verein-A"],
+    }));
+    assert.equal(candidates(result)[0].value.percentage.value, "10");
+  });
+
+  it("ohne standard nur die genannte Gruppe: Belag bekommt nichts", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 33.9, null, true, false, ["Belag"]),
+      vereinTags: ["Verein-NurTextil"],
+    }));
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("ohne standard: Textil bekommt seine 20 %", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 33.9, null, true, false, ["Textil"]),
+      vereinTags: ["Verein-NurTextil"],
+    }));
+    assert.equal(candidates(result)[0].value.percentage.value, "20");
+  });
+
+  it("Verein schlaegt Mengenrabatt: 18 % gegen 15 % bei 2 Stueck", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(2, 33.9, null, true, false, ["Belag"]),
+      vereinTags: ["Verein-A"],
+    }));
+    assert.equal(candidates(result)[0].value.percentage.value, "18");
+    assert.match(candidates(result)[0].message, /Vereinsrabatt/);
+  });
+
+  it("Mengenrabatt schlaegt Verein: 20 % gegen 18 % bei 5 Stueck", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(5, 33.9, null, true, false, ["Belag"]),
+      vereinTags: ["Verein-A"],
+    }));
+    assert.equal(candidates(result)[0].value.percentage.value, "20");
+    assert.match(candidates(result)[0].message, /Mengenrabatt/);
+  });
+
+  it("kein for_vip-Vorbehalt: greift auch bei nicht-for_vip-Produkten", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 33.9, null, false, false, ["Belag"]),
+      vereinTags: ["Verein-A"],
+      vipTags: ["VIP3"],
+    }));
+    // VIP faellt weg (nicht for_vip), der Verein bleibt
+    assert.equal(candidates(result)[0].value.percentage.value, "18");
+  });
+
+  it("mehrere Vereine am Kunden: hoechster Satz gewinnt", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 33.9, null, true, false, ["Belag"]),
+      vereinTags: ["Verein-A", "Verein-B"],
+    }));
+    assert.equal(candidates(result)[0].value.percentage.value, "18");
+  });
+
+  it("VIP schlaegt Verein, wenn er hoeher ist", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 33.9, null, true, false, ["Holz"]),
+      vereinTags: ["Verein-A"],
+      vipTags: ["VIP3"],
+    }));
+    assert.equal(candidates(result)[0].value.percentage.value, "30");
+    assert.match(candidates(result)[0].message, /VIP/);
+  });
+
+  it("Angebot bereits tiefer als der Vereinssatz: kein Zusatzrabatt", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 27.9, 39.9, true, false, ["Belag"]),
+      vereinTags: ["Verein-A"],
+    }));
+    // Ziel waere 39,90 x 0,82 = 32,72 - das Angebot ist mit 27,90 guenstiger
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("Angebot hoeher als der Vereinssatz: nur Differenz bis zum Zielpreis", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 38.0, 39.9, true, false, ["Belag"]),
+      vereinTags: ["Verein-A"],
+    }));
+    // Ziel 39,90 x 0,82 = 32,72 -> Abzug 38,00 - 32,72 = 5,28
+    assert.equal(candidates(result)[0].value.fixedAmount.amount, "5.28");
+  });
+
+  it("Verein greift nicht im POS", () => {
+    const result = run(vereinInput({
+      lines: collectionLines(1, 33.9, null, true, false, ["Belag"]),
+      vereinTags: ["Verein-A"],
+      retailLocation: { id: "gid://shopify/Location/1" },
+    }));
+    assert.equal(opsCount(result), 0);
+  });
+
+  it("Konfiguration ohne vereine: unveraendertes Verhalten", () => {
+    const result = run(makeInput({
+      lines: collectionLines(2, 33.9, null, true, false, ["Belag"]),
+      vereinTags: ["Verein-A"],
+    }));
+    assert.equal(candidates(result)[0].value.percentage.value, "15");
   });
 });

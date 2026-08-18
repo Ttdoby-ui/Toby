@@ -37,6 +37,30 @@
  *
  * `vipTags`/`vipTiers` sind optional. Fehlen sie, ist es ein reiner
  * Mengenrabatt ohne VIP-Vergleich.
+ *
+ * VEREINE (seit 2026-08-15)
+ * Zusaetzlich kann je Verein ein eigener Satz gelten - pro Warengruppe frei
+ * waehlbar. Die Warengruppe kommt aus den Produkt-Tags (Belag, Holz, Textil,
+ * ...), nicht aus Kollektionen; damit braucht ein neuer Verein keine neue
+ * Kollektion. Der Vereinssatz nimmt am selben "hoechster gewinnt"-Vergleich
+ * teil wie Mengenrabatt und VIP - es wird nie gestapelt.
+ *
+ * {
+ *   "gruppenTags": ["Belag", "Holz", "Textil"],
+ *   "vereinTags":  ["Verein-TTC-Adelsdorf", "Verein-SV-Musterstadt"],
+ *   "vereine": [
+ *     {
+ *       "tag": "Verein-TTC-Adelsdorf",
+ *       "standard": 10,                          // gilt fuer alles Uebrige
+ *       "gruppen": { "Belag": 15, "Textil": 12 } // je Warengruppe abweichend
+ *     },
+ *     { "tag": "Verein-SV-Musterstadt", "standard": 8 }
+ *   ]
+ * }
+ *
+ * `standard` weglassen oder 0 setzen -> der Verein bekommt NUR die unter
+ * `gruppen` genannten Warengruppen. Anders als bei VIP gilt hier KEIN
+ * `for_vip`-Vorbehalt: Vereinskonditionen sollen im ganzen Sortiment greifen.
  */
 
 const NO_DISCOUNT = { operations: [] };
@@ -85,6 +109,7 @@ export function run(input) {
 
   const volumePercent = highestVolumePercent(tiers, volumeQuantity);
   const customerVipPercent = highestVipPercent(cart, config.vipTiers);
+  const vereine = activeVereine(cart, config.vereine);
 
   const candidates = [];
   for (const line of collectionLines) {
@@ -99,15 +124,21 @@ export function run(input) {
     const lineVolumePercent = product.noVolume === true ? 0 : volumePercent;
     // VIP nur für VIP-fähige Produkte (Tag `for_vip`).
     const lineVipPercent = product.isVip === true ? customerVipPercent : 0;
+    // Verein: je Warengruppe des Produkts, ohne for_vip-Vorbehalt.
+    const lineVereinPercent = vereinPercentForLine(vereine, product);
 
     // Höchster Prozentsatz – kein Stapeln.
-    const percent = Math.max(lineVolumePercent, lineVipPercent);
+    const percent = Math.max(lineVolumePercent, lineVipPercent, lineVereinPercent);
     if (percent <= 0) {
       continue;
     }
 
-    const vipWins = lineVipPercent > lineVolumePercent;
-    const message = vipWins ? `VIP ${percent}%` : `Mengenrabatt ${percent}%`;
+    let message = `Mengenrabatt ${percent}%`;
+    if (lineVereinPercent >= percent && lineVereinPercent > lineVolumePercent) {
+      message = `Vereinsrabatt ${percent}%`;
+    } else if (lineVipPercent >= percent && lineVipPercent > lineVolumePercent) {
+      message = `VIP ${percent}%`;
+    }
 
     const compareAt = Number(line.cost?.compareAtAmountPerQuantity?.amount);
     const hasMarkdown = Number.isFinite(compareAt) && compareAt > current;
@@ -189,7 +220,7 @@ function highestVipPercent(cart, vipTiers) {
     return 0;
   }
 
-  const tags = cart.buyerIdentity?.customer?.hasTags ?? [];
+  const tags = cart.buyerIdentity?.customer?.vip ?? [];
   const activeTags = new Set(
     tags.filter((entry) => entry.hasTag).map((entry) => entry.tag)
   );
@@ -201,6 +232,61 @@ function highestVipPercent(cart, vipTiers) {
       if (Number.isFinite(percentage) && percentage > best) {
         best = percentage;
       }
+    }
+  }
+  return best;
+}
+
+/**
+ * Die Vereine, deren Tag der eingeloggte Kunde traegt.
+ * Gaeste haben keinen Kunden am Warenkorb und bekommen daher nie einen
+ * Vereinssatz - das ist gewollt, sonst waere die Kondition nicht zuordenbar.
+ */
+function activeVereine(cart, vereine) {
+  if (!Array.isArray(vereine) || vereine.length === 0) {
+    return [];
+  }
+  const tags = cart.buyerIdentity?.customer?.verein ?? [];
+  const aktiv = new Set(
+    tags.filter((entry) => entry.hasTag).map((entry) => entry.tag)
+  );
+  return vereine.filter((verein) => aktiv.has(verein?.tag));
+}
+
+/**
+ * Vereinssatz fuer eine Zeile: die Warengruppe des Produkts entscheidet.
+ *
+ * Traegt ein Produkt mehrere Gruppen-Tags, gewinnt der hoechste dafuer
+ * hinterlegte Satz. Passt keine Gruppe, greift `standard`. Gehoert ein Kunde
+ * mehreren Vereinen an, gewinnt ebenfalls der hoechste Satz.
+ */
+function vereinPercentForLine(vereine, product) {
+  if (vereine.length === 0) {
+    return 0;
+  }
+
+  const gruppen = product?.gruppen ?? [];
+  const produktGruppen = gruppen
+    .filter((entry) => entry.hasTag)
+    .map((entry) => entry.tag);
+
+  let best = 0;
+  for (const verein of vereine) {
+    const je = verein?.gruppen ?? {};
+    let satz = Number(verein?.standard);
+    if (!Number.isFinite(satz) || satz < 0) {
+      satz = 0;
+    }
+
+    for (const gruppe of produktGruppen) {
+      const wert = Number(je[gruppe]);
+      if (Number.isFinite(wert) && wert > satz) {
+        satz = wert;
+      }
+    }
+
+    if (satz > best) {
+      best = satz;
     }
   }
   return best;

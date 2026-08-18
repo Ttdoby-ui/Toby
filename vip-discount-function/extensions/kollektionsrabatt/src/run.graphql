@@ -1,4 +1,9 @@
-query Input($collectionIds: [ID!], $vipTags: [String!]) {
+query Input(
+  $collectionIds: [ID!]
+  $vipTags: [String!]
+  $vereinTags: [String!]
+  $gruppenTags: [String!]
+) {
   cart {
     # Gesetzt, wenn der Checkout im Ladengeschaeft (Shopify POS) stattfindet.
     # ACHTUNG: Feld liegt auf Cart, NICHT auf der Input-Root (gegen
@@ -8,7 +13,13 @@ query Input($collectionIds: [ID!], $vipTags: [String!]) {
     }
     buyerIdentity {
       customer {
-        hasTags(tags: $vipTags) {
+        # Zwei getrennte Tag-Abfragen, deshalb Aliase: hasTags kann pro Aufruf
+        # nur EINE Liste pruefen.
+        vip: hasTags(tags: $vipTags) {
+          tag
+          hasTag
+        }
+        verein: hasTags(tags: $vereinTags) {
           tag
           hasTag
         }
@@ -32,6 +43,13 @@ query Input($collectionIds: [ID!], $vipTags: [String!]) {
             inAnyCollection(ids: $collectionIds)
             isVip: hasAnyTag(tags: ["for_vip"])
             noVolume: hasAnyTag(tags: ["kein_mengenrabatt"])
+            # Warengruppen des Produkts (Belag, Holz, Textil, ...). Darueber
+            # bekommt jeder Verein je Warengruppe einen eigenen Satz, ohne dass
+            # dafuer Kollektionen angelegt werden muessen.
+            gruppen: hasTags(tags: $gruppenTags) {
+              tag
+              hasTag
+            }
           }
         }
       }
